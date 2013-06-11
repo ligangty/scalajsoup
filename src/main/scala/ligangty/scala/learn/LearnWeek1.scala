@@ -6,9 +6,13 @@ object Learn extends App {
   // Assignment 1 Testing
   //  printPascal(9)
 
-  // Asignment 2 Testing
-  val testString = "(((())))example"
-  println(balanceStacking(testString.toList))
+  // Assignment 2 Testing
+  //    val testString = "kljfsf()ksjf(())skldfj(fskjdf(slkdfjlsdf)(jskdfj(skdf)))__()"
+  //    println(balance(testString.toList))
+
+  // Assignment 3 Testing
+  val money = 10
+  val coins = List(2,2,1,5)
 
   // Assignment 1:
   def pascal(c: Int, r: Int): Int = {
@@ -28,7 +32,22 @@ object Learn extends App {
 
   // Assignment 2: recursive way
   def balance(chars: List[Char]): Boolean = {
-    false
+    def balanceInner(flag: Int, chars: List[Char]): Boolean = {
+      if ((flag < 0) || (chars.isEmpty && flag > 0))
+        false
+      else if (chars.isEmpty && flag == 0)
+        true
+      else {
+        if (chars.head == '(')
+          balanceInner(flag + 1, chars.tail)
+        else if (chars.head == ')')
+          balanceInner(flag - 1, chars.tail)
+        else
+          balanceInner(flag, chars.tail)
+      }
+    }
+
+    balanceInner(0, chars)
   }
 
   // Assignment 2: stack way
@@ -43,6 +62,13 @@ object Learn extends App {
         return false
     }
     stack.isEmpty
+  }
+
+  //Assignment 3
+  def countChange(money: Int, coins: List[Int]): Int = {
+    coins.sorted
+    require(money > 0)
+    1
   }
 
 }
