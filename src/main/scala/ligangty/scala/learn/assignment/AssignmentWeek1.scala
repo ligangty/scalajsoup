@@ -2,17 +2,17 @@ package ligangty.scala.learn
 
 import scala.collection.mutable.Stack
 
-object Learn extends App {
+object AssignmentWeek1 {
   // Assignment 1 Testing
   //  printPascal(9)
 
   // Assignment 2 Testing
-  //    val testString = "kljfsf()ksjf(())skldfj(fskjdf(slkdfjlsdf)(jskdfj(skdf)))__()"
-  //    println(balance(testString.toList))
+  val testString = "kljfsf()ksjf(())skldfj(fskjdf(slkdfjlsdf)(jskdfj(skdf)))__()"
+  println(balance(testString.toList))
 
   // Assignment 3 Testing
-  val money = 10
-  val coins = List(2,2,1,5)
+  //  val money = 10
+  //  val coins = List(2,2,1,5)
 
   // Assignment 1:
   def pascal(c: Int, r: Int): Int = {
@@ -70,5 +70,5 @@ object Learn extends App {
     require(money > 0)
     1
   }
-
+  
 }
