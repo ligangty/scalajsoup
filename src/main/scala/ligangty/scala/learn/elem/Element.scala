@@ -49,7 +49,7 @@ object Element {
   }
   private class UniformElement(ch: Char, override val width: Int, override val height: Int) extends Element {
     private val line = ch.toString * width
-    def contents = Array.make(height, line)
+    def contents = Array.fill(height)(line)
   }
 
   def elem(contents: Array[String]): Element = new ArrayElement(contents)

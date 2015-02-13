@@ -7,7 +7,7 @@ object Learn extends App {
     (a1 ++ a2).foreach(println _)
     (a1 zip a2).foreach(println _)
     (for ((l1, l2) <- a1 zip a2) yield l1 + l2).foreach(println _)
-    Array.make(6, ("a" * 5)).foreach(println _)
+    Array.fill(6)("a" * 5).foreach(println _)
   }
   
   def testSpiral = {
