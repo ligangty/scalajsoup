@@ -10,3 +10,5 @@ target/
 */reports/*
 bin
 .cache
+.idea
+*.iml
