@@ -2,8 +2,9 @@ package com.github.ligangty.scala.client.ldap
 
 import org.apache.commons.lang3.builder.ToStringBuilder
 
-case class LDAPPerson(userName:String) {
+class LDAPPerson {
 
+  var userName: String = _
   var realName: String = _
   var email: String = _
   var managerUsername: String = _
@@ -16,11 +17,14 @@ case class LDAPPerson(userName:String) {
   var location: String = _
   var hireDate: String = _
 
+  def this(un: String) = {
+    this()
+    this.userName = un
+  }
+
   override def hashCode: Int = {
-    val prime = 31;
-    var result = 1;
-    result = prime * result + this.userName.hashCode;
-    return result;
+    var result = 1
+    return 31 * result + (if (this.userName == null) 0 else this.userName.hashCode)
   }
 
   override def equals(obj: Any): Boolean = obj match {
@@ -28,6 +32,6 @@ case class LDAPPerson(userName:String) {
     case _ => false
   }
 
-  override def toString: String = return ToStringBuilder.reflectionToString(this);
+  override def toString: String = return ToStringBuilder.reflectionToString(this)
 
 }
