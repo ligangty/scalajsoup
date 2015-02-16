@@ -2,9 +2,8 @@ package com.github.ligangty.scala.client.ldap
 
 import org.apache.commons.lang3.builder.ToStringBuilder
 
-class LDAPPerson {
+case class LDAPPerson(userName:String) {
 
-  var userName: String = _
   var realName: String = _
   var email: String = _
   var managerUsername: String = _
@@ -16,11 +15,6 @@ class LDAPPerson {
   var oracleId: String = _
   var location: String = _
   var hireDate: String = _
-
-  def this(un: String) = {
-    this()
-    this.userName = un
-  }
 
   override def hashCode: Int = {
     var result = 1

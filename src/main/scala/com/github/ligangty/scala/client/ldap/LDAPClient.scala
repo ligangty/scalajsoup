@@ -74,17 +74,17 @@ class LDAPClient private() {
     LOGGER.debug("Seaching for existence with filter {} on contextBase {}", Array(filter, contextBase))
     val constraints = new SearchControls
     constraints.setSearchScope(SearchControls.SUBTREE_SCOPE)
-    return ctx.search(contextBase, filter, constraints)
+    ctx.search(contextBase, filter, constraints)
   }
 
   private def extractLDAPPerson(personSearchResult: SearchResult): LDAPPerson = {
-    val person = new LDAPPerson()
+
 
     val personAttributes = personSearchResult.getAttributes
 
     val userAttrId = LDAPAttributes.PersonAttributes.ATTR_UID
 
-    person.userName = getAttributeValue(personAttributes, userAttrId)
+    val person = LDAPPerson(getAttributeValue(personAttributes, userAttrId))
 
     val ldapGivenName: String = getAttributeValue(personAttributes, LDAPAttributes.PersonAttributes.ATTR_GIVEN_NAME)
     val ldapSN: String = getAttributeValue(personAttributes, LDAPAttributes.PersonAttributes.ATTR_SN)
