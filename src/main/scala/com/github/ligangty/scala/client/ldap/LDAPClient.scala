@@ -46,11 +46,11 @@ class LDAPClient private() {
       val userCtx = DEFAULT_USER_SEARCH_BASE
       val userFilter =  DEFAULT_USER_FILTER
       val result = getSearchResults(ctx, userCtx, userFilter, kerberosName)
-      if (result.hasMore()) {
+      if (result.hasMore) {
         val sr = result.next()
         // make sure there is not another item available, there should be
         // only 1 match
-        if (result.hasMoreElements()) {
+        if (result.hasMoreElements) {
           throw new LDAPClientException("has more than one user for kerberos name " + kerberosName)
         }
         person = extractLDAPPerson(sr)
@@ -64,7 +64,7 @@ class LDAPClient private() {
       closeContext(ctx)
     }
 
-    return person
+    person
   }
 
   private def getSearchResults(ctx: LdapContext, contextBase: String, searchfilter: String,
@@ -80,7 +80,7 @@ class LDAPClient private() {
   private def extractLDAPPerson(personSearchResult: SearchResult): LDAPPerson = {
     val person = new LDAPPerson()
 
-    val personAttributes = personSearchResult.getAttributes()
+    val personAttributes = personSearchResult.getAttributes
 
     val userAttrId = LDAPAttributes.PersonAttributes.ATTR_UID
 
@@ -115,7 +115,7 @@ class LDAPClient private() {
 
     person.hireDate = getAttributeValue(personAttributes, LDAPAttributes.PersonAttributes.ATTR_RHAT_HIRE_DATE)
 
-    return person
+    person
   }
 
   private def getAttributeValue[T](attributes: Attributes, attrId: String): T = {
@@ -124,7 +124,7 @@ class LDAPClient private() {
       LOGGER.debug("Ldap attribute value is missing for attribute " + attrId)
       return Option(null).get.asInstanceOf[T]
     }
-    return attr.get().asInstanceOf[T]
+    attr.get().asInstanceOf[T]
   }
 
 
@@ -135,7 +135,7 @@ class LDAPClient private() {
       val endIndex = dn.trim().indexOf(',', startIndex)
       return dn.trim().substring(startIndex, endIndex)
     }
-    return null
+    ""
   }
 
   private def buildInitialLdapContext(): InitialLdapContext = {
@@ -180,7 +180,7 @@ class LDAPClient private() {
       this.config.setProperty(Context.SECURITY_CREDENTIALS, bindpwd)
     }
 
-    if (LOGGER.isDebugEnabled()) {
+    if (LOGGER.isDebugEnabled) {
       LOGGER.debug("Using following InitialLdapContext properties:")
       LOGGER.debug("Factory {}", this.config.getProperty(Context.INITIAL_CONTEXT_FACTORY))
       LOGGER.debug("Authentication {}", this.config.getProperty(Context.SECURITY_AUTHENTICATION))
@@ -188,7 +188,7 @@ class LDAPClient private() {
       LOGGER.debug("Provider URL {}", this.config.getProperty(PROVIDER_URL))
     }
 
-    return new InitialLdapContext(this.config, null)
+    new InitialLdapContext(this.config, null)
   }
 
   private def closeContext(ctx: LdapContext): Unit = {

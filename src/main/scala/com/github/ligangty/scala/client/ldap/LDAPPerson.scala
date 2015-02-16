@@ -24,14 +24,14 @@ class LDAPPerson {
 
   override def hashCode: Int = {
     var result = 1
-    return 31 * result + (if (this.userName == null) 0 else this.userName.hashCode)
+    31 * result + (if (this.userName == null) 0 else this.userName.hashCode)
   }
 
   override def equals(obj: Any): Boolean = obj match {
-    case person: LDAPPerson => return this.userName.equals(person.userName)
+    case person: LDAPPerson => this.userName.equals(person.userName)
     case _ => false
   }
 
-  override def toString: String = return ToStringBuilder.reflectionToString(this)
+  override def toString: String = ToStringBuilder.reflectionToString(this)
 
 }
