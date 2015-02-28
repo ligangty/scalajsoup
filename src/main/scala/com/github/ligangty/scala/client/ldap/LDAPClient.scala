@@ -44,7 +44,7 @@ class LDAPClient private() {
       LOGGER.debug("start looking up {} user entry in LDAP", kerberosName)
       ctx = buildInitialLdapContext()
       val userCtx = DEFAULT_USER_SEARCH_BASE
-      val userFilter =  DEFAULT_USER_FILTER
+      val userFilter = DEFAULT_USER_FILTER
       val result = getSearchResults(ctx, userCtx, userFilter, kerberosName)
       if (result.hasMore) {
         val sr = result.next()
@@ -78,53 +78,37 @@ class LDAPClient private() {
   }
 
   private def extractLDAPPerson(personSearchResult: SearchResult): LDAPPerson = {
-
-
     val personAttributes = personSearchResult.getAttributes
-
     val userAttrId = LDAPAttributes.PersonAttributes.ATTR_UID
-
-    val person = LDAPPerson(getAttributeValue(personAttributes, userAttrId))
-
-    val ldapGivenName: String = getAttributeValue(personAttributes, LDAPAttributes.PersonAttributes.ATTR_GIVEN_NAME)
-    val ldapSN: String = getAttributeValue(personAttributes, LDAPAttributes.PersonAttributes.ATTR_SN)
+    val person = new LDAPPerson(getAttributeValue(personAttributes, userAttrId).get)
+    val ldapGivenName: String = getAttributeValue(personAttributes, LDAPAttributes.PersonAttributes.ATTR_GIVEN_NAME).get
+    val ldapSN: String = getAttributeValue(personAttributes, LDAPAttributes.PersonAttributes.ATTR_SN).get
     person.realName = ldapGivenName + " " + ldapSN
-
-    person.email = getAttributeValue(personAttributes, LDAPAttributes.PersonAttributes.ATTR_MAIL)
-
-    person.managerUsername = getUidFromDN(getAttributeValue(personAttributes, LDAPAttributes.PersonAttributes.ATTR_MANAGER))
-
-    var ldapJobTitle: String = getAttributeValue(personAttributes, LDAPAttributes.PersonAttributes.ATTR_RHAT_JOB_TITLE)
+    person.email = getAttributeValue(personAttributes, LDAPAttributes.PersonAttributes.ATTR_MAIL).get
+    person.managerUsername = getUidFromDN(getAttributeValue(personAttributes, LDAPAttributes.PersonAttributes.ATTR_MANAGER).get)
+    var ldapJobTitle: String = getAttributeValue(personAttributes, LDAPAttributes.PersonAttributes.ATTR_RHAT_JOB_TITLE).get
     // because someone does not have "rhatjobtitle" attribute, so use "title" as jobtitle if first is null
     if (StringUtils.isEmpty(ldapJobTitle)) {
-      ldapJobTitle = getAttributeValue(personAttributes, LDAPAttributes.PersonAttributes.ATTR_TITLE)
+      ldapJobTitle = getAttributeValue(personAttributes, LDAPAttributes.PersonAttributes.ATTR_TITLE).get
     }
     person.jobTitle = ldapJobTitle
-
-    person.costCenter = getAttributeValue(personAttributes, LDAPAttributes.PersonAttributes.ATTR_RHAT_COST_CENTER)
-
-    person.department = getAttributeValue(personAttributes, LDAPAttributes.PersonAttributes.ATTR_RHAT_COST_CENTER_DESC)
-
-    person.employeeNumber =getAttributeValue(personAttributes, LDAPAttributes.PersonAttributes.ATTR_EMPLOYEE_NUMBER)
-
-    person.employeeType = getAttributeValue(personAttributes, LDAPAttributes.PersonAttributes.ATTR_EMPLOYEE_TYPE)
-
-    person.oracleId = getAttributeValue(personAttributes, LDAPAttributes.PersonAttributes.ATTR_RHAT_ORACLE_PERSON_ID)
-
-    person.location = getAttributeValue(personAttributes, LDAPAttributes.PersonAttributes.ATTR_RHAT_LOCATION)
-
-    person.hireDate = getAttributeValue(personAttributes, LDAPAttributes.PersonAttributes.ATTR_RHAT_HIRE_DATE)
-
+    person.costCenter = getAttributeValue(personAttributes, LDAPAttributes.PersonAttributes.ATTR_RHAT_COST_CENTER).get
+    person.department = getAttributeValue(personAttributes, LDAPAttributes.PersonAttributes.ATTR_RHAT_COST_CENTER_DESC).get
+    person.employeeNumber = getAttributeValue(personAttributes, LDAPAttributes.PersonAttributes.ATTR_EMPLOYEE_NUMBER).get
+    person.employeeType = getAttributeValue(personAttributes, LDAPAttributes.PersonAttributes.ATTR_EMPLOYEE_TYPE).get
+    person.oracleId = getAttributeValue(personAttributes, LDAPAttributes.PersonAttributes.ATTR_RHAT_ORACLE_PERSON_ID).get
+    person.location = getAttributeValue(personAttributes, LDAPAttributes.PersonAttributes.ATTR_RHAT_LOCATION).get
+    person.hireDate = getAttributeValue(personAttributes, LDAPAttributes.PersonAttributes.ATTR_RHAT_HIRE_DATE).get
     person
   }
 
-  private def getAttributeValue[T](attributes: Attributes, attrId: String): T = {
+  private def getAttributeValue[T](attributes: Attributes, attrId: String): Option[T] = {
     val attr = attributes.get(attrId)
     if (attr == null) {
       LOGGER.debug("Ldap attribute value is missing for attribute " + attrId)
-      return Option(null).get.asInstanceOf[T]
+      return None
     }
-    attr.get().asInstanceOf[T]
+    Option(attr.get.asInstanceOf[T])
   }
 
 
@@ -160,8 +144,6 @@ class LDAPClient private() {
     if (StringUtils.isBlank(providerURL)) {
       providerURL = this.config.getProperty(PROVIDER_URL)
       if (StringUtils.isBlank(providerURL)) {
-        // set default provider URL to redhat internal one if no provider supplied in outer settings, but not
-        // recommended
         providerURL = if ("ssl".equalsIgnoreCase(protocol)) DEFAULT_PROVIDER_SSL_URL else DEFAULT_PROVIDER_URL
       }
       this.config.setProperty(Context.PROVIDER_URL, providerURL)

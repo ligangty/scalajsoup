@@ -2,7 +2,7 @@ package com.github.ligangty.scala.client.ldap
 
 import org.apache.commons.lang3.builder.ToStringBuilder
 
-case class LDAPPerson(userName:String) {
+class LDAPPerson(val userName:String) {
 
   var realName: String = _
   var email: String = _
