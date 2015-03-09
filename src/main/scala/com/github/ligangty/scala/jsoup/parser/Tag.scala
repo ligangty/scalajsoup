@@ -31,6 +31,11 @@ class Tag private() {
     this.containBlock = containBlock
   }
 
+  private def this(tagName: String, block: Boolean, containBlock: Boolean, formatAsBlock: Boolean) {
+    this(tagName, block, containBlock)
+    this.formatAsBlock = formatAsBlock
+  }
+
   /**
    * Get this tag's name.
    *
@@ -194,18 +199,13 @@ object Tag {
     }
   }
 
-
   private[this] def initTags() {
-    if(tags.isEmpty) {
+    if (tags.isEmpty) {
       for (tagName <- blockTags) {
         tags += (tagName -> new Tag(tagName))
       }
       for (tagName <- inlineTags) {
-        val tag = new Tag(tagName)
-        tag.block = false
-        tag.containBlock = false
-        tag.formatAsBlock = false
-        tags(tagName) = tag
+        tags += (tagName -> new Tag(tagName, false, false, false))
       }
 
       // mods:
