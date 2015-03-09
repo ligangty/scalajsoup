@@ -15,51 +15,55 @@ class TagTest extends FunSuite {
   test("trims") {
     val p1: Tag = Tag("p")
     val p2: Tag = Tag(" p ")
-    assertEquals(p1, p2)
+    assert(p1 == p2)
   }
 
-  test("equality"){
+  test("equality") {
     val p1: Tag = Tag("p")
     val p2: Tag = Tag("p")
-    assertTrue(p1.equals(p2))
-    assertTrue(p1 == p2)
+    assert(p1.equals(p2))
+    assert(p1 == p2)
   }
 
-  test("divSemantics"){
+  test("divSemantics") {
     val div = Tag("div")
 
-    assertTrue(div.isBlock)
-    assertTrue(div.isFormatAsBlock)
+    assert(div.isBlock)
+    assert(div.isFormatAsBlock)
   }
 
-  test("pSemantics"){
+  test("pSemantics") {
     val p = Tag("p")
 
-    assertTrue(p.isBlock)
-    assertFalse(p.isFormatAsBlock)
+    assert(p.isBlock)
+    assert(!p.isFormatAsBlock)
   }
 
-  test("imgSemantics"){
+  test("imgSemantics") {
     val img = Tag("img")
-    assertTrue(img.isInline)
-    assertTrue(img.isSelfClosing)
-    assertFalse(img.isBlock)
+    assert(img.isInline)
+    assert(img.isSelfClosing)
+    assert(!img.isBlock)
   }
 
-  test("defaultSemantics"){
+  test("defaultSemantics") {
     val foo = Tag("foo") // not defined
     val foo2 = Tag("FOO")
 
-    assertEquals(foo, foo2)
-    assertTrue(foo.isInline)
-    assertTrue(foo.isFormatAsBlock)
+    assert(foo == foo2)
+    assert(foo.isInline)
+    assert(foo.isFormatAsBlock)
   }
 
-  intercept[IllegalArgumentException]{
-    Tag(null)
+  test("null"){
+    intercept[IllegalArgumentException] {
+      Tag(null)
+    }
   }
 
-  intercept[IllegalArgumentException]{
-    Tag(" ")
+  test("empty"){
+    intercept[IllegalArgumentException] {
+      Tag(" ")
+    }
   }
 }
