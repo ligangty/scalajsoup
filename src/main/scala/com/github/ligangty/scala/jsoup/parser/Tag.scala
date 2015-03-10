@@ -181,8 +181,10 @@ object Tag {
   private[this] val preserveWhitespaceTags: Array[String] = Array("pre", "plaintext", "title", "textarea")
   private[this] val formListedTags: Array[String] = Array("button", "fieldset", "input", "keygen", "object", "output", "select", "textarea")
   private[this] val formSubmitTags: Array[String] = Array("input", "keygen", "object", "select", "textarea")
+
+  import scala.collection.mutable
   // creates
-  private[Tag] val tags: scala.collection.mutable.Map[String, Tag] = scala.collection.mutable.HashMap()
+  private[Tag] val tags: mutable.Map[String, Tag] = mutable.HashMap()
 
   def apply(tagName: String): Tag = {
     initTags
