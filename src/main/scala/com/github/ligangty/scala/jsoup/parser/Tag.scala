@@ -3,6 +3,7 @@ package com.github.ligangty.scala.jsoup.parser
 import com.github.ligangty.scala.jsoup.helper.Validator._
 
 /**
+ * HTML Tag capabilities.
  *
  */
 class Tag private() {
