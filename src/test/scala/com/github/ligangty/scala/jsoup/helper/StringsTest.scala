@@ -74,4 +74,13 @@ class StringsTest extends FunSuite {
 //    val extractedText = Jsoup.parse(test71540chars).text()
 //    assertResult(test71540charsExpectedSingleWhitespace)(extractedText)
   }
+
+  test("in"){
+    assert("a"!=null)
+    assert(in("a","a","b","c"))
+    assert(in("a","a","b",null))
+    assert(in("ab","ab","bc","cd"))
+    assert(!in("a","b","c","d"))
+    assert(!in("ab","abc","bcd","cde"))
+  }
 }

@@ -1,7 +1,7 @@
 package com.github.ligangty.scala.jsoup.helper
 
 
-import scala.collection.TraversableLike
+import java.lang
 
 /**
  * Created by gli on 15-3-10.
@@ -66,9 +66,9 @@ final object Strings {
    * @return normalised string
    */
   def normaliseWhitespace(string: String): String = {
-    val sb = new StringBuilder(string.length())
+    val sb = new lang.StringBuilder(string.length())
     appendNormalisedWhitespace(sb, string, false)
-    return sb.toString()
+    sb.toString()
   }
 
   /**
@@ -77,30 +77,29 @@ final object Strings {
    * @param string string to normalize whitespace within
    * @param stripLeading set to true if you wish to remove any leading whitespace
    */
-  def appendNormalisedWhitespace(accum: StringBuilder, string: String, stripLeading: Boolean) {
-//    var lastWasWhite = false
-//    var reachedNonWhite = false
-//
-//    val len = string.length()
-//    var i = 0
-//    var c = 0
-//    for (i <- 0 to len - 1)
-//      i < len
-//    i += Character.charCount(c))
-//    {
-//      c = string.codePointAt(i)
-//      if (isWhitespace(c)) {
-//        if ((stripLeading && !reachedNonWhite) || lastWasWhite)
-//          continue
-//        accum.append(' ')
-//        lastWasWhite = true
-//      }
-//      else {
-//        accum.appendCodePoint(c)
-//        lastWasWhite = false
-//        reachedNonWhite = true
-//      }
-//    }
+  def appendNormalisedWhitespace(accum: lang.StringBuilder, string: String, stripLeading: Boolean) {
+    val len = string.length()
+
+    var lastWasWhite = false
+    var reachedNonWhite = false
+    var i = 0
+    var c = 0
+    while (i < len) {
+      c = string.codePointAt(i)
+      i += Character.charCount(c)
+      if (isWhitespace(c)) {
+        if (!((stripLeading && !reachedNonWhite) || lastWasWhite)) {
+          accum.append(' ')
+          lastWasWhite = true
+        }
+      }
+      else {
+        accum.appendCodePoint(c)
+        lastWasWhite = false
+        reachedNonWhite = true
+      }
+    }
   }
 
+  def in(needle: String, haystack: String*): Boolean = !haystack.forall(needle != _)
 }
