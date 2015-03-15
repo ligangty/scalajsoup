@@ -183,12 +183,10 @@ object Tag {
   private[this] val formListedTags: Array[String] = Array("button", "fieldset", "input", "keygen", "object", "output", "select", "textarea")
   private[this] val formSubmitTags: Array[String] = Array("input", "keygen", "object", "select", "textarea")
 
-  import scala.collection.mutable
   // creates
-  private[Tag] val tags: mutable.Map[String, Tag] = mutable.HashMap()
+  lazy private[Tag] val tags: Map[String, Tag] = initTags
 
   def apply(tagName: String): Tag = {
-    initTags
     notNull(tagName)
     tags.get(tagName) match {
       case Some(find1: Tag) => find1
@@ -202,53 +200,53 @@ object Tag {
     }
   }
 
-  private[this] def initTags() {
-    if (tags.isEmpty) {
-      for (tagName <- blockTags) {
-        tags += (tagName -> new Tag(tagName))
-      }
-      for (tagName <- inlineTags) {
-        tags += (tagName -> new Tag(tagName, false, false, false))
-      }
-
-      // mods:
-      for (tagName <- emptyTags) {
-        val tag = tags(tagName)
-        notNull(tag)
-        tag.containBlock = false
-        tag.canContainInline = false
-        tag.empty = true
-        tags(tagName) = tag
-      }
-
-      for (tagName <- formatAsInlineTags) {
-        val tag = tags(tagName)
-        notNull(tag)
-        tag.formatAsBlock = false
-        tags(tagName) = tag
-      }
-
-      for (tagName <- preserveWhitespaceTags) {
-        val tag = tags(tagName)
-        notNull(tag)
-        tag.preserveWhitespace = true
-        tags(tagName) = tag
-      }
-
-      for (tagName <- formListedTags) {
-        val tag = tags(tagName)
-        notNull(tag)
-        tag.formList = true
-        tags(tagName) = tag
-      }
-
-      for (tagName <- formSubmitTags) {
-        val tag = tags(tagName)
-        notNull(tag)
-        tag.formSubmit = true
-        tags(tagName) = tag
-      }
+  private[this] def initTags(): Map[String, Tag] = {
+    import scala.collection.mutable
+    val tagsV: mutable.Map[String, Tag] = new mutable.HashMap()
+    for (tagName <- blockTags) {
+      tagsV += (tagName -> new Tag(tagName))
+    }
+    for (tagName <- inlineTags) {
+      tagsV += (tagName -> new Tag(tagName, false, false, false))
     }
 
+    // mods:
+    for (tagName <- emptyTags) {
+      val tag = tagsV(tagName)
+      notNull(tag)
+      tag.containBlock = false
+      tag.canContainInline = false
+      tag.empty = true
+      tagsV(tagName) = tag
+    }
+
+    for (tagName <- formatAsInlineTags) {
+      val tag = tagsV(tagName)
+      notNull(tag)
+      tag.formatAsBlock = false
+      tagsV(tagName) = tag
+    }
+
+    for (tagName <- preserveWhitespaceTags) {
+      val tag = tagsV(tagName)
+      notNull(tag)
+      tag.preserveWhitespace = true
+      tagsV(tagName) = tag
+    }
+
+    for (tagName <- formListedTags) {
+      val tag = tagsV(tagName)
+      notNull(tag)
+      tag.formList = true
+      tagsV(tagName) = tag
+    }
+
+    for (tagName <- formSubmitTags) {
+      val tag = tagsV(tagName)
+      notNull(tag)
+      tag.formSubmit = true
+      tagsV(tagName) = tag
+    }
+    tagsV.toMap
   }
 }
