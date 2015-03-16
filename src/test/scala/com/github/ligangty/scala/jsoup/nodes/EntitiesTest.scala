@@ -22,9 +22,13 @@ class EntitiesTest extends FunSuite {
   }
 
   test("getCharacterByName") {
-    println(isNamedEntity("AElig"))
-    println(getCharacterByName("AElig"))
     assert(Integer.parseInt("000C6", 16).toChar == getCharacterByName("AElig"))
+  }
+
+  test("Entities.EscapeMode Enumeration") {
+    assert(EscapeMode.xhtml(0x00022.toChar) == "quot")
+    assert(EscapeMode.base(0x000C6.toChar) == "AElig")
+    assert(EscapeMode.extended(0x0200C.toChar) == "zwnj")
   }
 
 }

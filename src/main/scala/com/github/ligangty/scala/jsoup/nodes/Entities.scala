@@ -7,25 +7,24 @@ import scala.collection.mutable
 import scala.collection.JavaConversions._
 
 /**
- * Created by gli on 15-3-12.
  */
 object Entities {
 
-  //  object EscapeMode extends Enumeration {
-  //    val xhtml = EscapeModeVal(xhtmlByVal)
-  //    val base = EscapeModeVal(baseByVal)
-  //    val extended = EscapeModeVal(fullByVal)
-  //
-  //    import scala.language.implicitConversions
-  //    protected case class EscapeModeVal[T <: Any, K <: Any](val map: mutable.Map[T, K]) {
-  //      def getMap = map
-  //    }
-  //
-  //    implicit def convert(value: Value) = value.asInstanceOf[EscapeModeVal]
-  //  }
+  object EscapeMode extends Enumeration {
+    val xhtml = EscapeModeVal[Char,String](xhtmlByVal)
+    val base = EscapeModeVal[Char,String](baseByVal)
+    val extended = EscapeModeVal[Char,String](fullByVal)
+
+    import scala.language.implicitConversions
+    protected case class EscapeModeVal[T <: Any, K <: Any](val map: Map[T, K]) {
+      def apply(charVal:T) = map(charVal)
+    }
+
+    implicit def convert(value: Value) = value.asInstanceOf[EscapeModeVal[Char,String]]
+  }
 
   private val full: Map[String, Char] = loadEntities("entities-full.properties")
-  lazy private val xhtmlByVal: mutable.Map[Char, String] = new mutable.HashMap[Char, String]()
+  lazy private val xhtmlByVal: Map[Char, String] = Map(0x00022.toChar -> "quot", 0x00026.toChar -> "amp", 0x0003C.toChar -> "lt", 0x0003E.toChar -> "gt")
   private val base: Map[String, Char] = loadEntities("entities-base.properties")
   lazy private val baseByVal: Map[Char, String] = toCharacterKey(base)
   lazy private val fullByVal: Map[Char, String] = toCharacterKey(full)
