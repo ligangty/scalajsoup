@@ -4,6 +4,7 @@ import java.io.{IOException, InputStream}
 import java.util.{MissingResourceException, Properties}
 
 import scala.collection.mutable
+import scala.collection.JavaConversions._
 
 /**
  * Created by gli on 15-3-12.
@@ -24,14 +25,19 @@ object Entities {
   //  }
 
   private val full: Map[String, Char] = loadEntities("entities-full.properties")
-  lazy private val xhtmlByVal: mutable.Map[Character, String] = new mutable.HashMap[Character, String]()
+  lazy private val xhtmlByVal: mutable.Map[Char, String] = new mutable.HashMap[Char, String]()
   private val base: Map[String, Char] = loadEntities("entities-base.properties")
-  lazy private val baseByVal: mutable.Map[Character, String] = null
-  lazy private val fullByVal: mutable.Map[Character, String] = null
+  lazy private val baseByVal: Map[Char, String] = toCharacterKey(base)
+  lazy private val fullByVal: Map[Char, String] = toCharacterKey(full)
 
   def isNamedEntity(name: String) = full.contains(name)
 
   def isBaseNamedEntity(name: String): Boolean = base.contains(name)
+
+  def getCharacterByName(name: String): Char = {
+    val result = full(name)
+    result
+  }
 
   private def loadEntities(filename: String): Map[String, Char] = {
     val properties: Properties = new Properties
@@ -46,21 +52,19 @@ object Entities {
       }
     }
 
-    import scala.collection.JavaConversions._
     properties.map({ case (key, value) => (key, Integer.parseInt(value, 16).toChar)}).toMap
   }
 
-  private def toCharacterKey(inMap: Map[String, Character]): Map[Character, String] = {
-    val outMap: mutable.Map[Character, String] = new mutable.HashMap[Character, String]
-    import scala.collection.JavaConversions._
+  private def toCharacterKey(inMap: Map[String, Char]): Map[Char, String] = {
+    val outMap: mutable.Map[Char, String] = new mutable.HashMap[Char, String]
     for (entry <- inMap.entrySet) {
       val character: Character = entry.getValue
       val name: String = entry.getKey
       if (outMap.containsKey(character)) {
-        if (name.toLowerCase == name) outMap.put(character, name)
+        if (name.toLowerCase == name) outMap(character) = name
       }
       else {
-        outMap.put(character, name)
+        outMap(character) = name
       }
     }
     outMap.toMap
