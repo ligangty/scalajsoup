@@ -7,21 +7,43 @@ import scala.collection.mutable
 import scala.collection.JavaConversions._
 
 /**
- */
+  */
 object Entities {
 
-  object EscapeMode extends Enumeration {
-    val xhtml = EscapeModeVal[Char,String](xhtmlByVal)
-    val base = EscapeModeVal[Char,String](baseByVal)
-    val extended = EscapeModeVal[Char,String](fullByVal)
+  sealed trait EscapeMode {
+    def getMap: Map[Char, String]
 
-    import scala.language.implicitConversions
-    protected case class EscapeModeVal[T <: Any, K <: Any](val map: Map[T, K]) {
-      def apply(charVal:T) = map(charVal)
-    }
-
-    implicit def convert(value: Value) = value.asInstanceOf[EscapeModeVal[Char,String]]
+    def apply(key: Char) = getMap(key)
   }
+
+  case object XHTML extends EscapeMode {
+    val getMap = xhtmlByVal
+  }
+
+  case object BASE extends EscapeMode {
+    val getMap = baseByVal
+  }
+
+  case object EXTENDED extends EscapeMode {
+    val getMap = fullByVal
+  }
+
+  case class UnknownMode(getMap: Map[Char, String]) extends EscapeMode
+
+  //  object EscapeMode extends Enumeration {
+  //    val xhtml = EscapeModeVal[Char,String](xhtmlByVal)
+  //    val base = EscapeModeVal[Char,String](baseByVal)
+  //    val extended = EscapeModeVal[Char,String](fullByVal)
+  //
+  //    import scala.language.implicitConversions
+  //    private[EscapeMode] case class EscapeModeVal[Char, String](val map: Map[Char, String]) {
+  //      def apply(charVal:Char) = map(charVal)
+  //    }
+  //
+  //    implicit def convert(value: Value) = value.asInstanceOf[EscapeModeVal[Char,String]]
+  ////    implicit def convert(escModeVal: EscapeModeVal[Char,String]) = escModeVal.asInstanceOf[Value]
+  //  }
+
 
   private val full: Map[String, Char] = loadEntities("entities-full.properties")
   lazy private val xhtmlByVal: Map[Char, String] = Map(0x00022.toChar -> "quot", 0x00026.toChar -> "amp", 0x0003C.toChar -> "lt", 0x0003E.toChar -> "gt")

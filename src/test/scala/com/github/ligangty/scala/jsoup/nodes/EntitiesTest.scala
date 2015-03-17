@@ -26,9 +26,18 @@ class EntitiesTest extends FunSuite {
   }
 
   test("Entities.EscapeMode Enumeration") {
-    assert(EscapeMode.xhtml(0x00022.toChar) == "quot")
-    assert(EscapeMode.base(0x000C6.toChar) == "AElig")
-    assert(EscapeMode.extended(0x0200C.toChar) == "zwnj")
+    assert(XHTML(0x00022.toChar) == "quot")
+    intercept[NoSuchElementException] {
+      XHTML(0x000C6.toChar)
+    }
+    assert(BASE(0x000C6.toChar) == "AElig")
+    intercept[NoSuchElementException] {
+      BASE(0x0200C.toChar)
+    }
+    assert(EXTENDED(0x0200C.toChar) == "zwnj")
+    intercept[NoSuchElementException] {
+      EXTENDED(0x0240F.toChar)
+    }
   }
 
 }
