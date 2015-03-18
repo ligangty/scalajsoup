@@ -4,6 +4,8 @@ import java.util.Arrays
 
 import com.github.ligangty.scala.jsoup.helper.Validator
 import com.github.ligangty.scala.jsoup.helper.Validator._
+import com.github.ligangty.scala.jsoup.nodes.Document.OutputSettings
+import com.github.ligangty.scala.jsoup.nodes.Document.OutputSettings.Syntax
 
 
 /**
@@ -41,24 +43,26 @@ class Attribute private[Attribute]() extends java.util.Map.Entry[String, String]
     old
   }
 
-  //  /**
-  //  Get the HTML representation of this attribute; e.g. {@code href="index.html"}.
-  //     @return HTML
-  //    */
-  //  def html: String = {
-  //    val accum: StringBuilder = new StringBuilder
-  //    html(accum, (new Document("")).outputSettings)
-  //    return accum.toString
-  //  }
-  //
-  //  protected def html(accum: StringBuilder, out: Document.OutputSettings) {
-  //    accum.append(key)
-  //    if (!shouldCollapseAttribute(out)) {
-  //      accum.append("=\"")
-  //      Entities.escape(accum, value, out, true, false, false)
-  //      accum.append('"')
-  //    }
-  //  }
+//  /**
+//  Get the HTML representation of this attribute; e.g. {@code href="index.html"}.
+//       @return HTML
+//    */
+//  def html: String = {
+//    val accum: StringBuilder = new StringBuilder
+//    html(accum, (new Document("")).outputSettings)
+//    accum.toString
+//  }
+
+
+//  protected def html(accum: StringBuilder, out: Document.OutputSettings) {
+//    accum.append(key)
+//    if (!shouldCollapseAttribute(out)) {
+//      accum.append("=\"")
+//      Entities.escape(accum, value, out, true, false, false)
+//      accum.append('"')
+//    }
+//  }
+
   //
   //  /**
   //  Get the string representation of this attribute, implemented as {@link #html()}.
@@ -83,12 +87,12 @@ class Attribute private[Attribute]() extends java.util.Map.Entry[String, String]
   //    return key.startsWith(Attributes.dataPrefix) && key.length > Attributes.dataPrefix.length
   //  }
   //
-  //  /**
-  //   * Collapsible if it's a boolean attribute and value is empty or same as name
-  //   */
-  //  protected def shouldCollapseAttribute(out: Document.OutputSettings): Boolean = {
-  //    return (("" == value) || value.equalsIgnoreCase(key)) && out.syntax eq Document.OutputSettings.Syntax.html && Arrays.binarySearch(booleanAttributes, key) >= 0
-  //  }
+  /**
+   * Collapsible if it's a boolean attribute and value is empty or same as name
+   */
+//  protected def shouldCollapseAttribute(out: Document.OutputSettings): Boolean = {
+//    return (("" == value) || value.equalsIgnoreCase(key)) && (out.syntax == Document.OutputSettings.Syntax.html) && (Arrays.binarySearch(booleanAttributes, key) >= 0)
+//  }
 
   override def equals(o: Any): Boolean = o match {
     case that: Attribute =>

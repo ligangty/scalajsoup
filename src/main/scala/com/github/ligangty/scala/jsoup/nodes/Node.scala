@@ -10,4 +10,6 @@ abstract class Node protected(private var baseUri: String, private var attribute
   private[nodes] var parentNode: Node = null
   private[nodes] var childNodes: List[Node] = null
   private[nodes] var siblingIndex: Int = 0
+
+  def nodeName():String
 }

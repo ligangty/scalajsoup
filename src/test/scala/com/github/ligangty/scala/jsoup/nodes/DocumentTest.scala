@@ -9,7 +9,7 @@ import org.scalatest.FunSuite
 /**
  * Created by gli on 15-3-17.
  */
-class Documentignore extends FunSuite {
+class DocumentTest extends FunSuite {
   ignore("setTextPreservesDocumentStructure") {
     fail("not implemented!")
   }

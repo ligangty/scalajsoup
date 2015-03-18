@@ -35,4 +35,6 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
   def this(tag: Tag, baseUri: String) {
     this(tag, baseUri, new Attributes)
   }
+
+  def nodeName: String = tag.getName
 }

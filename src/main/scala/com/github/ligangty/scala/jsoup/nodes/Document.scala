@@ -8,22 +8,86 @@ import com.github.ligangty.scala.jsoup.parser.Tag
 /**
  * Created by gli on 15-3-10.
  */
-class Document private(baseUri: String, location: String) extends Element(Tag("#root"), baseUri) {
+class Document private(baseUri: String, locationVal: String) extends Element(Tag("#root"), baseUri) {
+  private var outputSettingsVal: Document.OutputSettings = new Document.OutputSettings
+  private var quirksModeVal: Document.QuirksMode = Document.QuirksMode.noQuirks
+
   def this(baseUri: String) {
     this(baseUri, baseUri)
   }
+
+  /**
+  Create a valid, empty shell of a document, suitable for adding more elements to.
+     @param baseUri baseUri of document
+  @return document with html, head, and body elements.
+    */
+  private[nodes] def createShell(baseUri: String): Document = {
+    Validator.notNull(baseUri)
+    val doc: Document = new Document(baseUri)
+    //    val html: Element = doc.appendElement("html")
+    //    html.appendElement("head")
+    //    html.appendElement("body")
+    return doc
+  }
+
+  /**
+   * Get the URL this Document was parsed from. If the starting URL is a redirect,
+   * this will return the final URL from which the document was served from.
+   * @return location
+   */
+  def location: String = locationVal
+
+  /**
+  Accessor to the document's {@code head} element.
+     @return { @code head}
+    */
+  def head: Element = findFirstElementByTagName("head", this) match {
+    case Some(e: Element) => e
+    case None => null
+  }
+
+
+  /**
+  Accessor to the document's {@code body} element.
+     @return { @code body}
+    */
+  def body: Element = findFirstElementByTagName("body", this) match {
+    case Some(e: Element) => e
+    case None => null
+  }
+
+
+  private def findFirstElementByTagName(tag: String, node: Node): Option[Element] = {
+    if (node.nodeName == tag) return Some(node.asInstanceOf[Element])
+    else {
+      import scala.collection.JavaConversions._
+      for (child <- node.childNodes) {
+        val found = findFirstElementByTagName(tag, child)
+        if (found != None) return found
+      }
+    }
+    None
+  }
+
+
+  /**
+   * Get the document's current output settings.
+   * @return the document's current output settings.
+   */
+  def outputSettings: Document.OutputSettings = outputSettingsVal
 }
 
 object Document {
 
-  class OutputSettings extends Cloneable {
-
+  object OutputSettings {
     object Syntax extends Enumeration {
-      type Syntax = Value
       val html, xml = Value
     }
 
-    type Syntax = Syntax.Syntax
+    type Syntax = Syntax.Value
+  }
+
+  class OutputSettings extends Cloneable {
 
     import Entities._
 
@@ -33,7 +97,7 @@ object Document {
     private var prettyPrintVal: Boolean = true
     private var outlineVal: Boolean = false
     private var indentAmountVal: Int = 1
-    private var syntaxVal: OutputSettings#Syntax = Syntax.html
+    private var syntaxVal: OutputSettings.Syntax = OutputSettings.Syntax.html
 
     /**
      * Get the document's current HTML escape mode: <code>base</code>, which provides a limited set of named HTML
@@ -93,7 +157,7 @@ object Document {
      * Get the document's current output syntax.
      * @return current syntax
      */
-    def syntax: OutputSettings#Syntax = syntaxVal
+    def syntax: OutputSettings.Syntax = syntaxVal
 
     /**
      * Set the document's output syntax. Either {@code html}, with empty tags and boolean attributes (etc), or
@@ -101,7 +165,7 @@ object Document {
      * @param syntaxIn serialization syntax
      * @return the document's output settings, for chaining
      */
-    def syntax(syntaxIn: Document.OutputSettings#Syntax): Document.OutputSettings = {
+    def syntax(syntaxIn: Document.OutputSettings.Syntax): Document.OutputSettings = {
       this.syntaxVal = syntaxIn
       this
     }
@@ -175,4 +239,10 @@ object Document {
     }
   }
 
+  object QuirksMode extends Enumeration {
+    type QuirksMode = Value
+    val noQuirks, quirks, limitedQuirks = Value
+  }
+
+  type QuirksMode = QuirksMode.QuirksMode
 }
