@@ -8,14 +8,14 @@ import org.scalatest.FunSuite
 class AttributeTest extends FunSuite {
   test("html") {
     val attr: Attribute = new Attribute("key", "value &")
-//    assert("key=\"value &amp;\"" == attr.html)
-//    assert(attr.html == attr.toString)
+    assert("key=\"value &amp;\"" == attr.html)
+    assert(attr.html == attr.toString)
   }
 
   test("Supplementary Character should In AttributeKeyAndValue") {
     val s: String = new String(Character.toChars(135361))
     val attr: Attribute = new Attribute(s, "A" + s + "B")
-//    assert(s + "=\"A" + s + "B\"" == attr.html)
-//    assert(attr.html == attr.toString)
+    assert(s + "=\"A" + s + "B\"" == attr.html)
+    assert(attr.html == attr.toString)
   }
 }

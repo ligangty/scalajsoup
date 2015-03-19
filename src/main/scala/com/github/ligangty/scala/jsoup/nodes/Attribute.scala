@@ -20,7 +20,7 @@ class Attribute private[Attribute]() extends java.util.Map.Entry[String, String]
     this()
     notEmpty(key)
     notNull(value)
-    this.key = key
+    this.key = key.toLowerCase.trim
     this.value = value
   }
 
@@ -43,34 +43,32 @@ class Attribute private[Attribute]() extends java.util.Map.Entry[String, String]
     old
   }
 
-//  /**
-//  Get the HTML representation of this attribute; e.g. {@code href="index.html"}.
-//       @return HTML
-//    */
-//  def html: String = {
-//    val accum: StringBuilder = new StringBuilder
-//    html(accum, (new Document("")).outputSettings)
-//    accum.toString
-//  }
+  /**
+  Get the HTML representation of this attribute; e.g. {@code href="index.html"}.
+       @return HTML
+    */
+  def html: String = {
+    val accum: StringBuilder = new StringBuilder
+    html(accum, (new Document("")).outputSettings)
+    accum.toString
+  }
 
 
-//  protected def html(accum: StringBuilder, out: Document.OutputSettings) {
-//    accum.append(key)
-//    if (!shouldCollapseAttribute(out)) {
-//      accum.append("=\"")
-//      Entities.escape(accum, value, out, true, false, false)
-//      accum.append('"')
-//    }
-//  }
+  protected def html(accum: StringBuilder, out: Document.OutputSettings) {
+    accum.append(key)
+    if (!shouldCollapseAttribute(out)) {
+      accum.append("=\"")
+      Entities.escape(accum, value, out, true, false, false)
+      accum.append('"')
+    }
+  }
 
-  //
-  //  /**
-  //  Get the string representation of this attribute, implemented as {@link #html()}.
-  //     @return string
-  //    */
-  //  override def toString: String = {
-  //    return html
-  //  }
+  /**
+   * Get the string representation of this attribute, implemented as {@link #html()}.
+   * @return string
+   */
+  override def toString: String = html
+
   //
   //  /**
   //   * Create a new Attribute from an unencoded key and a HTML attribute encoded value.
@@ -90,9 +88,12 @@ class Attribute private[Attribute]() extends java.util.Map.Entry[String, String]
   /**
    * Collapsible if it's a boolean attribute and value is empty or same as name
    */
-//  protected def shouldCollapseAttribute(out: Document.OutputSettings): Boolean = {
-//    return (("" == value) || value.equalsIgnoreCase(key)) && (out.syntax == Document.OutputSettings.Syntax.html) && (Arrays.binarySearch(booleanAttributes, key) >= 0)
-//  }
+  protected def shouldCollapseAttribute(out: Document.OutputSettings): Boolean = {
+    return (("" == value) || value.equalsIgnoreCase(key)) &&
+      (out.syntax == Document.OutputSettings.Syntax.html) &&
+      (Arrays.binarySearch(Attribute.booleanAttributes.asInstanceOf[Array[AnyRef]], key) >= 0)
+
+  }
 
   override def equals(o: Any): Boolean = o match {
     case that: Attribute =>
@@ -116,6 +117,7 @@ class Attribute private[Attribute]() extends java.util.Map.Entry[String, String]
       }
     }
   }
+
 }
 
 object Attribute {
