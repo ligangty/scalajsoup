@@ -17,10 +17,10 @@ class Document private(baseUri: String, locationVal: String) extends Element(Tag
   }
 
   /**
-  Create a valid, empty shell of a document, suitable for adding more elements to.
-     @param baseUri baseUri of document
-  @return document with html, head, and body elements.
-    */
+   * Create a valid, empty shell of a document, suitable for adding more elements to.
+   * @param baseUri baseUri of document
+   * @return document with html, head, and body elements.
+   */
   private[nodes] def createShell(baseUri: String): Document = {
     Validator.notNull(baseUri)
     val doc: Document = new Document(baseUri)
@@ -80,6 +80,7 @@ class Document private(baseUri: String, locationVal: String) extends Element(Tag
 object Document {
 
   object OutputSettings {
+
     object Syntax extends Enumeration {
       val html, xml = Value
     }

@@ -1,10 +1,14 @@
 package com.github.ligangty.scala.jsoup.nodes
 
 import java.io.{IOException, InputStream}
+import java.nio.charset.CharsetEncoder
 import java.util.{MissingResourceException, Properties}
+
+import com.github.ligangty.scala.jsoup.helper.Strings
 
 import scala.collection.mutable
 import scala.collection.JavaConversions._
+import scala.util.control.Breaks
 
 /**
   */
@@ -58,6 +62,69 @@ object Entities {
   def getCharacterByName(name: String): Char = {
     val result = full(name)
     result
+  }
+
+  private[nodes] def escape(string: String, out: Document.OutputSettings): String = {
+    val accum: StringBuilder = new StringBuilder(string.length * 2)
+    escape(accum, string, out, false, false, false)
+    return accum.toString
+  }
+
+  private[nodes] def escape(accum: StringBuilder, string: String, out: Document.OutputSettings, inAttribute: Boolean, normaliseWhite: Boolean, stripLeadingWhite: Boolean): Unit = {
+    var lastWasWhite: Boolean = false
+    var reachedNonWhite: Boolean = false
+    val escapeMode: Entities.EscapeMode = out.escapeMode
+    val encoder: CharsetEncoder = out.encoder
+    val escapeModeMap: Map[Char, String] = escapeMode.getMap
+    val length: Int = string.length
+    import scala.util.control.Breaks._
+    var offset: Int = 0
+    while (offset < length) {
+      var codePoint = string.codePointAt(offset)
+      breakable {
+        if (normaliseWhite) {
+          if (Strings.isWhitespace(codePoint)) {
+            if ((stripLeadingWhite && !reachedNonWhite) || lastWasWhite) break
+            accum.append(' ')
+            lastWasWhite = true
+            break
+          }
+          else {
+            lastWasWhite = false
+            reachedNonWhite = true
+          }
+        }
+        if (codePoint < Character.MIN_SUPPLEMENTARY_CODE_POINT) {
+          val c: Char = codePoint.toChar
+          c match {
+            case '&' =>
+              accum.append("&amp;")
+            case 0xA0 =>
+              if (escapeMode == XHTML) accum.append("&nbsp;")
+              else accum.append(c)
+            case '<' =>
+              if (!inAttribute) accum.append("&lt;")
+              else accum.append(c)
+            case '>' =>
+              if (!inAttribute) accum.append("&gt;")
+              else accum.append(c)
+            case '"' =>
+              if (inAttribute) accum.append("&quot;")
+              else accum.append(c)
+            case _ =>
+              if (encoder.canEncode(c)) accum.append(c)
+              else if (escapeModeMap.containsKey(c)) accum.append('&').append(escapeModeMap(c)).append(';')
+              else accum.append("&#x").append(Integer.toHexString(codePoint)).append(';')
+          }
+        }
+        else {
+          val c: String = new String(Character.toChars(codePoint))
+          if (encoder.canEncode(c)) accum.append(c)
+          else accum.append("&#x").append(Integer.toHexString(codePoint)).append(';')
+        }
+      }
+      offset += Character.charCount(codePoint)
+    }
   }
 
   private def loadEntities(filename: String): Map[String, Char] = {
