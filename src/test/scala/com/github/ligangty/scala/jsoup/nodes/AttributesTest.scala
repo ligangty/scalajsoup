@@ -16,9 +16,15 @@ class AttributesTest extends FunSuite {
     assert(a.hasKey("Hello"))
     assert(a.hasKey("data-name"))
     assert("a&p" == a.get("tot"))
-//    assert(1 == a.dataset.size)
-//    assert("Jsoup" == a.dataset.get("name"))
-//    assert(" tot=\"a&amp;p\" hello=\"There\" data-name=\"Jsoup\"" == a.html)
-//    assert(a.html == a.toString)
+    assert(""==a.get("notfound"))
+    val list = a.asList
+    assert(3 == list.size)
+    assert(list.contains(new Attribute("Tot", "a&p")))
+    assert(list.contains(new Attribute("Hello", "There")))
+    assert(list.contains(new Attribute("data-name", "Jsoup")))
+    //    assert(1 == a.dataset.size)
+    //    assert("Jsoup" == a.dataset.get("name"))
+    //    assert(" tot=\"a&amp;p\" hello=\"There\" data-name=\"Jsoup\"" == a.html)
+    //    assert(a.html == a.toString)
   }
 }

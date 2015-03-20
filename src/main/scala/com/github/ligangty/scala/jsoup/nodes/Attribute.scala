@@ -104,17 +104,15 @@ class Attribute private[Attribute]() extends java.util.Map.Entry[String, String]
   override def hashCode: Int = {
     var result: Int = if (key != null) key.hashCode else 0
     result = 31 * result + (if (value != null) value.hashCode else 0)
-    return result
+    result
   }
 
   override def clone: Attribute = {
     try {
-      return super.clone.asInstanceOf[Attribute]
+      super.clone.asInstanceOf[Attribute]
     }
     catch {
-      case e: CloneNotSupportedException => {
-        throw new RuntimeException(e)
-      }
+      case e: CloneNotSupportedException => throw new RuntimeException(e)
     }
   }
 
@@ -124,5 +122,4 @@ object Attribute {
   private val booleanAttributes: Array[String] = Array("allowfullscreen", "async", "autofocus", "checked", "compact", "declare", "default", "defer", "disabled", "formnovalidate", "hidden", "inert", "ismap", "itemscope", "multiple", "muted", "nohref", "noresize", "noshade", "novalidate", "nowrap", "open", "readonly", "required", "reversed", "seamless", "selected", "sortable", "truespeed", "typemustmatch")
 
   def apply(key: String, value: String): Attribute = new Attribute(key.trim.toLowerCase, value)
-
 }

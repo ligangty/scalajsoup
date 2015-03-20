@@ -8,6 +8,7 @@ import com.github.ligangty.scala.jsoup.helper.Strings
 
 import scala.collection.mutable
 import scala.collection.JavaConversions._
+import scala.io.Source
 import scala.util.control.Breaks
 
 /**
@@ -97,8 +98,7 @@ object Entities {
         if (codePoint < Character.MIN_SUPPLEMENTARY_CODE_POINT) {
           val c: Char = codePoint.toChar
           c match {
-            case '&' =>
-              accum.append("&amp;")
+            case '&' => accum.append("&amp;")
             case 0xA0 =>
               if (escapeMode == XHTML) accum.append("&nbsp;")
               else accum.append(c)
@@ -128,20 +128,15 @@ object Entities {
   }
 
   private def loadEntities(filename: String): Map[String, Char] = {
-    val properties: Properties = new Properties
-    try {
-      val in: InputStream = Entities.getClass.getResourceAsStream(filename)
-      properties.load(in)
-      in.close
+    val propsToTuple = (v: String) => v.split("=") match {
+      case Array(key: String, value: String) => (key, Integer.parseInt(value, 16).toChar)
     }
-    catch {
-      case e: IOException => {
-        throw new MissingResourceException("Error loading entities resource: " + e.getMessage, "Entities", filename)
-      }
-    }
-
-    properties.map({ case (key, value) => (key, Integer.parseInt(value, 16).toChar)}).toMap
+    Source.fromInputStream(Entities.getClass.getResourceAsStream(filename))
+      .getLines()
+      .map(propsToTuple)
+      .toMap
   }
+
 
   private def toCharacterKey(inMap: Map[String, Char]): Map[Char, String] = {
     val outMap: mutable.Map[Char, String] = new mutable.HashMap[Char, String]
