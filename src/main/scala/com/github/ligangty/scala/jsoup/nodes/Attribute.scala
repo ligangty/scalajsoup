@@ -54,7 +54,7 @@ class Attribute private[Attribute]() extends java.util.Map.Entry[String, String]
   }
 
 
-  protected def html(accum: StringBuilder, out: Document.OutputSettings) {
+  private[nodes] def html(accum: StringBuilder, out: Document.OutputSettings) {
     accum.append(key)
     if (!shouldCollapseAttribute(out)) {
       accum.append("=\"")
@@ -81,14 +81,15 @@ class Attribute private[Attribute]() extends java.util.Map.Entry[String, String]
   //    return new Attribute(unencodedKey, value)
   //  }
   //
-  //  protected def isDataAttribute: Boolean = {
-  //    return key.startsWith(Attributes.dataPrefix) && key.length > Attributes.dataPrefix.length
-  //  }
-  //
+
+    private[nodes] def isDataAttribute: Boolean = {
+      return key.startsWith(Attributes.dataPrefix) && key.length > Attributes.dataPrefix.length
+    }
+
   /**
    * Collapsible if it's a boolean attribute and value is empty or same as name
    */
-  protected def shouldCollapseAttribute(out: Document.OutputSettings): Boolean = {
+  private[nodes] def shouldCollapseAttribute(out: Document.OutputSettings): Boolean = {
     return (("" == value) || value.equalsIgnoreCase(key)) &&
       (out.syntax == Document.OutputSettings.Syntax.html) &&
       (Arrays.binarySearch(Attribute.booleanAttributes.asInstanceOf[Array[AnyRef]], key) >= 0)

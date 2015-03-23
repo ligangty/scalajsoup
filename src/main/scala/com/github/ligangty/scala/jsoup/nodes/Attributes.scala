@@ -4,7 +4,7 @@ import java.util
 
 import com.github.ligangty.scala.jsoup.helper.Validator._
 
-import scala.collection.mutable.ArrayBuffer
+import scala.collection.JavaConversions._
 
 /**
  * The attributes of an Element.
@@ -16,9 +16,7 @@ import scala.collection.mutable.ArrayBuffer
  *
  */
 class Attributes extends Iterable[Attribute] {
-  //  override def iterator: Iterator[Attribute] = ???
-
-  protected val dataPrefix: String = "data-"
+  self =>
 
   // linked hash map to preserve insertion order.
   // null be default as so many elements have no attributes -- saves a good chunk of memory
@@ -33,7 +31,7 @@ class Attributes extends Iterable[Attribute] {
   def get(key: String): String = {
     notEmpty(key)
     attributes match {
-      case attrs if attrs!=null => {
+      case attrs if attrs != null => {
         val attr = attrs.get(key.toLowerCase)
         if (attr != null) attr.getValue else ""
       }
@@ -117,63 +115,89 @@ class Attributes extends Iterable[Attribute] {
    * starting with {@code data-}.
    * @return map of custom data attributes.
    */
-  //  def dataset: Map[String, String] = {
-  //    return new Attributes#Dataset
-  //  }
-  //
-  //  private class Dataset extends util.AbstractMap[String, String] {
-  //    private def this() {
-  //      this()
-  //      if (attributes == null) attributes = new util.LinkedHashMap[String, Attribute](2)
-  //    }
-  //
-  //    def entrySet: Set[util.Map.Entry[String, String]] = {
-  //      return new Attributes#Dataset#EntrySet
-  //    }
-  //
-  //    override def put(key: String, value: String): String = {
-  //      val dataKey: String = dataKey(key)
-  //      val oldValue: String = if (hasKey(dataKey)) attributes.get(dataKey).getValue else null
-  //      val attr: Attribute = new Attribute(dataKey, value)
-  //      attributes.put(dataKey, attr)
-  //      return oldValue
-  //    }
-  //
-  //    private class EntrySet extends util.AbstractSet[util.Map.Entry[String, String]] {
-  //      def iterator: Iterator[util.Map.Entry[String, String]] = {
-  //        return new Attributes#Dataset#DatasetIterator
-  //      }
-  //
-  //      def size: Int = {
-  //        var count: Int = 0
-  //        val iter: Iterator[_] = new Attributes#Dataset#DatasetIterator
-  //        while (iter.hasNext) ({
-  //          count += 1; count - 1
-  //        })
-  //        return count
-  //      }
-  //    }
-  //
-  //    private class DatasetIterator extends Iterator[util.Map.Entry[String, String]] {
-  //      private var attrIter: Iterator[Attribute] = attributes.values.iterator
-  //      private var attr: Attribute = null
-  //
-  //      def hasNext: Boolean = {
-  //        while (attrIter.hasNext) {
-  //          attr = attrIter.next
-  //          if (attr.isDataAttribute) return true
-  //        }
-  //        return false
-  //      }
-  //
-  //      def next: Map.Entry[String, String] = {
-  //        return new Attribute(attr.getKey.substring(dataPrefix.length), attr.getValue)
-  //      }
-  //
-  //      def remove {
-  //        attributes.remove(attr.getKey)
-  //      }
-  //    }
-  //
-  //  }
+  def dataset: Map[String, String] = {
+    return new self.Dataset().toMap
+  }
+
+  /**
+  Get the HTML representation of these attributes.
+     @return HTML
+    */
+  def html: String = {
+    val accum: StringBuilder = new StringBuilder
+    html(accum, (new Document("")).outputSettings)
+    return accum.toString
+  }
+
+  private[nodes] def html(accum: StringBuilder, out: Document.OutputSettings) {
+    if (attributes == null) return
+    import scala.collection.JavaConversions._
+    for (entry <- attributes.entrySet) {
+      val attribute: Attribute = entry.getValue
+      accum.append(" ")
+      attribute.html(accum, out)
+    }
+  }
+
+  override def toString: String = {
+    return html
+  }
+
+  private[Attributes] class Dataset(u: Unit = ()) extends util.AbstractMap[String, String] {
+    self =>
+    private def this() {
+      this(())
+      if (attributes == null) attributes = new util.LinkedHashMap[String, Attribute](2)
+    }
+
+    override def entrySet: util.Set[util.Map.Entry[String, String]] = new self.EntrySet()
+
+    override def put(key: String, value: String): String = {
+      val datKey: String = Attributes.dataKey(key)
+      val oldValue: String = if (hasKey(datKey)) attributes.get(datKey).getValue else null
+      val attr: Attribute = new Attribute(datKey, value)
+      attributes.put(datKey, attr)
+      oldValue
+    }
+
+    private[Dataset] class EntrySet extends util.AbstractSet[util.Map.Entry[String, String]] {
+      override def iterator: util.Iterator[util.Map.Entry[String, String]] = new self.DatasetIterator
+
+      override def size: Int = {
+        var count: Int = 0
+        val iter: Iterator[_] = new DatasetIterator
+        while (iter.hasNext) ({
+          count += 1;
+          count - 1
+        })
+        count
+      }
+    }
+
+    private[Dataset] class DatasetIterator extends util.Iterator[util.Map.Entry[String, String]] {
+      private var attrIter: Iterator[Attribute] = attributes.values.iterator
+      private var attr: Attribute = null
+
+      def hasNext: Boolean = {
+        while (attrIter.hasNext) {
+          attr = attrIter.next
+          if (attr.isDataAttribute) return true
+        }
+        false
+      }
+
+      def next: util.Map.Entry[String, String] = new Attribute(attr.getKey.substring(Attributes.dataPrefix.length), attr.getValue)
+
+      def remove = attributes.remove(attr.getKey)
+    }
+
+  }
+
 }
+
+private[nodes] object Attributes {
+  private[nodes] val dataPrefix: String = "data-"
+
+  def dataKey(key: String) = dataPrefix + key
+}
+
