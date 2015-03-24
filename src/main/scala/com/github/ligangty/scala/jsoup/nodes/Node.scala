@@ -82,7 +82,7 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
       val key: String = attributeKey.substring("abs:".length)
       if (attributes.hasKey(key) && !(absUrl(key) == "")) return true
     }
-    return attributes.hasKey(attributeKey)
+    attributes.hasKey(attributeKey)
   }
 
   /**
@@ -93,16 +93,14 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
   def removeAttr(attributeKey: String): Node = {
     notNull(attributeKey)
     attributes.remove(attributeKey)
-    return this
+    this
   }
 
   /**
    * Get the base URI of this node.
    * @return base URI
    */
-  def baseUri: String = {
-    return baseUriVal
-  }
+  def baseUri: String = baseUriVal
 
   /**
   Update the base URI of this node and all of its descendants.
@@ -167,4 +165,107 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
       }
     }
   }
+
+  /**
+  Get a child node by its 0-based index.
+     @param index index of child node
+  @return the child node at this index. Throws a { @code IndexOutOfBoundsException} if the index is out of bounds.
+    */
+  def getChildNode(index: Int): Node = childNodes(index)
+
+
+  /**
+  Get this node's children. Presented as an unmodifiable list: new children can not be added, but the child nodes
+     themselves can be manipulated.
+     @return list of children. If no children, returns an empty list.
+    */
+  def getChildNodes: Seq[Node] = childNodes.toSeq
+
+  /**
+   * Returns a deep copy of this node's children. Changes made to these nodes will not be reflected in the original
+   * nodes
+   * @return a deep copy of this node's children
+   */
+  def childNodesCopy: Seq[Node] = childNodes.map(_.clone).toSeq
+
+  override def equals(o: Any): Boolean = o match {
+    case node:Node => this eq node
+    case _ => false
+  }
+
+  override def hashCode: Int = {
+    var result: Int = if (parentNode != null) parentNode.hashCode else 0
+    result = 31 * result + (if (attributes != null) attributes.hashCode else 0)
+    result
+  }
+
+  /**
+   * Create a stand-alone, deep copy of this node, and all of its children. The cloned node will have no siblings or
+   * parent node. As a stand-alone object, any changes made to the clone or any of its children will not impact the
+   * original node.
+   * <p>
+   * The cloned node may be adopted into another Document or node structure using {@link Element#appendChild(Node)}.
+   * @return stand-alone cloned node
+   */
+  override def clone(): Node = {
+    val thisClone: Node = doClone(null)
+//    val nodesToProcess: mutable.MutableList[Node] = mutable.MutableList[Node](thisClone)
+//    while (!nodesToProcess.isEmpty) {
+//      val currParent: Node = nodesToProcess.remove
+//      {
+//        var i: Int = 0
+//        while (i < currParent.childNodes.size) {
+//          {
+//            val childClone: Node = currParent.childNodes.get(i).doClone(currParent)
+//            currParent.childNodes.set(i, childClone)
+//            nodesToProcess.add(childClone)
+//          }
+//          ({
+//            i += 1; i - 1
+//          })
+//        }
+//      }
+//    }
+    return thisClone
+  }
+
+  protected def doClone(parent: Node): Node = {
+    var clone: Node = null
+    try {
+      clone = super.clone.asInstanceOf[Node]
+    }
+    catch {
+      case e: CloneNotSupportedException => {
+        throw new RuntimeException(e)
+      }
+    }
+    clone.parentNode = parent
+    clone.siblingIndex = if (parent == null) 0 else siblingIndex
+    clone.attributes = if (attributes != null) attributes.clone else null
+    clone.baseUriVal = baseUri
+    clone.childNodes = new mutable.ArrayBuffer[Node](childNodes.size)
+    import scala.collection.JavaConversions._
+    for (child <- childNodes) clone.childNodes.add(child)
+    return clone
+  }
+
+//  private class OuterHtmlVisitor extends NodeVisitor {
+//    private var accum: StringBuilder = null
+//    private var out: Document.OutputSettings = null
+//
+//    private[nodes] def this(accum: StringBuilder, out: Document.OutputSettings) {
+//      this()
+//      this.accum = accum
+//      this.out = out
+//    }
+//
+//    def head(node: Node, depth: Int) {
+//      node.outerHtmlHead(accum, depth, out)
+//    }
+//
+//    def tail(node: Node, depth: Int) {
+//      if (!(node.nodeName == "#text")) node.outerHtmlTail(accum, depth, out)
+//    }
+//  }
+
 }

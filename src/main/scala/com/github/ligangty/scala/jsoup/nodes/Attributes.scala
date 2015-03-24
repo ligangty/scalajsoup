@@ -139,8 +139,29 @@ class Attributes extends Iterable[Attribute] {
     }
   }
 
-  override def toString: String = {
-    return html
+  override def toString: String = html
+
+  override def equals(o: Any): Boolean = o match {
+    case attrs:Attributes => (this eq attrs) || !(if (attributes != null) !(attributes == attrs.attributes) else attrs.attributes != null)
+    case _ => false
+  }
+
+  override def hashCode: Int = if (attributes != null) attributes.hashCode else 0
+
+  override def clone: Attributes = {
+    if (attributes == null) return new Attributes
+    var clone: Attributes = null
+    try {
+      clone = super.clone.asInstanceOf[Attributes]
+    }
+    catch {
+      case e: CloneNotSupportedException => {
+        throw new RuntimeException(e)
+      }
+    }
+    clone.attributes = new util.LinkedHashMap[String, Attribute](attributes.size)
+    for (attribute <- this) clone.attributes.put(attribute.getKey, attribute.clone)
+    clone
   }
 
   private[Attributes] class Dataset(u: Unit = ()) extends util.AbstractMap[String, String] {
