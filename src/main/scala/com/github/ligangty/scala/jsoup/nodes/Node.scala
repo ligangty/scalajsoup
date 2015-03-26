@@ -2,6 +2,9 @@ package com.github.ligangty.scala.jsoup.nodes
 
 import java.net.{MalformedURLException, URL}
 
+import com.github.ligangty.scala.jsoup.helper.Strings
+import com.github.ligangty.scala.jsoup.select.{NodeTraversor, NodeVisitor}
+
 import scala.collection.mutable
 
 import com.github.ligangty.scala.jsoup.helper.Validator._
@@ -13,11 +16,11 @@ import scala.collection.mutable.ArrayBuffer
  * Created by gli on 3/9/15.
  */
 abstract class Node private(u: Unit = ()) extends scala.Cloneable {
-  private[nodes] var parentNode: Node = null
-  private[nodes] var childNodes: mutable.Seq[Node] = null
-  private[nodes] var attributes: Attributes = null
+  private[nodes] var parentNodeVal: Node = null
+  private[nodes] var childNodes: mutable.Buffer[Node] = null
+  private[nodes] var attributesVal: Attributes = null
   private[nodes] var baseUriVal: String = null
-  private[nodes] var siblingIndex: Int = 0
+  private[nodes] var siblingIndexVal: Int = 0
 
   /**
    * Create a new Node.
@@ -30,7 +33,7 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
     notNull(attributes)
     childNodes = new ArrayBuffer[Node]()
     this.baseUriVal = baseUri.trim
-    this.attributes = attributes
+    this.attributesVal = attributes
   }
 
   protected def this(baseUri: String) {
@@ -42,8 +45,8 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
    */
   protected def this() {
     this(())
-    childNodes = mutable.Seq.empty
-    attributes = null
+    childNodes = mutable.Buffer.empty
+    attributesVal = null
   }
 
   /**
@@ -66,9 +69,26 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
    */
   def attr(attributeKey: String): String = {
     notNull(attributeKey)
-    if (attributes.hasKey(attributeKey)) attributes.get(attributeKey)
+    if (attributesVal.hasKey(attributeKey)) attributesVal.get(attributeKey)
     else if (attributeKey.toLowerCase.startsWith("abs:")) absUrl(attributeKey.substring("abs:".length))
     else ""
+  }
+
+  /**
+   * Get all of the element's attributes.
+   * @return attributes (which implements iterable, in same order as presented in original HTML).
+   */
+  def attributes: Attributes = attributesVal
+
+  /**
+   * Set an attribute (key=value). If the attribute already exists, it is replaced.
+   * @param attributeKey The attribute key.
+   * @param attributeValue The attribute value.
+   * @return this (for chaining)
+   */
+  def attr(attributeKey: String, attributeValue: String): Node = {
+    attributesVal.put(attributeKey, attributeValue)
+    this
   }
 
   /**
@@ -80,9 +100,9 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
     notNull(attributeKey)
     if (attributeKey.startsWith("abs:")) {
       val key: String = attributeKey.substring("abs:".length)
-      if (attributes.hasKey(key) && !(absUrl(key) == "")) return true
+      if (attributesVal.hasKey(key) && !(absUrl(key) == "")) return true
     }
-    attributes.hasKey(attributeKey)
+    attributesVal.hasKey(attributeKey)
   }
 
   /**
@@ -92,7 +112,7 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
    */
   def removeAttr(attributeKey: String): Node = {
     notNull(attributeKey)
-    attributes.remove(attributeKey)
+    attributesVal.remove(attributeKey)
     this
   }
 
@@ -107,14 +127,14 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
      @param baseUri base URI to set
     */
   def setBaseUri(baseUri: String) {
-    //    notNull(baseUri)
-    //    traverse( new class null {
-    //      def head(node: Node, depth: Int) {
-    //        node.baseUri = baseUri
-    //      }
-    //      def tail(node: Node, depth: Int) {
-    //      }
-    //    })
+    notNull(baseUri)
+    traverse( new class null {
+      def head(node: Node, depth: Int) {
+        node.baseUri = baseUri
+      }
+      def tail(node: Node, depth: Int) {
+      }
+    })
   }
 
   /**
@@ -188,14 +208,345 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
    */
   def childNodesCopy: Seq[Node] = childNodes.map(_.clone).toSeq
 
+  /**
+   * Get the number of child nodes that this node holds.
+   * @return the number of child nodes that this node holds.
+   */
+  def childNodeSize: Int = childNodes.size
+
+
+  protected def childNodesAsArray: Array[Node] = childNodes.toArray
+
+
+  /**
+   * Gets this node's parent node.
+   * @return parent node; or null if no parent.
+   */
+  def parent: Node = parentNodeVal
+
+
+  /**
+   * Gets this node's parent node. Node overridable by extending classes, so useful if you really just need the Node type.
+   * @return parent node; or null if no parent.
+   */
+  def parentNode: Node = parentNodeVal
+
+  /**
+   * Gets the Document associated with this Node.
+   * @return the Document associated with this Node, or null if there is no such Document.
+   */
+  def ownerDocument: Document = {
+    if (this.isInstanceOf[Document]) this.asInstanceOf[Document]
+    else if (parentNode == null) null
+    else parentNode.ownerDocument
+  }
+
+  /**
+   * Remove (delete) this node from the DOM tree. If this node has children, they are also removed.
+   */
+  def remove {
+    notNull(parentNode)
+    parentNode.removeChild(this)
+  }
+
+  /**
+   * Insert the specified HTML into the DOM before this node (i.e. as a preceding sibling).
+   * @param html HTML to add before this node
+   * @return this node, for chaining
+   * @see #after(String)
+   */
+  def before(html: String): Node = {
+    addSiblingHtml(siblingIndex, html)
+    this
+  }
+
+  /**
+   * Insert the specified node into the DOM before this node (i.e. as a preceding sibling).
+   * @param node to add before this node
+   * @return this node, for chaining
+   * @see #after(Node)
+   */
+  def before(node: Node): Node = {
+    notNull(node)
+    notNull(parentNode)
+    parentNode.addChildren(siblingIndex, node)
+    return this
+  }
+
+  /**
+   * Insert the specified HTML into the DOM after this node (i.e. as a following sibling).
+   * @param html HTML to add after this node
+   * @return this node, for chaining
+   * @see #before(String)
+   */
+  def after(html: String): Node = {
+    addSiblingHtml(siblingIndex + 1, html)
+    return this
+  }
+
+  /**
+   * Insert the specified node into the DOM after this node (i.e. as a following sibling).
+   * @param node to add after this node
+   * @return this node, for chaining
+   * @see #before(Node)
+   */
+  def after(node: Node): Node = {
+    notNull(node)
+    notNull(parentNode)
+    parentNode.addChildren(siblingIndex + 1, node)
+    return this
+  }
+
+  private def addSiblingHtml(index: Int, html: String) {
+    //    notNull(html)
+    //    notNull(parentNode)
+    //    val context: Element = if (parent.isInstanceOf[Element]) parent.asInstanceOf[Element] else null
+    //    val nodes: List[Node] = Parser.parseFragment(html, context, baseUri)
+    //    parentNode.addChildren(index, nodes.toArray(new Array[Node](nodes.size)))
+  }
+
+  /**
+   * Wrap the supplied HTML around this node.
+   * @param html HTML to wrap around this element, e.g. { @code <div class="head"></div>}. Can be arbitrarily deep.
+   * @return this node, for chaining.
+   */
+  def wrap(html: String): Node = {
+    //    notEmpty(html)
+    //    val context: Element = if (parent.isInstanceOf[Element]) parent.asInstanceOf[Element] else null
+    //    val wrapChildren: List[Node] = Parser.parseFragment(html, context, baseUri)
+    //    val wrapNode: Node = wrapChildren.get(0)
+    //    if (wrapNode == null || !(wrapNode.isInstanceOf[Element])) return null
+    //    val wrap: Element = wrapNode.asInstanceOf[Element]
+    //    val deepest: Element = getDeepChild(wrap)
+    //    parentNode.replaceChild(this, wrap)
+    //    deepest.addChildren(this)
+    //    if (wrapChildren.size > 0) {
+    //      {
+    //        var i: Int = 0
+    //        while (i < wrapChildren.size) {
+    //          {
+    //            val remainder: Node = wrapChildren.get(i)
+    //            remainder.parentNode.removeChild(remainder)
+    //            wrap.appendChild(remainder)
+    //          }
+    //          ({
+    //            i += 1; i - 1
+    //          })
+    //        }
+    //      }
+    //    }
+    return this
+  }
+
+  /**
+   * Removes this node from the DOM, and moves its children up into the node's parent. This has the effect of dropping
+   * the node but keeping its children.
+   * <p/>
+   * For example, with the input html:<br/>
+   * {@code <div>One <span>Two <b>Three</b></span></div>}<br/>
+   * Calling {@code element.unwrap()} on the {@code span} element will result in the html:<br/>
+   * {@code <div>One Two <b>Three</b></div>}<br/>
+   * and the {@code "Two "} {@link TextNode} being returned.
+   * @return the first child of this node, after the node has been unwrapped. Null if the node had no children.
+   * @see #remove()
+   * @see #wrap(String)
+   */
+  def unwrap: Node = {
+    notNull(parentNode)
+    val index: Int = siblingIndex
+    val firstChild: Node = if (childNodes.size > 0) childNodes.get(0) else null
+    parentNode.addChildren(index, this.childNodesAsArray)
+    this.remove
+    return firstChild
+  }
+
+  private def getDeepChild(el: Element): Element = {
+    val children: List[Element] = el.children
+    if (children.size > 0) getDeepChild(children(0))
+    else el
+  }
+
+  /**
+   * Replace this node in the DOM with the supplied node.
+   * @param in the node that will will replace the existing node.
+   */
+  def replaceWith(in: Node) {
+    notNull(in)
+    notNull(parentNode)
+    parentNode.replaceChild(this, in)
+  }
+
+  protected def setParentNode(parentNode: Node) {
+    if (this.parentNode != null) this.parentNode.removeChild(this)
+    this.parentNodeVal = parentNode
+  }
+
+  protected def replaceChild(out: Node, in: Node) {
+    isTrue(out.parentNode eq this)
+    notNull(in)
+    if (in.parentNode != null) in.parentNode.removeChild(in)
+    val index: Integer = out.siblingIndex
+    childNodes(index) = in
+    in.parentNodeVal = this
+    in.setSiblingIndex(index)
+    out.parentNodeVal = null
+  }
+
+  protected def removeChild(out: Node) {
+    isTrue(out.parentNode eq this)
+    val index: Int = out.siblingIndex
+    childNodes.remove(index)
+    reindexChildren
+    out.parentNodeVal = null
+  }
+
+  protected def addChildren(children: Node*) {
+    for (child <- children) {
+      reparentChild(child)
+      childNodes.append(child)
+      child.setSiblingIndex(childNodes.size - 1)
+    }
+  }
+
+  protected def addChildren(index: Int, children: Node*) {
+    noNullElements(children)
+    var i: Int = children.length - 1
+    while (i >= 0) {
+      val in: Node = children(i)
+      reparentChild(in)
+      childNodes.insert(index, in)
+      i -= 1
+    }
+    reindexChildren
+  }
+
+  protected def reparentChild(child: Node) {
+    if (child.parentNode != null) child.parentNode.removeChild(child)
+    child.setParentNode(this)
+  }
+
+  private def reindexChildren {
+    {
+      var i: Int = 0
+      while (i < childNodes.size) {
+        {
+          childNodes(i).setSiblingIndex(i)
+        }
+        ({
+          i += 1;
+          i - 1
+        })
+      }
+    }
+  }
+
+  /**
+  Retrieves this node's sibling nodes. Similar to {@link #childNodes()  node.parent.childNodes()}, but does not
+     include this node (a node is not a sibling of itself).
+     @return node siblings. If the node has no parent, returns an empty list.
+    */
+  def siblingNodes: List[Node] = {
+    if (parentNode == null) return List.empty
+    val nodes: List[Node] = parentNode.childNodes
+    val siblings: List[Node] = new ArrayList[Node](nodes.size - 1)
+    import scala.collection.JavaConversions._
+    for (node <- nodes) if (node ne this) siblings.add(node)
+    siblings
+  }
+
+  /**
+  Get this node's next sibling.
+     @return next sibling, or null if this is the last sibling
+    */
+  def nextSibling: Node = {
+    if (parentNode == null) return null
+    val siblings: List[Node] = parentNode.childNodes
+    val index: Integer = siblingIndex
+    notNull(index)
+    if (siblings.size > index + 1) return siblings(index + 1)
+    else return null
+  }
+
+  /**
+  Get this node's previous sibling.
+     @return the previous sibling, or null if this is the first sibling
+    */
+  def previousSibling: Node = {
+    if (parentNode == null) return null
+    val siblings: List[Node] = parentNode.childNodes
+    val index: Integer = siblingIndex
+    notNull(index)
+    if (index > 0) siblings(index - 1) else null
+  }
+
+  /**
+   * Get the list index of this node in its node sibling list. I.e. if this is the first node
+   * sibling, returns 0.
+   * @return position in node sibling list
+   * @see org.jsoup.nodes.Element#elementSiblingIndex()
+   */
+  def siblingIndex: Int = siblingIndexVal
+
+
+  protected def setSiblingIndex(siblingIndex: Int) {
+    this.siblingIndexVal = siblingIndex
+  }
+
+  /**
+   * Perform a depth-first traversal through this node and its descendants.
+   * @param nodeVisitor the visitor callbacks to perform on each node
+   * @return this node, for chaining
+   */
+  def traverse(nodeVisitor: NodeVisitor): Node = {
+    notNull(nodeVisitor)
+    val traversor: NodeTraversor = new NodeTraversor(nodeVisitor)
+    traversor.traverse(this)
+    this
+  }
+
+
+  /**
+   * Get the outer HTML of this node.
+   * @return HTML
+   */
+  def outerHtml: String = {
+    val accum: StringBuilder = new StringBuilder(128)
+    outerHtml(accum)
+    return accum.toString
+  }
+
+  protected def outerHtml(accum: StringBuilder) {
+    new NodeTraversor(new Node.OuterHtmlVisitor(accum, getOutputSettings)).traverse(this)
+  }
+
+  private[nodes] def getOutputSettings: Document.OutputSettings = {
+    return if (ownerDocument != null) ownerDocument.outputSettings else (new Document("")).outputSettings
+  }
+
+  /**
+   * Get the outer HTML of this node.
+   * @param accum accumulator to place HTML into
+   */
+  private[nodes] def outerHtmlHead(accum: StringBuilder, depth: Int, out: Document.OutputSettings)
+
+  private[nodes] def outerHtmlTail(accum: StringBuilder, depth: Int, out: Document.OutputSettings)
+
+  override def toString: String = {
+    return outerHtml
+  }
+
+  protected def indent(accum: StringBuilder, depth: Int, out: Document.OutputSettings) {
+    accum.append("\n").append(Strings.padding(depth * out.indentAmount))
+  }
+
   override def equals(o: Any): Boolean = o match {
-    case node:Node => this eq node
+    case node: Node => this eq node
     case _ => false
   }
 
   override def hashCode: Int = {
     var result: Int = if (parentNode != null) parentNode.hashCode else 0
-    result = 31 * result + (if (attributes != null) attributes.hashCode else 0)
+    result = 31 * result + (if (attributesVal != null) attributesVal.hashCode else 0)
     result
   }
 
@@ -209,24 +560,19 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
    */
   override def clone(): Node = {
     val thisClone: Node = doClone(null)
-//    val nodesToProcess: mutable.MutableList[Node] = mutable.MutableList[Node](thisClone)
-//    while (!nodesToProcess.isEmpty) {
-//      val currParent: Node = nodesToProcess.remove
-//      {
-//        var i: Int = 0
-//        while (i < currParent.childNodes.size) {
-//          {
-//            val childClone: Node = currParent.childNodes.get(i).doClone(currParent)
-//            currParent.childNodes.set(i, childClone)
-//            nodesToProcess.add(childClone)
-//          }
-//          ({
-//            i += 1; i - 1
-//          })
-//        }
-//      }
-//    }
-    return thisClone
+    val nodesToProcess: mutable.Queue[Node] = mutable.Queue[Node](thisClone)
+    while (!nodesToProcess.isEmpty) {
+      val currParent: Node = nodesToProcess.dequeue
+      var i: Int = 0
+      val length = currParent.childNodes.size
+      while (i < length) {
+        val childClone: Node = currParent.childNodes(i).doClone(currParent)
+        currParent.childNodes(i) = childClone
+        nodesToProcess.enqueue(childClone)
+        i += 1;
+      }
+    }
+    thisClone
   }
 
   protected def doClone(parent: Node): Node = {
@@ -239,9 +585,9 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
         throw new RuntimeException(e)
       }
     }
-    clone.parentNode = parent
+    clone.parentNodeVal = parent
     clone.siblingIndex = if (parent == null) 0 else siblingIndex
-    clone.attributes = if (attributes != null) attributes.clone else null
+    clone.attributesVal = if (attributesVal != null) attributesVal.clone else null
     clone.baseUriVal = baseUri
     clone.childNodes = new mutable.ArrayBuffer[Node](childNodes.size)
     import scala.collection.JavaConversions._
@@ -249,23 +595,28 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
     return clone
   }
 
-//  private class OuterHtmlVisitor extends NodeVisitor {
-//    private var accum: StringBuilder = null
-//    private var out: Document.OutputSettings = null
-//
-//    private[nodes] def this(accum: StringBuilder, out: Document.OutputSettings) {
-//      this()
-//      this.accum = accum
-//      this.out = out
-//    }
-//
-//    def head(node: Node, depth: Int) {
-//      node.outerHtmlHead(accum, depth, out)
-//    }
-//
-//    def tail(node: Node, depth: Int) {
-//      if (!(node.nodeName == "#text")) node.outerHtmlTail(accum, depth, out)
-//    }
-//  }
+
+}
+
+object Node {
+
+  private class OuterHtmlVisitor extends NodeVisitor {
+    private var accum: StringBuilder = null
+    private var out: Document.OutputSettings = null
+
+    private[nodes] def this(accum: StringBuilder, out: Document.OutputSettings) {
+      this()
+      this.accum = accum
+      this.out = out
+    }
+
+    def head(node: Node, depth: Int) {
+      node.outerHtmlHead(accum, depth, out)
+    }
+
+    def tail(node: Node, depth: Int) {
+      if (!(node.nodeName == "#text")) node.outerHtmlTail(accum, depth, out)
+    }
+  }
 
 }

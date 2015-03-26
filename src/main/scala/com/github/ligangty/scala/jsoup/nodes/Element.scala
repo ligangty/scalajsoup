@@ -37,4 +37,21 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
   }
 
   def nodeName: String = tag.getName
+
+  /**
+   * Get this element's child elements.
+   * <p/>
+   * This is effectively a filter on {@link #childNodes()} to get Element nodes.
+   * @return child elements. If this element has no children, returns an
+   *         empty list.
+   * @see #childNodes()
+   */
+  def children: Elements = {
+    val elements: List[Element] = new ArrayList[Element](childNodes.size)
+    import scala.collection.JavaConversions._
+    for (node <- childNodes) {
+      if (node.isInstanceOf[Element]) elements.add(node.asInstanceOf[Element])
+    }
+    return new Elements(elements)
+  }
 }

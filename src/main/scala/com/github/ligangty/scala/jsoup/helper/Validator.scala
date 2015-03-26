@@ -1,7 +1,7 @@
 package com.github.ligangty.scala.jsoup.helper
 
 /**
- */
+  */
 final object Validator {
 
   /**
@@ -59,16 +59,32 @@ final object Validator {
    * Validates that the array contains no null elements
    * @param objects the array to test
    */
-  def noNullElements(objects: Array[AnyRef]) {
-    noNullElements(objects, "Array must not contain any null objects")
-  }
+  def noNullElements(objects: Array[AnyRef]) =
+    noNullElements("Array must not contain any null objects", objects)
+
+
+  /**
+   * Validates that the array contains no null elements
+   * @param objects the array to test
+   */
+  def noNullElements(objects: AnyRef*) =
+    noNullElements("Array must not contain any null objects", objects)
+
 
   /**
    * Validates that the array contains no null elements
    * @param objects the array to test
    * @param msg message to output if validation fails
    */
-  def noNullElements(objects: Array[AnyRef], msg: String) {
+  def noNullElements(msg: String, objects: Array[AnyRef]) =
+    for (obj <- objects) if (obj == null) throw new IllegalArgumentException(msg)
+
+  /**
+   * Validates that the array contains no null elements
+   * @param objects the array to test
+   * @param msg message to output if validation fails
+   */
+  def noNullElements(msg: String, objects: AnyRef*) {
     for (obj <- objects) if (obj == null) throw new IllegalArgumentException(msg)
   }
 
