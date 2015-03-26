@@ -76,9 +76,8 @@ class Tag private() {
    *
    * @return if this tag is a data only tag
    */
-  def isData: Boolean = {
-    return !canContainInline && !isEmpty
-  }
+  def isData: Boolean = !canContainInline && !isEmpty
+
 
 
   /**

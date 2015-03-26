@@ -185,7 +185,7 @@ object Document {
      */
     def prettyPrint(pretty: Boolean): Document.OutputSettings = {
       this.prettyPrintVal = pretty
-      return this
+      this
     }
 
     /**

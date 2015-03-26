@@ -26,21 +26,23 @@ class NodeTraversor {
   def traverse(root: Node) {
     var node: Node = root
     var depth: Int = 0
-    while (node != null) {
-      visitor.head(node, depth)
-      if (node.childNodeSize > 0) {
-        node = node.getChildNode(0)
-        depth += 1
-      }
-      else {
-        while (node.nextSibling == null && depth > 0) {
+    import scala.util.control.Breaks._
+    breakable {
+      while (node != null) {
+        visitor.head(node, depth)
+        if (node.childNodeSize > 0) {
+          node = node.getChildNode(0)
+          depth += 1
+        } else {
+          while (node.nextSibling == null && depth > 0) {
+            visitor.tail(node, depth)
+            node = node.parentNode
+            depth -= 1
+          }
           visitor.tail(node, depth)
-          node = node.parentNode
-          depth -= 1
+          if (node eq root) break
+          node = node.nextSibling
         }
-        visitor.tail(node, depth)
-        if (node eq root) break //todo: break is not supported
-        node = node.nextSibling
       }
     }
   }

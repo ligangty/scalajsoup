@@ -127,6 +127,19 @@ object Entities {
     }
   }
 
+  private[nodes] def unescape(string: String): String = unescape(string, false)
+
+  /**
+   * Unescape the input string.
+   * @param string
+   * @param strict if "strict" (that is, requires trailing ';' char, otherwise that's optional)
+   * @return
+   */
+  private[nodes] def unescape(string: String, strict: Boolean): String = {
+//    return Parser.unescapeEntities(string, strict)
+    ""
+  }
+
   private def loadEntities(filename: String): Map[String, Char] = {
     val propsToTuple = (v: String) => v.split("=") match {
       case Array(key: String, value: String) => (key, Integer.parseInt(value, 16).toChar)

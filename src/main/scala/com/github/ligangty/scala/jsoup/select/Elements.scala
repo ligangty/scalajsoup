@@ -4,35 +4,38 @@ import java.util
 
 import com.github.ligangty.scala.jsoup.nodes.Element
 
+import scala.collection.mutable
+import scala.collection.mutable.{Buffer, ArrayBuffer}
+
 /**
  * Created by gli on 15-3-26.
  */
 class Elements private(u:Unit=()) extends util.List[Element] with Cloneable {
-  private var contents: List[Element] = null
+  private var contents: mutable.Buffer[Element] = null
 
   def this() {
     this(())
-//    contents = new ArrayList[Element]
+    contents = ArrayBuffer[Element]()
   }
 
   def this(initialCapacity: Int) {
     this(())
-//    contents = new ArrayList[Element](initialCapacity)
+    contents = new ArrayBuffer[Element](initialCapacity)
   }
 
   def this(elements: util.Collection[Element]) {
     this()
-//    contents = new ArrayList[Element](elements)
+    import scala.collection.JavaConversions._
+    contents = ArrayBuffer() ++= (elements)
   }
 
-  def this(elements: List[Element]) {
+  def this(elements: mutable.Buffer[Element]) {
     this()
     contents = elements
   }
 
   def this(elements: Element*) {
-    this()
-    this(Arrays.asList(elements))
+    this(elements.toBuffer)
   }
 
   /**
@@ -49,10 +52,9 @@ class Elements private(u:Unit=()) extends util.List[Element] with Cloneable {
         throw new RuntimeException(e)
       }
     }
-    val elements: List[Element] = new ArrayList[Element]
+    val elements: Buffer[Element] = new ArrayBuffer[Element]()
     clone.contents = elements
-    import scala.collection.JavaConversions._
-    for (e <- contents) elements.add(e.clone)
+    for (e <- contents) elements.append(e.clone)
     return clone
   }
 

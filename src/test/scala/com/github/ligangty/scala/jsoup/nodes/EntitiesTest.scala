@@ -27,6 +27,10 @@ class EntitiesTest extends FunSuite {
     //    assert(text==Entities.unescape(escapedUtfMin))
   }
 
+  ignore("unescape"){
+    fail("not implemented yet!")
+  }
+
   test("isBaseNamedEntity") {
     assert(isBaseNamedEntity("AElig"))
     assert(isBaseNamedEntity("yuml"))

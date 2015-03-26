@@ -3,7 +3,7 @@ package com.github.ligangty.scala.jsoup.nodes
 import java.net.{MalformedURLException, URL}
 
 import com.github.ligangty.scala.jsoup.helper.Strings
-import com.github.ligangty.scala.jsoup.select.{NodeTraversor, NodeVisitor}
+import com.github.ligangty.scala.jsoup.select.{Elements, NodeTraversor, NodeVisitor}
 
 import scala.collection.mutable
 
@@ -123,17 +123,17 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
   def baseUri: String = baseUriVal
 
   /**
-  Update the base URI of this node and all of its descendants.
-     @param baseUri base URI to set
-    */
+   * Update the base URI of this node and all of its descendants.
+   * @param baseUri base URI to set
+   */
   def setBaseUri(baseUri: String) {
     notNull(baseUri)
-    traverse( new class null {
+    traverse(new NodeVisitor {
       def head(node: Node, depth: Int) {
-        node.baseUri = baseUri
+        node.baseUriVal = baseUri
       }
-      def tail(node: Node, depth: Int) {
-      }
+
+      def tail(node: Node, depth: Int) {}
     })
   }
 
@@ -270,7 +270,7 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
     notNull(node)
     notNull(parentNode)
     parentNode.addChildren(siblingIndex, node)
-    return this
+    this
   }
 
   /**
@@ -281,7 +281,7 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
    */
   def after(html: String): Node = {
     addSiblingHtml(siblingIndex + 1, html)
-    return this
+    this
   }
 
   /**
@@ -294,7 +294,7 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
     notNull(node)
     notNull(parentNode)
     parentNode.addChildren(siblingIndex + 1, node)
-    return this
+    this
   }
 
   private def addSiblingHtml(index: Int, html: String) {
@@ -335,7 +335,7 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
     //        }
     //      }
     //    }
-    return this
+    this
   }
 
   /**
@@ -354,15 +354,15 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
   def unwrap: Node = {
     notNull(parentNode)
     val index: Int = siblingIndex
-    val firstChild: Node = if (childNodes.size > 0) childNodes.get(0) else null
+    val firstChild: Node = if (childNodes.size > 0) childNodes(0) else null
     parentNode.addChildren(index, this.childNodesAsArray)
     this.remove
-    return firstChild
+    firstChild
   }
 
   private def getDeepChild(el: Element): Element = {
-    val children: List[Element] = el.children
-    if (children.size > 0) getDeepChild(children(0))
+    val children: Elements = el.children
+    if (children.size > 0) getDeepChild(children.get(0))
     else el
   }
 
@@ -400,7 +400,9 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
     out.parentNodeVal = null
   }
 
-  protected def addChildren(children: Node*) {
+  protected def addChildren(children: Node*): Unit = addChildren(children.toArray)
+
+  protected def addChildren(children: Array[Node]): Unit = {
     for (child <- children) {
       reparentChild(child)
       childNodes.append(child)
@@ -408,7 +410,9 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
     }
   }
 
-  protected def addChildren(index: Int, children: Node*) {
+  protected[nodes] def addChildren(index: Int, children: Node*):Unit = addChildren(index, children.toArray)
+
+  protected[nodes] def addChildren(index: Int, children: Array[Node]):Unit = {
     noNullElements(children)
     var i: Int = children.length - 1
     while (i >= 0) {
@@ -447,11 +451,11 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
     */
   def siblingNodes: List[Node] = {
     if (parentNode == null) return List.empty
-    val nodes: List[Node] = parentNode.childNodes
-    val siblings: List[Node] = new ArrayList[Node](nodes.size - 1)
+    val nodes: mutable.Buffer[Node] = parentNode.childNodes
+    val siblings: mutable.Buffer[Node] = new mutable.ArrayBuffer[Node](nodes.size - 1)
     import scala.collection.JavaConversions._
     for (node <- nodes) if (node ne this) siblings.add(node)
-    siblings
+    siblings.toList
   }
 
   /**
@@ -460,11 +464,10 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
     */
   def nextSibling: Node = {
     if (parentNode == null) return null
-    val siblings: List[Node] = parentNode.childNodes
+    val siblings: mutable.Buffer[Node] = parentNode.childNodes
     val index: Integer = siblingIndex
     notNull(index)
-    if (siblings.size > index + 1) return siblings(index + 1)
-    else return null
+    if (siblings.size > index + 1) siblings(index + 1) else null
   }
 
   /**
@@ -473,7 +476,7 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
     */
   def previousSibling: Node = {
     if (parentNode == null) return null
-    val siblings: List[Node] = parentNode.childNodes
+    val siblings: mutable.Buffer[Node] = parentNode.childNodes
     val index: Integer = siblingIndex
     notNull(index)
     if (index > 0) siblings(index - 1) else null
@@ -512,7 +515,7 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
   def outerHtml: String = {
     val accum: StringBuilder = new StringBuilder(128)
     outerHtml(accum)
-    return accum.toString
+    accum.toString
   }
 
   protected def outerHtml(accum: StringBuilder) {
@@ -520,7 +523,7 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
   }
 
   private[nodes] def getOutputSettings: Document.OutputSettings = {
-    return if (ownerDocument != null) ownerDocument.outputSettings else (new Document("")).outputSettings
+    if (ownerDocument != null) ownerDocument.outputSettings else (new Document("")).outputSettings
   }
 
   /**
@@ -532,7 +535,7 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
   private[nodes] def outerHtmlTail(accum: StringBuilder, depth: Int, out: Document.OutputSettings)
 
   override def toString: String = {
-    return outerHtml
+    outerHtml
   }
 
   protected def indent(accum: StringBuilder, depth: Int, out: Document.OutputSettings) {
@@ -586,13 +589,13 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
       }
     }
     clone.parentNodeVal = parent
-    clone.siblingIndex = if (parent == null) 0 else siblingIndex
-    clone.attributesVal = if (attributesVal != null) attributesVal.clone else null
+    clone.siblingIndexVal = if (parent == null) 0 else this.siblingIndexVal
+    clone.attributesVal = if (this.attributesVal != null) attributesVal.clone else null
     clone.baseUriVal = baseUri
     clone.childNodes = new mutable.ArrayBuffer[Node](childNodes.size)
     import scala.collection.JavaConversions._
-    for (child <- childNodes) clone.childNodes.add(child)
-    return clone
+    for (child <- this.childNodes) clone.childNodes.add(child)
+    clone
   }
 
 
@@ -600,7 +603,7 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
 
 object Node {
 
-  private class OuterHtmlVisitor extends NodeVisitor {
+  private[Node] class OuterHtmlVisitor extends NodeVisitor {
     private var accum: StringBuilder = null
     private var out: Document.OutputSettings = null
 

@@ -59,7 +59,7 @@ final object Validator {
    * Validates that the array contains no null elements
    * @param objects the array to test
    */
-  def noNullElements(objects: Array[AnyRef]) =
+  def noNullElements(objects: Array[AnyRef]):Unit =
     noNullElements("Array must not contain any null objects", objects)
 
 
@@ -67,7 +67,7 @@ final object Validator {
    * Validates that the array contains no null elements
    * @param objects the array to test
    */
-  def noNullElements(objects: AnyRef*) =
+  def noNullElements(objects: AnyRef*):Unit =
     noNullElements("Array must not contain any null objects", objects)
 
 
@@ -76,7 +76,7 @@ final object Validator {
    * @param objects the array to test
    * @param msg message to output if validation fails
    */
-  def noNullElements(msg: String, objects: Array[AnyRef]) =
+  def noNullElements(msg: String, objects: Array[AnyRef]):Unit =
     for (obj <- objects) if (obj == null) throw new IllegalArgumentException(msg)
 
   /**
@@ -84,9 +84,9 @@ final object Validator {
    * @param objects the array to test
    * @param msg message to output if validation fails
    */
-  def noNullElements(msg: String, objects: AnyRef*) {
+  def noNullElements(msg: String, objects: AnyRef*):Unit =
     for (obj <- objects) if (obj == null) throw new IllegalArgumentException(msg)
-  }
+
 
   /**
    * Validates that the string is not empty
