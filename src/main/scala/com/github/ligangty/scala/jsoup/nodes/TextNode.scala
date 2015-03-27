@@ -6,7 +6,7 @@ import TextNode._
 import com.github.ligangty.scala.jsoup.helper.Validator._
 
 /**
- * Created by gli on 3/26/15.
+ * A text node.
  */
 class TextNode extends Node {
   private[nodes] var textVal: String = null
@@ -25,18 +25,14 @@ class TextNode extends Node {
   }
 
 
-  def nodeName: String = {
-    return "#text"
-  }
+  def nodeName(): String = "#text"
 
   /**
    * Get the text content of this text node.
    * @return Unencoded, normalised text.
    * @see TextNode#getWholeText()
    */
-  def text: String = {
-    return normaliseWhitespace(getWholeText)
-  }
+  def text: String = TextNode.normaliseWhitespace(getWholeText)
 
   /**
    * Set the text content of this text node.
@@ -53,9 +49,8 @@ class TextNode extends Node {
   Get the (unencoded) text of this text node, including any newlines and spaces present in the original.
      @return text
     */
-  def getWholeText: String = {
-    return if (attributes == null) text else attributes.get(TEXT_KEY)
-  }
+  def getWholeText: String =
+    if (attributes == null) text else attributes.get(TEXT_KEY)
 
   /**
   Test if this text node is blank -- that is, empty or only whitespace (including newlines).
@@ -81,7 +76,7 @@ class TextNode extends Node {
   }
 
   private[nodes] def outerHtmlHead(accum: StringBuilder, depth: Int, out: Document.OutputSettings) {
-    if (out.prettyPrint && ((siblingIndex == 0 && parentNode.isInstanceOf[Element] && (parentNode.asInstanceOf[Element]).tag.isFormatAsBlock && !isBlank) || (out.outline && siblingNodes.size > 0 && !isBlank))) indent(accum, depth, out)
+    if (out.prettyPrint && ((siblingIndex == 0 && parentNode.isInstanceOf[Element] && parentNode.asInstanceOf[Element].tag.isFormatAsBlock && !isBlank) || (out.outline && siblingNodes.size > 0 && !isBlank))) indent(accum, depth, out)
     val normaliseWhite: Boolean = out.prettyPrint && parent.isInstanceOf[Element] && !Element.preserveWhitespace(parent.asInstanceOf[Element])
     Entities.escape(accum, getWholeText, out, false, normaliseWhite, false)
   }
@@ -92,7 +87,7 @@ class TextNode extends Node {
   override def toString: String = outerHtml
 
   // attribute fiddling. create on first access.
-  private def ensureAttributes {
+  private def ensureAttributes(): Unit = {
     if (attributesVal == null) {
       attributesVal = new Attributes
       attributesVal.put(TEXT_KEY, text)
@@ -100,32 +95,32 @@ class TextNode extends Node {
   }
 
   override def attr(attributeKey: String): String = {
-    ensureAttributes
+    ensureAttributes()
     super.attr(attributeKey)
   }
 
   override def attributes: Attributes = {
-    ensureAttributes
+    ensureAttributes()
     super.attributes
   }
 
   override def attr(attributeKey: String, attributeValue: String): Node = {
-    ensureAttributes
+    ensureAttributes()
     super.attr(attributeKey, attributeValue)
   }
 
   override def hasAttr(attributeKey: String): Boolean = {
-    ensureAttributes
+    ensureAttributes()
     super.hasAttr(attributeKey)
   }
 
   override def removeAttr(attributeKey: String): Node = {
-    ensureAttributes
+    ensureAttributes()
     super.removeAttr(attributeKey)
   }
 
   override def absUrl(attributeKey: String): String = {
-    ensureAttributes
+    ensureAttributes()
     super.absUrl(attributeKey)
   }
 }

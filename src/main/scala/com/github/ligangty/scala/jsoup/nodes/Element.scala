@@ -9,10 +9,13 @@ import com.github.ligangty.scala.jsoup.select.{NodeTraversor, NodeVisitor, Eleme
 import Element._
 
 import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
 
 /**
- * Created by gli on 15-3-10.
+ * A HTML element consists of a tag name, attributes, and child nodes (including text nodes and
+ * other elements).
+ *
+ * From an Element, you can extract data, traverse the node graph, and manipulate the HTML.
+ *
  */
 class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, attributes) {
   private var tagVal: Tag = null
@@ -44,7 +47,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
     this(tag, baseUri, new Attributes)
   }
 
-  def nodeName: String = tagVal.getName
+  override def nodeName(): String = tagVal.getName
 
   /**
    * Get the name of the tagVal for this element. E.g. {@code div}
@@ -382,7 +385,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * @return this element
    */
   def empty: Element = {
-    childNodes.clear
+    childNodes.clear()
     this
   }
 
@@ -407,10 +410,10 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
     val selector: StringBuilder = new StringBuilder(tagName)
     val classes: String = Strings.join(classNames, ".")
     if (classes.length > 0) selector.append('.').append(classes)
-    if (parent == null || parent.isInstanceOf[Document]) return selector.toString
+    if (parent == null || parent.isInstanceOf[Document]) return selector.toString()
     selector.insert(0, " > ")
-    if (parent.select(selector.toString).size > 1) selector.append(String.format(":nth-child(%d)", elementSiblingIndex + 1))
-    parent.cssSelector + selector.toString
+    if (parent.select(selector.toString()).size > 1) selector.append(String.format(":nth-child(%d)", elementSiblingIndex + 1))
+    parent.cssSelector + selector.toString()
   }
 
   /**
@@ -664,9 +667,8 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
       pattern = util.regex.Pattern.compile(regex)
     }
     catch {
-      case e: util.regex.PatternSyntaxException => {
+      case e: util.regex.PatternSyntaxException =>
         throw new IllegalArgumentException("Pattern syntax error: " + regex, e)
-      }
     }
     getElementsByAttributeValueMatching(key, pattern)
   }
@@ -755,9 +757,8 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
       pattern = util.regex.Pattern.compile(regex)
     }
     catch {
-      case e: util.regex.PatternSyntaxException => {
+      case e: util.regex.PatternSyntaxException =>
         throw new IllegalArgumentException("Pattern syntax error: " + regex, e)
-      }
     }
     getElementsMatchingText(pattern)
   }
@@ -817,13 +818,15 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
     val accum: java.lang.StringBuilder = new java.lang.StringBuilder
     new NodeTraversor(new NodeVisitor {
       def head(node: Node, depth: Int) {
-        if (node.isInstanceOf[TextNode]) {
-          val textNode: TextNode = node.asInstanceOf[TextNode]
-          appendNormalisedText(accum, textNode)
-        }
-        else if (node.isInstanceOf[Element]) {
-          val element: Element = node.asInstanceOf[Element]
-          if (accum.length > 0 && (element.isBlock || (element.tag.getName == "br")) && !TextNode.lastCharIsWhitespace(accum)) accum.append(" ")
+        node match {
+          case t: TextNode =>
+            val textNode: TextNode = t.asInstanceOf[TextNode]
+            appendNormalisedText(accum, textNode)
+          case e: Element =>
+            val element: Element = e.asInstanceOf[Element]
+            if (accum.length > 0 && (element.isBlock || (element.tag.getName == "br")) && !TextNode.lastCharIsWhitespace(accum))
+              accum.append(" ")
+
         }
       }
 
@@ -851,7 +854,6 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
   }
 
   private def ownText(accum: java.lang.StringBuilder) {
-    import scala.collection.JavaConversions._
     for (child <- childNodes) {
       child match {
         case t: TextNode =>
@@ -873,7 +875,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
     empty
     val textNode: TextNode = new TextNode(text, baseUri)
     appendChild(textNode)
-    return this
+    this
   }
 
   /**
@@ -881,18 +883,17 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
      @return true if element has non-blank text content.
     */
   def hasText: Boolean = {
-    import scala.collection.JavaConversions._
     for (child <- childNodes) {
-      if (child.isInstanceOf[TextNode]) {
-        val textNode: TextNode = child.asInstanceOf[TextNode]
-        if (!textNode.isBlank) return true
-      }
-      else if (child.isInstanceOf[Element]) {
-        val el: Element = child.asInstanceOf[Element]
-        if (el.hasText) return true
+      child match {
+        case t: TextNode =>
+          val textNode: TextNode = t.asInstanceOf[TextNode]
+          if (!textNode.isBlank) return true
+        case e: Element =>
+          val el: Element = e.asInstanceOf[Element]
+          if (el.hasText) return true
       }
     }
-    return false
+    false
   }
 
   /**
@@ -903,19 +904,18 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    */
   def data: String = {
     val sb: StringBuilder = new StringBuilder
-    import scala.collection.JavaConversions._
     for (childNode <- childNodes) {
-      if (childNode.isInstanceOf[DataNode]) {
-        val data: DataNode = childNode.asInstanceOf[DataNode]
-        sb.append(data.getWholeData)
-      }
-      else if (childNode.isInstanceOf[Element]) {
-        val element: Element = childNode.asInstanceOf[Element]
-        val elementData: String = element.data
-        sb.append(elementData)
+      childNode match {
+        case d: DataNode =>
+          val data: DataNode = d.asInstanceOf[DataNode]
+          sb.append(data.getWholeData)
+        case e: Element =>
+          val element: Element = e.asInstanceOf[Element]
+          val elementData: String = element.data
+          sb.append(elementData)
       }
     }
-    sb.toString
+    sb.toString()
   }
 
   /**
@@ -970,23 +970,22 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
     */
   def addClass(className: String): Element = {
     notNull(className)
-    val cNames = classNames
-    val classes: mutable.Set[String] = mutable.Set(cNames: _*)
+    val classes: mutable.Set[String] = mutable.Set(classNames.toArray: _*)
     classes.add(className)
     classNames(classes.toSet)
     this
   }
 
   /**
-  Remove a class name from this element's {@code class} attribute.
-     @param className class name to remove
-  @return this element
-    */
+   * Remove a class name from this element's {@code class} attribute.
+   * @param className class name to remove
+   * @return this element
+   */
   def removeClass(className: String): Element = {
     notNull(className)
-    val classes: Set[String] = classNames
+    val classes: mutable.Set[String] = mutable.Set(classNames.toArray: _*)
     classes.remove(className)
-    classNames(classes)
+    classNames(classes.toSet)
     this
   }
 
@@ -997,10 +996,10 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
     */
   def toggleClass(className: String): Element = {
     notNull(className)
-    val classes: Set[String] = classNames
+    val classes: mutable.Set[String] = mutable.Set(classNames.toArray: _*)
     if (classes.contains(className)) classes.remove(className)
     else classes.add(className)
-    classNames(classes)
+    classNames(classes.toSet)
     this
   }
 
@@ -1036,7 +1035,17 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
 
   private[nodes] def outerHtmlTail(accum: StringBuilder, depth: Int, out: Document.OutputSettings) {
     if (!(childNodes.isEmpty && tagVal.isSelfClosing)) {
-      if (out.prettyPrint && (!childNodes.isEmpty && (tagVal.isFormatAsBlock || (out.outline && (childNodes.size > 1 || (childNodes.size == 1 && !(childNodes(0).isInstanceOf[TextNode]))))))) indent(accum, depth, out)
+      if (out.prettyPrint && (childNodes.nonEmpty &&
+        (tagVal.isFormatAsBlock ||
+          (out.outline &&
+            (childNodes.size > 1 ||
+              (childNodes.size == 1 && !childNodes.head.isInstanceOf[TextNode])
+              )
+            )
+          )
+        )
+      )
+        indent(accum, depth, out)
       accum.append("</").append(tagName).append(">")
     }
   }
@@ -1052,7 +1061,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
   def html: String = {
     val accum: StringBuilder = new StringBuilder
     html(accum)
-    if (getOutputSettings.prettyPrint) accum.toString.trim else accum.toString
+    if (getOutputSettings.prettyPrint) accum.toString().trim else accum.toString()
   }
 
   private def html(accum: StringBuilder) {
@@ -1082,7 +1091,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
 
   override def hashCode: Int = 31 * super.hashCode + (if (tag != null) tag.hashCode else 0)
 
-  override def clone: Element = super.clone.asInstanceOf[Element]
+  override def clone(): Element = super.clone().asInstanceOf[Element]
 }
 
 private[nodes] object Element {
