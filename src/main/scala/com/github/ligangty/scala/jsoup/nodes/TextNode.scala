@@ -88,14 +88,71 @@ class TextNode extends Node {
 
   private[nodes] def outerHtmlTail(accum: StringBuilder, depth: Int, out: Document.OutputSettings) {
   }
+
+  override def toString: String = outerHtml
+
+  // attribute fiddling. create on first access.
+  private def ensureAttributes {
+    if (attributesVal == null) {
+      attributesVal = new Attributes
+      attributesVal.put(TEXT_KEY, text)
+    }
+  }
+
+  override def attr(attributeKey: String): String = {
+    ensureAttributes
+    super.attr(attributeKey)
+  }
+
+  override def attributes: Attributes = {
+    ensureAttributes
+    super.attributes
+  }
+
+  override def attr(attributeKey: String, attributeValue: String): Node = {
+    ensureAttributes
+    super.attr(attributeKey, attributeValue)
+  }
+
+  override def hasAttr(attributeKey: String): Boolean = {
+    ensureAttributes
+    super.hasAttr(attributeKey)
+  }
+
+  override def removeAttr(attributeKey: String): Node = {
+    ensureAttributes
+    super.removeAttr(attributeKey)
+  }
+
+  override def absUrl(attributeKey: String): String = {
+    ensureAttributes
+    super.absUrl(attributeKey)
+  }
 }
 
-private object TextNode {
+object TextNode {
   /*
    TextNode is a node, and so by default comes with attributes and children. The attributes are seldom used, but use
    memory, and the child nodes are never used. So we don't have them, and override accessors to attributes to create
    them as needed on the fly.
     */
   private val TEXT_KEY = "text"
+
+  /**
+   * Create a new TextNode from HTML encoded (aka escaped) data.
+   * @param encodedText Text containing encoded HTML (e.g. &amp;lt;)
+   * @param baseUri Base uri
+   * @return TextNode containing unencoded data (e.g. &lt;)
+   */
+  def createFromEncoded(encodedText: String, baseUri: String): TextNode =
+    new TextNode(Entities.unescape(encodedText), baseUri)
+
+  private[nodes] def normaliseWhitespace(text: String): String = Strings.normaliseWhitespace(text)
+
+  private[nodes] def stripLeadingWhitespace(text: String): String = text.replaceFirst("^\\s+", "")
+
+  private[nodes] def lastCharIsWhitespace(sb: java.lang.StringBuilder): Boolean =
+    sb.length != 0 && sb.charAt(sb.length - 1) == ' '
+
 
 }

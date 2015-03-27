@@ -410,9 +410,9 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
     }
   }
 
-  protected[nodes] def addChildren(index: Int, children: Node*):Unit = addChildren(index, children.toArray)
+  protected[nodes] def addChildren(index: Int, children: Node*): Unit = addChildren(index, children.toArray)
 
-  protected[nodes] def addChildren(index: Int, children: Array[Node]):Unit = {
+  protected[nodes] def addChildren(index: Int, children: Array[Node]): Unit = {
     noNullElements(children)
     var i: Int = children.length - 1
     while (i >= 0) {
@@ -430,17 +430,11 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
   }
 
   private def reindexChildren {
-    {
-      var i: Int = 0
-      while (i < childNodes.size) {
-        {
-          childNodes(i).setSiblingIndex(i)
-        }
-        ({
-          i += 1;
-          i - 1
-        })
-      }
+    var i: Int = 0
+    val length = childNodes.size
+    while (i < length) {
+      childNodes(i).setSiblingIndex(i)
+      i += 1;
     }
   }
 
@@ -522,6 +516,7 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
     new NodeTraversor(new Node.OuterHtmlVisitor(accum, getOutputSettings)).traverse(this)
   }
 
+  // if this node has no document (or parent), retrieve the default output settings
   private[nodes] def getOutputSettings: Document.OutputSettings = {
     if (ownerDocument != null) ownerDocument.outputSettings else (new Document("")).outputSettings
   }

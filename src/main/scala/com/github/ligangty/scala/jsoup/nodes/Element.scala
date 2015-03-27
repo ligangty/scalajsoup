@@ -2,10 +2,11 @@ package com.github.ligangty.scala.jsoup.nodes
 
 import java.util
 
-import com.github.ligangty.scala.jsoup.helper.Validator
+import com.github.ligangty.scala.jsoup.helper.{Strings, Validator}
 import com.github.ligangty.scala.jsoup.helper.Validator._
 import com.github.ligangty.scala.jsoup.parser.Tag
-import com.github.ligangty.scala.jsoup.select.Elements
+import com.github.ligangty.scala.jsoup.select.{NodeTraversor, NodeVisitor, Elements}
+import Element._
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
@@ -210,7 +211,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    */
   def select(cssQuery: String): Elements = {
     //TODO: need to implement Selector
-//    return Selector.select(cssQuery, this)
+    //    return Selector.select(cssQuery, this)
     new Elements()
   }
 
@@ -246,20 +247,20 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * right. The inserted nodes will be moved from their current parent. To prevent moving, copy the nodes first.
    *
    * @param index 0-based index to insert children at. Specify { @code 0} to insert at the start, { @code -1} at the
-   *                                                                                                      end
+   *              end
    * @param children child nodes to insert
    * @return this element, for chaining.
    */
-  def insertChildren(index: Int, children: util.Collection[_ <: Node]): Element = {
+  def insertChildren(index: Int, children: Seq[_ <: Node]): Element = {
     Validator.notNull(children, "Children collection to be inserted must not be null.")
     var indexVal = index
     val currentSize: Int = childNodeSize
     if (indexVal < 0) indexVal += (currentSize + 1)
     isTrue(indexVal >= 0 && indexVal <= currentSize, "Insert position out of bounds.")
-    val nodes: mutable.ArrayBuffer[Node] = new mutable.ArrayBuffer[Node](children)
-    val nodeArray: Array[Node] = nodes.toArray(new Array[Node](nodes.size))
+    val nodes: mutable.ArrayBuffer[Node] = mutable.ArrayBuffer(children: _*)
+    val nodeArray: Array[Node] = nodes.toArray
     addChildren(indexVal, nodeArray)
-    return this
+    this
   }
 
   /**
@@ -270,9 +271,9 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    *         { @code parent.appendElement("h1").attr("id", "header").text("Welcome");}
    */
   def appendElement(tagName: String): Element = {
-    val child: Element = new Element(Tag.valueOf(tagName), baseUri)
+    val child: Element = new Element(Tag(tagName), baseUri)
     appendChild(child)
-    return child
+    child
   }
 
   /**
@@ -283,9 +284,740 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    *         { @code parent.prependElement("h1").attr("id", "header").text("Welcome");}
    */
   def prependElement(tagName: String): Element = {
-    val child: Element = new Element(Tag.valueOf(tagName), baseUri)
+    val child: Element = new Element(Tag(tagName), baseUri)
     prependChild(child)
-    return child
+    child
+  }
+
+  /**
+   * Create and append a new TextNode to this element.
+   *
+   * @param text the unencoded text to add
+   * @return this element
+   */
+  def appendText(text: String): Element = {
+    val node: TextNode = new TextNode(text, baseUri)
+    appendChild(node)
+    this
+  }
+
+  /**
+   * Create and prepend a new TextNode to this element.
+   *
+   * @param text the unencoded text to add
+   * @return this element
+   */
+  def prependText(text: String): Element = {
+    val node: TextNode = new TextNode(text, baseUri)
+    prependChild(node)
+    this
+  }
+
+  /**
+   * Add inner HTML to this element. The supplied HTML will be parsed, and each node appended to the end of the children.
+   * @param html HTML to add inside this element, after the existing HTML
+   * @return this element
+   * @see #html(String)
+   */
+  def append(html: String): Element = {
+    //TODO: Parser Not implemented yet
+    //    notNull(html)
+    //    val nodes: List[Node] = Parser.parseFragment(html, this, baseUri)
+    //    addChildren(nodes.toArray)
+    this
+  }
+
+  /**
+   * Add inner HTML into this element. The supplied HTML will be parsed, and each node prepended to the start of the element's children.
+   * @param html HTML to add inside this element, before the existing HTML
+   * @return this element
+   * @see #html(String)
+   */
+  def prepend(html: String): Element = {
+    //TODO: Parser Not implemented yet
+    //    notNull(html)
+    //    val nodes: List[Node] = Parser.parseFragment(html, this, baseUri)
+    //    addChildren(0, nodes.toArray)
+    this
+  }
+
+  /**
+   * Insert the specified HTML into the DOM before this element (as a preceding sibling).
+   *
+   * @param html HTML to add before this element
+   * @return this element, for chaining
+   * @see #after(String)
+   */
+  override def before(html: String): Element = super.before(html).asInstanceOf[Element]
+
+
+  /**
+   * Insert the specified node into the DOM before this node (as a preceding sibling).
+   * @param node to add before this element
+   * @return this Element, for chaining
+   * @see #after(Node)
+   */
+  override def before(node: Node): Element = super.before(node).asInstanceOf[Element]
+
+  /**
+   * Insert the specified HTML into the DOM after this element (as a following sibling).
+   *
+   * @param html HTML to add after this element
+   * @return this element, for chaining
+   * @see #before(String)
+   */
+  override def after(html: String): Element = super.after(html).asInstanceOf[Element]
+
+
+  /**
+   * Insert the specified node into the DOM after this node (as a following sibling).
+   * @param node to add after this element
+   * @return this element, for chaining
+   * @see #before(Node)
+   */
+  override def after(node: Node): Element = super.after(node).asInstanceOf[Element]
+
+  /**
+   * Remove all of the element's child nodes. Any attributes are left as-is.
+   * @return this element
+   */
+  def empty: Element = {
+    childNodes.clear
+    this
+  }
+
+  /**
+   * Wrap the supplied HTML around this element.
+   *
+   * @param html HTML to wrap around this element, e.g. { @code <div class="head"></div>}. Can be arbitrarily deep.
+   * @return this element, for chaining.
+   */
+  override def wrap(html: String): Element = super.wrap(html).asInstanceOf[Element]
+
+  /**
+   * Get a CSS selector that will uniquely select this element.
+   * <p/>If the element has an ID, returns #id;
+   * otherwise returns the parent (if any) CSS selector, followed by '>',
+   * followed by a unique selector for the element (tag.class.class:nth-child(n)).
+   *
+   * @return the CSS Path that can be used to retrieve the element in a selector.
+   */
+  def cssSelector: String = {
+    if (id.length > 0) return "#" + id
+    val selector: StringBuilder = new StringBuilder(tagName)
+    val classes: String = Strings.join(classNames, ".")
+    if (classes.length > 0) selector.append('.').append(classes)
+    if (parent == null || parent.isInstanceOf[Document]) return selector.toString
+    selector.insert(0, " > ")
+    if (parent.select(selector.toString).size > 1) selector.append(String.format(":nth-child(%d)", elementSiblingIndex + 1))
+    parent.cssSelector + selector.toString
+  }
+
+  /**
+   * Get sibling elements. If the element has no sibling elements, returns an empty list. An element is not a sibling
+   * of itself, so will not be included in the returned list.
+   * @return sibling elements
+   */
+  def siblingElements: Elements = {
+    if (parentNode == null) return new Elements(0)
+    val elements: Elements = parent.children
+    val siblings: Elements = new Elements(elements.size - 1)
+    import scala.collection.JavaConversions._
+    elements.foreach(a => if (a ne this) siblings.add(a))
+    siblings
+  }
+
+  /**
+   * Gets the next sibling element of this element. E.g., if a {@code div} contains two {@code p}s,
+   * the {@code nextElementSibling} of the first {@code p} is the second {@code p}.
+   * <p/>
+   * This is similar to {@link #nextSibling()}, but specifically finds only Elements
+   * @return the next element, or null if there is no next element
+   * @see #previousElementSibling()
+   */
+  def nextElementSibling: Element = {
+    if (parentNode == null) return null
+    val siblings: Elements = parent.children
+    val index: Integer = indexInList(this, siblings)
+    notNull(index)
+    if (siblings.size > index + 1) siblings.get(index + 1)
+    else null
+  }
+
+  /**
+   * Gets the previous element sibling of this element.
+   * @return the previous element, or null if there is no previous element
+   * @see #nextElementSibling()
+   */
+  def previousElementSibling: Element = {
+    if (parentNode == null) return null
+    val siblings: Elements = parent.children
+    val index: Integer = indexInList(this, siblings)
+    notNull(index)
+    if (index > 0) siblings.get(index - 1)
+    else null
+  }
+
+  /**
+   * Gets the first element sibling of this element.
+   * @return the first sibling that is an element (aka the parent's first element child)
+   */
+  def firstElementSibling: Element = {
+    val siblings: Elements = parent.children
+    if (siblings.size > 1) siblings.get(0) else null
+  }
+
+  /**
+   * Get the list index of this element in its element sibling list. I.e. if this is the first element
+   * sibling, returns 0.
+   * @return position in element sibling list
+   */
+  def elementSiblingIndex: Integer = {
+    if (parent == null) return 0
+    indexInList(this, parent.children)
+  }
+
+  /**
+   * Gets the last element sibling of this element
+   * @return the last sibling that is an element (aka the parent's last element child)
+   */
+  def lastElementSibling: Element = {
+    val siblings: Elements = parent.children
+    if (siblings.size > 1) siblings.get(siblings.size - 1) else null
+  }
+
+  private def indexInList[E <: Element](search: Element, elements: util.List[E]): Integer = {
+    notNull(search)
+    notNull(elements)
+    var i: Int = 0
+    val length = elements.size
+    while (i < length) {
+      val element: E = elements.get(i)
+      if (element == search) return i
+      i += 1
+    }
+    null
+  }
+
+  // DOM type methods
+  /**
+   * Finds elements, including and recursively under this element, with the specified tag name.
+   * @param tagName The tag name to search for (case insensitively).
+   * @return a matching unmodifiable list of elements. Will be empty if this element and none of its children match.
+   */
+  def getElementsByTag(tagName: String): Elements = {
+    //todo Collector and Evaluator not implemented yet
+    //    notEmpty(tagName)
+    //    tagName = tagName.toLowerCase.trim
+    //    return Collector.collect(new Evaluator.Tag(tagName), this)
+    null
+  }
+
+  /**
+   * Find an element by ID, including or under this element.
+   * <p>
+   * Note that this finds the first matching ID, starting with this element. If you search down from a different
+   * starting point, it is possible to find a different element by ID. For unique element by ID within a Document,
+   * use {@link Document#getElementById(String)}
+   * @param id The ID to search for.
+   * @return The first matching element by ID, starting with this element, or null if none found.
+   */
+  def getElementById(id: String): Element = {
+    //todo Collector and Evaluator not implemented yet
+    //    notEmpty(id)
+    //    val elements: Elements = Collector.collect(new Evaluator.Id(id), this)
+    //    if (elements.size > 0) elements.get(0) else null
+    null
+  }
+
+  /**
+   * Find elements that have this class, including or under this element. Case insensitive.
+   * <p>
+   * Elements can have multiple classes (e.g. {@code <div class="header round first">}. This method
+   * checks each class, so you can find the above with {@code el.getElementsByClass("header");}.
+   *
+   * @param className the name of the class to search for.
+   * @return elements with the supplied class name, empty if none
+   * @see #hasClass(String)
+   * @see #classNames()
+   */
+  def getElementsByClass(className: String): Elements = {
+    //todo Collector and Evaluator not implemented yet
+    //    notEmpty(className)
+    //    Collector.collect(new Evaluator.Class(className), this)
+    null
+  }
+
+  /**
+   * Find elements that have a named attribute set. Case insensitive.
+   *
+   * @param key name of the attribute, e.g. { @code href}
+   * @return elements that have this attribute, empty if none
+   */
+  def getElementsByAttribute(key: String): Elements = {
+    //todo Collector and Evaluator not implemented yet
+    notEmpty(key)
+    //    Collector.collect(new Evaluator.Attribute(key.trim.toLowerCase), this)
+    null
+  }
+
+  /**
+   * Find elements that have an attribute name starting with the supplied prefix. Use {@code data-} to find elements
+   * that have HTML5 datasets.
+   * @param keyPrefix name prefix of the attribute e.g. { @code data-}
+   * @return elements that have attribute names that start with with the prefix, empty if none.
+   */
+  def getElementsByAttributeStarting(keyPrefix: String): Elements = {
+    //todo Collector and Evaluator not implemented yet
+    //    notEmpty(keyPrefix)
+    //    Collector.collect(new Evaluator.AttributeStarting(keyPrefix.trim.toLowerCase), this)
+    null
+  }
+
+  /**
+   * Find elements that have an attribute with the specific value. Case insensitive.
+   *
+   * @param key name of the attribute
+   * @param value value of the attribute
+   * @return elements that have this attribute with this value, empty if none
+   */
+  def getElementsByAttributeValue(key: String, value: String): Elements = {
+    //todo Collector and Evaluator not implemented yet
+    //    Collector.collect(new Evaluator.AttributeWithValue(key, value), this)
+    null
+  }
+
+  /**
+   * Find elements that either do not have this attribute, or have it with a different value. Case insensitive.
+   *
+   * @param key name of the attribute
+   * @param value value of the attribute
+   * @return elements that do not have a matching attribute
+   */
+  def getElementsByAttributeValueNot(key: String, value: String): Elements = {
+    //todo Collector and Evaluator not implemented yet
+    //    Collector.collect(new Evaluator.AttributeWithValueNot(key, value), this)
+    null
+  }
+
+  /**
+   * Find elements that have attributes that start with the value prefix. Case insensitive.
+   *
+   * @param key name of the attribute
+   * @param valuePrefix start of attribute value
+   * @return elements that have attributes that start with the value prefix
+   */
+  def getElementsByAttributeValueStarting(key: String, valuePrefix: String): Elements = {
+    //todo Collector and Evaluator not implemented yet
+    //    Collector.collect(new Evaluator.AttributeWithValueStarting(key, valuePrefix), this)
+    null
+  }
+
+
+  /**
+   * Find elements that have attributes that end with the value suffix. Case insensitive.
+   *
+   * @param key name of the attribute
+   * @param valueSuffix end of the attribute value
+   * @return elements that have attributes that end with the value suffix
+   */
+  def getElementsByAttributeValueEnding(key: String, valueSuffix: String): Elements = {
+    //todo Collector and Evaluator not implemented yet
+    //    Collector.collect(new Evaluator.AttributeWithValueEnding(key, valueSuffix), this)
+    null
+  }
+
+  /**
+   * Find elements that have attributes whose value contains the match string. Case insensitive.
+   *
+   * @param key name of the attribute
+   * @param match substring of value to search for
+   * @return elements that have attributes containing this text
+   */
+  def getElementsByAttributeValueContaining(key: String, `match`: String): Elements = {
+    //todo Collector and Evaluator not implemented yet
+    //    Collector.collect(new Evaluator.AttributeWithValueContaining(key, `match`), this)
+    null
+  }
+
+  /**
+   * Find elements that have attributes whose values match the supplied regular expression.
+   * @param key name of the attribute
+   * @param pattern compiled regular expression to match against attribute values
+   * @return elements that have attributes matching this regular expression
+   */
+  def getElementsByAttributeValueMatching(key: String, pattern: util.regex.Pattern): Elements = {
+    //todo Collector and Evaluator not implemented yet
+    //    Collector.collect(new Evaluator.AttributeWithValueMatching(key, pattern), this)
+    null
+  }
+
+  /**
+   * Find elements that have attributes whose values match the supplied regular expression.
+   * @param key name of the attribute
+   * @param regex regular expression to match against attribute values. You can use <a href="http://java.sun.com/docs/books/tutorial/essential/regex/pattern.html#embedded">embedded flags</a> (such as (?i) and (?m) to control regex options.
+   * @return elements that have attributes matching this regular expression
+   */
+  def getElementsByAttributeValueMatching(key: String, regex: String): Elements = {
+    var pattern: util.regex.Pattern = null
+    try {
+      pattern = util.regex.Pattern.compile(regex)
+    }
+    catch {
+      case e: util.regex.PatternSyntaxException => {
+        throw new IllegalArgumentException("Pattern syntax error: " + regex, e)
+      }
+    }
+    getElementsByAttributeValueMatching(key, pattern)
+  }
+
+  /**
+   * Find elements whose sibling index is less than the supplied index.
+   * @param index 0-based index
+   * @return elements less than index
+   */
+  def getElementsByIndexLessThan(index: Int): Elements = {
+    //todo Collector and Evaluator not implemented yet
+    //    return Collector.collect(new Evaluator.IndexLessThan(index), this)
+    null
+  }
+
+  /**
+   * Find elements whose sibling index is greater than the supplied index.
+   * @param index 0-based index
+   * @return elements greater than index
+   */
+  def getElementsByIndexGreaterThan(index: Int): Elements = {
+    //todo Collector and Evaluator not implemented yet
+    //    return Collector.collect(new Evaluator.IndexGreaterThan(index), this)
+    null
+  }
+
+
+  /**
+   * Find elements whose sibling index is equal to the supplied index.
+   * @param index 0-based index
+   * @return elements equal to index
+   */
+  def getElementsByIndexEquals(index: Int): Elements = {
+    //todo Collector and Evaluator not implemented yet
+    //    return Collector.collect(new Evaluator.IndexEquals(index), this)
+    null
+  }
+
+  /**
+   * Find elements that contain the specified string. The search is case insensitive. The text may appear directly
+   * in the element, or in any of its descendants.
+   * @param searchText to look for in the element's text
+   * @return elements that contain the string, case insensitive.
+   * @see Element#text()
+   */
+  def getElementsContainingText(searchText: String): Elements = {
+    //todo Collector and Evaluator not implemented yet
+    //    return Collector.collect(new Evaluator.ContainsText(searchText), this)
+    null
+  }
+
+  /**
+   * Find elements that directly contain the specified string. The search is case insensitive. The text must appear directly
+   * in the element, not in any of its descendants.
+   * @param searchText to look for in the element's own text
+   * @return elements that contain the string, case insensitive.
+   * @see Element#ownText()
+   */
+  def getElementsContainingOwnText(searchText: String): Elements = {
+    //todo Collector and Evaluator not implemented yet
+    //    return Collector.collect(new Evaluator.ContainsOwnText(searchText), this)
+    null
+  }
+
+  /**
+   * Find elements whose text matches the supplied regular expression.
+   * @param pattern regular expression to match text against
+   * @return elements matching the supplied regular expression.
+   * @see Element#text()
+   */
+  def getElementsMatchingText(pattern: util.regex.Pattern): Elements = {
+    //todo Collector and Evaluator not implemented yet
+    //    return Collector.collect(new Evaluator.Matches(pattern), this)
+    null
+  }
+
+  /**
+   * Find elements whose text matches the supplied regular expression.
+   * @param regex regular expression to match text against. You can use <a href="http://java.sun.com/docs/books/tutorial/essential/regex/pattern.html#embedded">embedded flags</a> (such as (?i) and (?m) to control regex options.
+   * @return elements matching the supplied regular expression.
+   * @see Element#text()
+   */
+  def getElementsMatchingText(regex: String): Elements = {
+    var pattern: util.regex.Pattern = null
+    try {
+      pattern = util.regex.Pattern.compile(regex)
+    }
+    catch {
+      case e: util.regex.PatternSyntaxException => {
+        throw new IllegalArgumentException("Pattern syntax error: " + regex, e)
+      }
+    }
+    getElementsMatchingText(pattern)
+  }
+
+  /**
+   * Find elements whose own text matches the supplied regular expression.
+   * @param pattern regular expression to match text against
+   * @return elements matching the supplied regular expression.
+   * @see Element#ownText()
+   */
+  def getElementsMatchingOwnText(pattern: util.regex.Pattern): Elements = {
+    //todo Collector and Evaluator not implemented yet
+    //    return Collector.collect(new Evaluator.MatchesOwn(pattern), this)
+    null
+  }
+
+  /**
+   * Find elements whose text matches the supplied regular expression.
+   * @param regex regular expression to match text against. You can use <a href="http://java.sun.com/docs/books/tutorial/essential/regex/pattern.html#embedded">embedded flags</a> (such as (?i) and (?m) to control regex options.
+   * @return elements matching the supplied regular expression.
+   * @see Element#ownText()
+   */
+  def getElementsMatchingOwnText(regex: String): Elements = {
+    var pattern: util.regex.Pattern = null
+    try {
+      pattern = util.regex.Pattern.compile(regex)
+    }
+    catch {
+      case e: util.regex.PatternSyntaxException => {
+        throw new IllegalArgumentException("Pattern syntax error: " + regex, e)
+      }
+    }
+    getElementsMatchingOwnText(pattern)
+  }
+
+  /**
+   * Find all elements under this element (including self, and children of children).
+   *
+   * @return all elements
+   */
+  def getAllElements: Elements = {
+    //todo Collector and Evaluator not implemented yet
+    //    return Collector.collect(new Evaluator.AllElements, this)
+    null
+  }
+
+  /**
+   * Gets the combined text of this element and all its children. Whitespace is normalized and trimmed.
+   * <p>
+   * For example, given HTML {@code <p>Hello  <b>there</b> now! </p>}, {@code p.text()} returns {@code "Hello there now!"}
+   *
+   * @return unencoded text, or empty string if none.
+   * @see #ownText()
+   * @see #textNodes()
+   */
+  def text: String = {
+    val accum: java.lang.StringBuilder = new java.lang.StringBuilder
+    new NodeTraversor(new NodeVisitor {
+      def head(node: Node, depth: Int) {
+        if (node.isInstanceOf[TextNode]) {
+          val textNode: TextNode = node.asInstanceOf[TextNode]
+          appendNormalisedText(accum, textNode)
+        }
+        else if (node.isInstanceOf[Element]) {
+          val element: Element = node.asInstanceOf[Element]
+          if (accum.length > 0 && (element.isBlock || (element.tag.getName == "br")) && !TextNode.lastCharIsWhitespace(accum)) accum.append(" ")
+        }
+      }
+
+      def tail(node: Node, depth: Int) {
+      }
+    }).traverse(this)
+    accum.toString.trim
+  }
+
+  /**
+   * Gets the text owned by this element only; does not get the combined text of all children.
+   * <p>
+   * For example, given HTML {@code <p>Hello <b>there</b> now!</p>}, {@code p.ownText()} returns {@code "Hello now!"},
+   * whereas {@code p.text()} returns {@code "Hello there now!"}.
+   * Note that the text within the {@code b} element is not returned, as it is not a direct child of the {@code p} element.
+   *
+   * @return unencoded text, or empty string if none.
+   * @see #text()
+   * @see #textNodes()
+   */
+  def ownText: String = {
+    val sb: java.lang.StringBuilder = new java.lang.StringBuilder
+    ownText(sb)
+    sb.toString.trim
+  }
+
+  private def ownText(accum: java.lang.StringBuilder) {
+    import scala.collection.JavaConversions._
+    for (child <- childNodes) {
+      child match {
+        case t: TextNode =>
+          val textNode: TextNode = child.asInstanceOf[TextNode]
+          appendNormalisedText(accum, textNode)
+        case e: Element =>
+          appendWhitespaceIfBr(child.asInstanceOf[Element], accum)
+      }
+    }
+  }
+
+  /**
+   * Set the text of this element. Any existing contents (text or elements) will be cleared
+   * @param text unencoded text
+   * @return this element
+   */
+  def text(text: String): Element = {
+    notNull(text)
+    empty
+    val textNode: TextNode = new TextNode(text, baseUri)
+    appendChild(textNode)
+    return this
+  }
+
+  /**
+  Test if this element has any text content (that is not just whitespace).
+     @return true if element has non-blank text content.
+    */
+  def hasText: Boolean = {
+    import scala.collection.JavaConversions._
+    for (child <- childNodes) {
+      if (child.isInstanceOf[TextNode]) {
+        val textNode: TextNode = child.asInstanceOf[TextNode]
+        if (!textNode.isBlank) return true
+      }
+      else if (child.isInstanceOf[Element]) {
+        val el: Element = child.asInstanceOf[Element]
+        if (el.hasText) return true
+      }
+    }
+    return false
+  }
+
+  /**
+   * Get the combined data of this element. Data is e.g. the inside of a {@code script} tag.
+   * @return the data, or empty string if none
+   *
+   * @see #dataNodes()
+   */
+  def data: String = {
+    val sb: StringBuilder = new StringBuilder
+    import scala.collection.JavaConversions._
+    for (childNode <- childNodes) {
+      if (childNode.isInstanceOf[DataNode]) {
+        val data: DataNode = childNode.asInstanceOf[DataNode]
+        sb.append(data.getWholeData)
+      }
+      else if (childNode.isInstanceOf[Element]) {
+        val element: Element = childNode.asInstanceOf[Element]
+        val elementData: String = element.data
+        sb.append(elementData)
+      }
+    }
+    sb.toString
+  }
+
+  /**
+   * Gets the literal value of this element's "class" attribute, which may include multiple class names, space
+   * separated. (E.g. on <code>&lt;div class="header gray"></code> returns, "<code>header gray</code>")
+   * @return The literal class attribute, or <b>empty string</b> if no class attribute set.
+   */
+  def className: String = attr("class").trim
+
+  /**
+   * Get all of the element's class names. E.g. on element {@code <div class="header gray"}>},
+   * returns a set of two elements {@code "header", "gray"}. Note that modifications to this set are not pushed to
+   * the backing {@code class} attribute; use the {@link #classNames(java.util.Set)} method to persist them.
+   * @return set of classnames, empty if no class attribute
+   */
+  def classNames: Set[String] = {
+    val names: Array[String] = className.split("\\s+")
+    val classNames: mutable.Set[String] = mutable.Set(names: _*)
+    classNames.remove("")
+    classNames.toSet
+  }
+
+  /**
+  Set the element's {@code class} attribute to the supplied class names.
+     @param classNames set of classes
+  @return this element, for chaining
+    */
+  def classNames(classNames: Set[String]): Element = {
+    notNull(classNames)
+    attributes.put("class", Strings.join(classNames, " "))
+    this
+  }
+
+  /**
+   * Tests if this element has a class. Case insensitive.
+   * @param className name of class to check for
+   * @return true if it does, false if not
+   */
+  def hasClass(className: String): Boolean = {
+    val classNames: Set[String] = classNames
+    import scala.collection.JavaConversions._
+    for (name <- classNames) {
+      if (className.equalsIgnoreCase(name)) return true
+    }
+    false
+  }
+
+  /**
+  Add a class name to this element's {@code class} attribute.
+     @param className class name to add
+  @return this element
+    */
+  def addClass(className: String): Element = {
+    notNull(className)
+    val cNames = classNames
+    val classes: mutable.Set[String] = mutable.Set(cNames: _*)
+    classes.add(className)
+    classNames(classes.toSet)
+    this
+  }
+
+  /**
+  Remove a class name from this element's {@code class} attribute.
+     @param className class name to remove
+  @return this element
+    */
+  def removeClass(className: String): Element = {
+    notNull(className)
+    val classes: Set[String] = classNames
+    classes.remove(className)
+    classNames(classes)
+    this
+  }
+
+  /**
+  Toggle a class name on this element's {@code class} attribute: if present, remove it; otherwise add it.
+     @param className class name to toggle
+  @return this element
+    */
+  def toggleClass(className: String): Element = {
+    notNull(className)
+    val classes: Set[String] = classNames
+    if (classes.contains(className)) classes.remove(className)
+    else classes.add(className)
+    classNames(classes)
+    this
+  }
+
+  /**
+   * Get the value of a form element (input, textarea, etc).
+   * @return the value of the form element, or empty string if not set.
+   */
+  def value: String = if (tagName == "textarea") text else attr("value")
+
+  /**
+   * Set the value of a form element (input, textarea, etc).
+   * @param value value to set
+   * @return this element (for chaining)
+   */
+  def value(value: String): Element = {
+    if (tagName == "textarea") text(value) else attr("value", value)
+    this
   }
 
   private[nodes] def outerHtmlHead(accum: StringBuilder, depth: Int, out: Document.OutputSettings) {
@@ -320,7 +1052,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
   def html: String = {
     val accum: StringBuilder = new StringBuilder
     html(accum)
-    return if (getOutputSettings.prettyPrint) accum.toString.trim else accum.toString
+    if (getOutputSettings.prettyPrint) accum.toString.trim else accum.toString
   }
 
   private def html(accum: StringBuilder) {
@@ -336,27 +1068,21 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
   def html(html: String): Element = {
     empty
     append(html)
-    return this
+    this
   }
 
-  override def toString: String = {
-    return outerHtml
+  override def toString: String = outerHtml
+
+  override def equals(o: Any): Boolean = o match {
+    // todo: have nodes hold a child index, compare against that and parent (not children)
+
+    case v: Element => this eq v
+    case _ => false
   }
 
-  override def equals(o: AnyRef): Boolean = {
-    return this eq o
-  }
+  override def hashCode: Int = 31 * super.hashCode + (if (tag != null) tag.hashCode else 0)
 
-  override def hashCode: Int = {
-    var result: Int = super.hashCode
-    result = 31 * result + (if (tag != null) tag.hashCode else 0)
-    return result
-  }
-
-  override def clone: Element = {
-    val clone: Element = super.clone.asInstanceOf[Element]
-    return clone
-  }
+  override def clone: Element = super.clone.asInstanceOf[Element]
 }
 
 private[nodes] object Element {
@@ -366,5 +1092,15 @@ private[nodes] object Element {
       return element.tagVal.isPreserveWhitespace || element.parent != null && element.parent.tagVal.isPreserveWhitespace
     }
     false
+  }
+
+  private def appendNormalisedText(accum: java.lang.StringBuilder, textNode: TextNode) {
+    val text: String = textNode.getWholeText
+    if (preserveWhitespace(textNode.parentNode)) accum.append(text)
+    else Strings.appendNormalisedWhitespace(accum, text, TextNode.lastCharIsWhitespace(accum))
+  }
+
+  private def appendWhitespaceIfBr(element: Element, accum: java.lang.StringBuilder) {
+    if ((element.tag.getName == "br") && !TextNode.lastCharIsWhitespace(accum)) accum.append(" ")
   }
 }
