@@ -4,9 +4,9 @@ package com.github.ligangty.scala.jsoup.helper
 import java.lang
 
 /**
- * Created by gli on 15-3-10.
+ * A minimal String utility class. Designed for internal jsoup use only.
  */
-final object Strings {
+object Strings {
   private val paddings: Array[String] = Array("", " ", "  ", "   ", "    ", "     ", "      ", "       ", "        ", "         ", "          ")
 
   /**
@@ -57,7 +57,7 @@ final object Strings {
    * @return true if only digit chars, false if empty or null or contains non-digit chrs
    */
   def isNumeric(string: String): Boolean =
-    if (string == null) false else string.forall(Character.isDigit(_))
+    if (string == null) false else string.forall(Character.isDigit)
 
   /**
    * Normalise the whitespace within this string multiple spaces collapse to a single, and all whitespace characters

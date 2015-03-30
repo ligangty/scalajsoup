@@ -412,7 +412,8 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
     if (classes.length > 0) selector.append('.').append(classes)
     if (parent == null || parent.isInstanceOf[Document]) return selector.toString()
     selector.insert(0, " > ")
-    if (parent.select(selector.toString()).size > 1) selector.append(String.format(":nth-child(%d)", elementSiblingIndex + 1))
+    val value = String.format(":nth-child(%d)", elementSiblingIndex + 1)
+    if (parent.select(selector.toString()).size > 1) selector.append(value)
     parent.cssSelector + selector.toString()
   }
 
@@ -475,7 +476,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * sibling, returns 0.
    * @return position in element sibling list
    */
-  def elementSiblingIndex: Integer = {
+  def elementSiblingIndex: Int = {
     if (parent == null) return 0
     indexInList(this, parent.children)
   }
@@ -489,7 +490,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
     if (siblings.size > 1) siblings.get(siblings.size - 1) else null
   }
 
-  private def indexInList[E <: Element](search: Element, elements: util.List[E]): Integer = {
+  private def indexInList[E <: Element](search: Element, elements: util.List[E]): Int = {
     notNull(search)
     notNull(elements)
     var i: Int = 0
@@ -1064,9 +1065,8 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
     if (getOutputSettings.prettyPrint) accum.toString().trim else accum.toString()
   }
 
-  private def html(accum: StringBuilder) {
-    for (node <- childNodes) node.outerHtml(accum)
-  }
+  private def html(accum: StringBuilder) = childNodes.foreach(_.outerHtml(accum))
+
 
   /**
    * Set this element's inner HTML. Clears the existing HTML first.

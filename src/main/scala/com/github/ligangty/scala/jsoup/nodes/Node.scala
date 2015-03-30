@@ -485,7 +485,7 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
   def siblingIndex: Int = siblingIndexVal
 
 
-  protected def setSiblingIndex(siblingIndex: Int) {
+  protected[nodes] def setSiblingIndex(siblingIndex: Int) {
     this.siblingIndexVal = siblingIndex
   }
 
@@ -518,7 +518,7 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
 
   // if this node has no document (or parent), retrieve the default output settings
   private[nodes] def getOutputSettings: Document.OutputSettings = {
-    if (ownerDocument != null) ownerDocument.outputSettings else (new Document("")).outputSettings
+    if (ownerDocument != null) ownerDocument.outputSettings else new Document("").outputSettings
   }
 
   /**

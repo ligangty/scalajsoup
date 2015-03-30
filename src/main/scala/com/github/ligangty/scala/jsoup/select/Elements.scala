@@ -2,15 +2,19 @@ package com.github.ligangty.scala.jsoup.select
 
 import java.util
 
+import com.github.ligangty.scala.jsoup.helper.Validator._
 import com.github.ligangty.scala.jsoup.nodes.Element
 
 import scala.collection.mutable
 import scala.collection.mutable.{Buffer, ArrayBuffer}
+import scala.reflect.ClassTag
 
 /**
- * Created by gli on 15-3-26.
+ * A list of {@link Element}s, with methods that act on every element in the list.
+ * <p/>
+ * To get an {@code Elements} object, use the {@link Element#select(String)} method.
  */
-class Elements private(u:Unit=()) extends util.List[Element] with Cloneable {
+class Elements private(u: Unit = ()) extends util.List[Element] with Cloneable {
   private var contents: mutable.Buffer[Element] = null
 
   def this() {
@@ -26,7 +30,7 @@ class Elements private(u:Unit=()) extends util.List[Element] with Cloneable {
   def this(elements: util.Collection[Element]) {
     this()
     import scala.collection.JavaConversions._
-    contents = ArrayBuffer() ++= (elements)
+    contents = ArrayBuffer() ++= elements
   }
 
   def this(elements: mutable.Buffer[Element]) {
@@ -46,46 +50,35 @@ class Elements private(u:Unit=()) extends util.List[Element] with Cloneable {
     var clone: Elements = null
     try {
       clone = super.clone.asInstanceOf[Elements]
+    } catch {
+      case e: CloneNotSupportedException => throw new RuntimeException(e)
     }
-    catch {
-      case e: CloneNotSupportedException => {
-        throw new RuntimeException(e)
-      }
-    }
-    val elements: Buffer[Element] = new ArrayBuffer[Element]()
+    val elements: mutable.Buffer[Element] = new mutable.ArrayBuffer[Element]()
     clone.contents = elements
-    for (e <- contents) elements.append(e.clone)
-    return clone
+    for (e <- contents) elements.append(e.clone())
+    clone
   }
 
   // attribute methods
   /**
-  Get an attribute value from the first matched element that has the attribute.
-     @param attributeKey The attribute key.
-  @return The attribute value from the first matched element that has the attribute.. If no elements were matched (isEmpty() == true),
-     or if the no elements have the attribute, returns empty string.
-  @see #hasAttr(String)
-    */
+   * Get an attribute value from the first matched element that has the attribute.
+   * @param attributeKey The attribute key.
+   * @return The attribute value from the first matched element that has the attribute.. If no elements were matched (isEmpty() == true),
+   *         or if the no elements have the attribute, returns empty string.
+   * @see #hasAttr(String)
+   */
   def attr(attributeKey: String): String = {
-    import scala.collection.JavaConversions._
-    for (element <- contents) {
-      if (element.hasAttr(attributeKey)) return element.attr(attributeKey)
-    }
-    return ""
+    val founded = contents.filter(_.hasAttr(attributeKey))
+    if (founded.nonEmpty) founded.head.attr(attributeKey)
+    else ""
   }
 
   /**
-  Checks if any of the matched elements have this attribute set.
-     @param attributeKey attribute key
-  @return true if any of the elements have the attribute; false if none do.
-    */
-  def hasAttr(attributeKey: String): Boolean = {
-    import scala.collection.JavaConversions._
-    for (element <- contents) {
-      if (element.hasAttr(attributeKey)) return true
-    }
-    return false
-  }
+   * Checks if any of the matched elements have this attribute set.
+   * @param attributeKey attribute key
+   * @return true if any of the elements have the attribute; false if none do.
+   */
+  def hasAttr(attributeKey: String): Boolean = contents.exists(_.hasAttr(attributeKey))
 
   /**
    * Set an attribute on all matched elements.
@@ -94,11 +87,8 @@ class Elements private(u:Unit=()) extends util.List[Element] with Cloneable {
    * @return this
    */
   def attr(attributeKey: String, attributeValue: String): Elements = {
-    import scala.collection.JavaConversions._
-    for (element <- contents) {
-      element.attr(attributeKey, attributeValue)
-    }
-    return this
+    contents.foreach(_.attr(attributeKey, attributeValue))
+    this
   }
 
   /**
@@ -107,74 +97,55 @@ class Elements private(u:Unit=()) extends util.List[Element] with Cloneable {
    * @return this (for chaining)
    */
   def removeAttr(attributeKey: String): Elements = {
-    import scala.collection.JavaConversions._
-    for (element <- contents) {
-      element.removeAttr(attributeKey)
-    }
-    return this
+    contents.foreach(_.removeAttr(attributeKey))
+    this
   }
 
   /**
-  Add the class name to every matched element's {@code class} attribute.
-     @param className class name to add
-  @return this
-    */
+   * Add the class name to every matched element's {@code class} attribute.
+   * @param className class name to add
+   * @return this
+   */
   def addClass(className: String): Elements = {
-    import scala.collection.JavaConversions._
-    for (element <- contents) {
-      element.addClass(className)
-    }
-    return this
+    contents.foreach(_.addClass(className))
+    this
   }
 
   /**
-  Remove the class name from every matched element's {@code class} attribute, if present.
-     @param className class name to remove
-  @return this
-    */
+   * Remove the class name from every matched element's {@code class} attribute, if present.
+   * @param className class name to remove
+   * @return this
+   */
   def removeClass(className: String): Elements = {
-    import scala.collection.JavaConversions._
-    for (element <- contents) {
-      element.removeClass(className)
-    }
-    return this
+    contents.foreach(_.removeClass(className))
+    this
   }
 
   /**
-  Toggle the class name on every matched element's {@code class} attribute.
-     @param className class name to add if missing, or remove if present, from every element.
-  @return this
-    */
+   * Toggle the class name on every matched element's {@code class} attribute.
+   * @param className class name to add if missing, or remove if present, from every element.
+   * @return this
+   */
   def toggleClass(className: String): Elements = {
-    import scala.collection.JavaConversions._
-    for (element <- contents) {
-      element.toggleClass(className)
-    }
-    return this
+    contents.foreach(_.toggleClass(className))
+    this
   }
 
   /**
-  Determine if any of the matched elements have this class name set in their {@code class} attribute.
-     @param className class name to check for
-  @return true if any do, false if none do
-    */
-  def hasClass(className: String): Boolean = {
-    import scala.collection.JavaConversions._
-    for (element <- contents) {
-      if (element.hasClass(className)) return true
-    }
-    return false
-  }
+   * Determine if any of the matched elements have this class name set in their {@code class} attribute.
+   * @param className class name to check for
+   * @return true if any do, false if none do
+   */
+  def hasClass(className: String): Boolean = contents.filter(_.hasClass(className)).nonEmpty
+
 
   /**
    * Get the form element's value of the first matched element.
    * @return The form element's value, or empty if not set.
    * @see Element#val()
    */
-  def `val`: String = {
-    if (size > 0) return first.`val`
-    else return ""
-  }
+  def value: String = if (size > 0) first().value else ""
+
 
   /**
    * Set the form element's value in each of the matched elements.
@@ -182,9 +153,8 @@ class Elements private(u:Unit=()) extends util.List[Element] with Cloneable {
    * @return this (for chaining)
    */
   def `val`(value: String): Elements = {
-    import scala.collection.JavaConversions._
-    for (element <- contents) element.`val`(value)
-    return this
+    contents.foreach(_.value(value))
+    this
   }
 
   /**
@@ -195,23 +165,10 @@ class Elements private(u:Unit=()) extends util.List[Element] with Cloneable {
    * @return string of all text: unescaped and no HTML.
    * @see Element#text()
    */
-  def text: String = {
-    val sb: StringBuilder = new StringBuilder
-    import scala.collection.JavaConversions._
-    for (element <- contents) {
-      if (sb.length != 0) sb.append(" ")
-      sb.append(element.text)
-    }
-    return sb.toString
-  }
+  def text: String = contents.map(_.text).mkString(" ")
 
-  def hasText: Boolean = {
-    import scala.collection.JavaConversions._
-    for (element <- contents) {
-      if (element.hasText) return true
-    }
-    return false
-  }
+
+  def hasText: Boolean = contents.exists(_.hasText)
 
   /**
    * Get the combined inner HTML of all matched elements.
@@ -219,15 +176,7 @@ class Elements private(u:Unit=()) extends util.List[Element] with Cloneable {
    * @see #text()
    * @see #outerHtml()
    */
-  def html: String = {
-    val sb: StringBuilder = new StringBuilder
-    import scala.collection.JavaConversions._
-    for (element <- contents) {
-      if (sb.length != 0) sb.append("\n")
-      sb.append(element.html)
-    }
-    return sb.toString
-  }
+  def html: String = contents.map(_.html).mkString("\n")
 
   /**
    * Get the combined outer HTML of all matched elements.
@@ -235,15 +184,7 @@ class Elements private(u:Unit=()) extends util.List[Element] with Cloneable {
    * @see #text()
    * @see #html()
    */
-  def outerHtml: String = {
-    val sb: StringBuilder = new StringBuilder
-    import scala.collection.JavaConversions._
-    for (element <- contents) {
-      if (sb.length != 0) sb.append("\n")
-      sb.append(element.outerHtml)
-    }
-    return sb.toString
-  }
+  def outerHtml: String = contents.map(_.outerHtml).mkString("\n")
 
   /**
    * Get the combined outer HTML of all matched elements. Alias of {@link #outerHtml()}.
@@ -251,9 +192,7 @@ class Elements private(u:Unit=()) extends util.List[Element] with Cloneable {
    * @see #text()
    * @see #html()
    */
-  override def toString: String = {
-    return outerHtml
-  }
+  override def toString: String = outerHtml
 
   /**
    * Update the tag name of each matched element. For example, to change each {@code <i>} to a {@code <em>}, do
@@ -263,11 +202,8 @@ class Elements private(u:Unit=()) extends util.List[Element] with Cloneable {
    * @see Element#tagName(String)
    */
   def tagName(tagName: String): Elements = {
-    import scala.collection.JavaConversions._
-    for (element <- contents) {
-      element.tagName(tagName)
-    }
-    return this
+    contents.foreach(_.tagName(tagName))
+    this
   }
 
   /**
@@ -277,11 +213,8 @@ class Elements private(u:Unit=()) extends util.List[Element] with Cloneable {
    * @see Element#html(String)
    */
   def html(html: String): Elements = {
-    import scala.collection.JavaConversions._
-    for (element <- contents) {
-      element.html(html)
-    }
-    return this
+    contents.foreach(_.html(html))
+    this
   }
 
   /**
@@ -291,11 +224,8 @@ class Elements private(u:Unit=()) extends util.List[Element] with Cloneable {
    * @see Element#prepend(String)
    */
   def prepend(html: String): Elements = {
-    import scala.collection.JavaConversions._
-    for (element <- contents) {
-      element.prepend(html)
-    }
-    return this
+    contents.foreach(_.prepend(html))
+    this
   }
 
   /**
@@ -305,11 +235,8 @@ class Elements private(u:Unit=()) extends util.List[Element] with Cloneable {
    * @see Element#append(String)
    */
   def append(html: String): Elements = {
-    import scala.collection.JavaConversions._
-    for (element <- contents) {
-      element.append(html)
-    }
-    return this
+    contents.foreach(_.append(html))
+    this
   }
 
   /**
@@ -319,11 +246,8 @@ class Elements private(u:Unit=()) extends util.List[Element] with Cloneable {
    * @see Element#before(String)
    */
   def before(html: String): Elements = {
-    import scala.collection.JavaConversions._
-    for (element <- contents) {
-      element.before(html)
-    }
-    return this
+    contents.foreach(_.before(html))
+    this
   }
 
   /**
@@ -333,29 +257,23 @@ class Elements private(u:Unit=()) extends util.List[Element] with Cloneable {
    * @see Element#after(String)
    */
   def after(html: String): Elements = {
-    import scala.collection.JavaConversions._
-    for (element <- contents) {
-      element.after(html)
-    }
-    return this
+    contents.foreach(_.after(html))
+    this
   }
 
   /**
-  Wrap the supplied HTML around each matched elements. For example, with HTML
-     {@code <p><b>This</b> is <b>Jsoup</b></p>},
-     <code>doc.select("b").wrap("&lt;i&gt;&lt;/i&gt;");</code>
-     becomes {@code <p><i><b>This</b></i> is <i><b>jsoup</b></i></p>}
-  @param html HTML to wrap around each element, e.g. { @code <div class="head"></div>}. Can be arbitrarily deep.
-  @return this (for chaining)
-  @see Element#wrap
-    */
+   * Wrap the supplied HTML around each matched elements. For example, with HTML
+   * {@code <p><b>This</b> is <b>Jsoup</b></p>},
+   * <code>doc.select("b").wrap("&lt;i&gt;&lt;/i&gt;");</code>
+   * becomes {@code <p><i><b>This</b></i> is <i><b>jsoup</b></i></p>}
+   * @param html HTML to wrap around each element, e.g. { @code <div class="head"></div>}. Can be arbitrarily deep.
+   * @return this (for chaining)
+   * @see Element#wrap
+   */
   def wrap(html: String): Elements = {
-    Validate.notEmpty(html)
-    import scala.collection.JavaConversions._
-    for (element <- contents) {
-      element.wrap(html)
-    }
-    return this
+    notEmpty(html)
+    contents.foreach(_.wrap(html))
+    this
   }
 
   /**
@@ -372,11 +290,8 @@ class Elements private(u:Unit=()) extends util.List[Element] with Cloneable {
    * @see Node#unwrap
    */
   def unwrap: Elements = {
-    import scala.collection.JavaConversions._
-    for (element <- contents) {
-      element.unwrap
-    }
-    return this
+    contents.foreach(_.unwrap)
+    this
   }
 
   /**
@@ -391,11 +306,8 @@ class Elements private(u:Unit=()) extends util.List[Element] with Cloneable {
    * @see #remove()
    */
   def empty: Elements = {
-    import scala.collection.JavaConversions._
-    for (element <- contents) {
-      element.empty
-    }
-    return this
+    contents.foreach(_.empty)
+    this
   }
 
   /**
@@ -411,11 +323,8 @@ class Elements private(u:Unit=()) extends util.List[Element] with Cloneable {
    * @see #empty()
    */
   def remove: Elements = {
-    import scala.collection.JavaConversions._
-    for (element <- contents) {
-      element.remove
-    }
-    return this
+    contents.foreach(_.remove)
+    this
   }
 
   // filters
@@ -425,7 +334,9 @@ class Elements private(u:Unit=()) extends util.List[Element] with Cloneable {
    * @return the filtered list of elements, or an empty list if none match.
    */
   def select(query: String): Elements = {
-    return Selector.select(query, this)
+    //@todo Selector not implemented yet
+    //    return Selector.select(query, this)
+    null
   }
 
   /**
@@ -439,8 +350,10 @@ class Elements private(u:Unit=()) extends util.List[Element] with Cloneable {
    * @return a new elements list that contains only the filtered results
    */
   def not(query: String): Elements = {
-    val out: Elements = Selector.select(query, this)
-    return Selector.filterOut(this, out)
+    //@todo Selector not implemented yet
+    //    val out: Elements = Selector.select(query, this)
+    //    return Selector.filterOut(this, out)
+    null
   }
 
   /**
@@ -450,31 +363,26 @@ class Elements private(u:Unit=()) extends util.List[Element] with Cloneable {
    * @param index the (zero-based) index of the element in the list to retain
    * @return Elements containing only the specified element, or, if that element did not exist, an empty list.
    */
-  def eq(index: Int): Elements = {
-    return if (contents.size > index) new Elements(get(index)) else new Elements
-  }
+  def eq(index: Int): Elements = if (contents.size > index) new Elements(get(index)) else new Elements
+
 
   /**
    * Test if any of the matched elements match the supplied query.
    * @param query A selector
    * @return true if at least one element in the list matches the query.
    */
-  def is(query: String): Boolean = {
-    val children: Elements = select(query)
-    return !children.isEmpty
-  }
+  def is(query: String): Boolean = !select(query).isEmpty
 
   /**
    * Get all of the parents and ancestor elements of the matched elements.
    * @return all of the parents and ancestor elements of the matched elements
    */
   def parents: Elements = {
-    val combo: HashSet[Element] = new LinkedHashSet[Element]
-    import scala.collection.JavaConversions._
+    val combo: util.Set[Element] = new util.LinkedHashSet[Element]
     for (e <- contents) {
       combo.addAll(e.parents)
     }
-    return new Elements(combo)
+    new Elements(combo)
   }
 
   // list-like methods
@@ -482,17 +390,14 @@ class Elements private(u:Unit=()) extends util.List[Element] with Cloneable {
   Get the first matched element.
      @return The first matched element, or <code>null</code> if contents is empty.
     */
-  def first: Element = {
-    return if (contents.isEmpty) null else contents.get(0)
-  }
+  def first(): Element = if (contents.isEmpty) null else contents.head
+
 
   /**
   Get the last matched element.
      @return The last matched element, or <code>null</code> if contents is empty.
     */
-  def last: Element = {
-    return if (contents.isEmpty) null else contents.get(contents.size - 1)
-  }
+  def last: Element = if (contents.isEmpty) null else contents(contents.size - 1)
 
   /**
    * Perform a depth-first traversal on each of the selected elements.
@@ -500,124 +405,123 @@ class Elements private(u:Unit=()) extends util.List[Element] with Cloneable {
    * @return this, for chaining
    */
   def traverse(nodeVisitor: NodeVisitor): Elements = {
-    Validate.notNull(nodeVisitor)
+    notNull(nodeVisitor)
     val traversor: NodeTraversor = new NodeTraversor(nodeVisitor)
-    import scala.collection.JavaConversions._
     for (el <- contents) {
       traversor.traverse(el)
     }
-    return this
+    this
   }
 
+  //@todo need to implement FormElement to implement this method
   /**
    * Get the {@link FormElement} forms from the selected elements, if any.
    * @return a list of { @link FormElement}s pulled from the matched elements. The list will be empty if the elements contain
-   *                           no forms.
+   *         no forms.
    */
-  def forms: List[FormElement] = {
-    val forms: ArrayList[FormElement] = new ArrayList[FormElement]
+  //  def forms: List[FormElement] = {
+  //    val forms: ArrayList[FormElement] = new ArrayList[FormElement]
+  //    import scala.collection.JavaConversions._
+  //    for (el <- contents) if (el.isInstanceOf[FormElement]) forms.add(el.asInstanceOf[FormElement])
+  //    return forms
+  //  }
+
+  // implements List<Element> delegates:
+  override def size: Int = contents.size
+
+  override def isEmpty: Boolean = contents.isEmpty
+
+  override def contains(o: AnyRef): Boolean = contents.contains(o)
+
+  override def iterator: Iterator[Element] = contents.iterator
+
+  override def toArray: Array[AnyRef] = contents.toArray
+
+  override def toArray[T](a: Array[T]): Array[T] = contents.map(_.asInstanceOf[T]).toArray
+
+  override def add(element: Element): Boolean = {
+    contents.append(element)
+    true
+  }
+
+  override def remove(o: AnyRef): Boolean = {
+    val finded = contents.indexOf(o)
+    if (finded >= 0) {
+      contents.remove(finded)
+      true
+    } else {
+      false
+    }
+  }
+
+  override def containsAll(c: util.Collection[_]): Boolean = {
     import scala.collection.JavaConversions._
-    for (el <- contents) if (el.isInstanceOf[FormElement]) forms.add(el.asInstanceOf[FormElement])
-    return forms
+    for (e <- c) if (!contents.contains(e)) return false
+    true
   }
 
-  def size: Int = {
-    return contents.size
+  override def addAll(c: util.Collection[_ <: Element]): Boolean = {
+    import scala.collection.JavaConversions._
+    contents.appendAll(c)
+    c.size() != 0
   }
 
-  def isEmpty: Boolean = {
-    return contents.isEmpty
+  override def addAll(index: Int, c: util.Collection[_ <: Element]): Boolean = {
+    import scala.collection.JavaConversions._
+    contents.addAll(index, c)
+    c.size() != 0
   }
 
-  def contains(o: AnyRef): Boolean = {
-    return contents.contains(o)
+  override def removeAll(c: util.Collection[_]): Boolean = {
+    import scala.collection.JavaConversions._
+    contents.removeAll(c)
   }
 
-  def iterator: Iterator[Element] = {
-    return contents.iterator
+  override def retainAll(c: util.Collection[_]): Boolean = {
+    import scala.collection.JavaConversions._
+    contents.retainAll(c)
   }
 
-  def toArray: Array[AnyRef] = {
-    return contents.toArray
+  override def clear(): Unit = contents.clear()
+
+
+  override def equals(o: AnyRef): Boolean = contents == o
+
+  override def hashCode: Int = contents.hashCode()
+
+  override def get(index: Int): Element = contents(index)
+
+  override def set(index: Int, element: Element): Element = {
+    import scala.collection.JavaConversions._
+    contents.set(index, element)
   }
 
-  def toArray[T](a: Array[T]): Array[T] = {
-    return contents.toArray(a)
+  override def add(index: Int, element: Element) = contents.insert(index, element)
+
+  override def remove(index: Int): Element = {
+    contents.remove(index)
   }
 
-  def add(element: Element): Boolean = {
-    return contents.add(element)
+  override def indexOf(o: AnyRef): Int = {
+    contents.indexOf(o)
   }
 
-  def remove(o: AnyRef): Boolean = {
-    return contents.remove(o)
+  override def lastIndexOf(o: AnyRef): Int = {
+    contents.lastIndexOf(o)
   }
 
-  def containsAll(c: Collection[_]): Boolean = {
-    return contents.containsAll(c)
+  override def listIterator: util.ListIterator[Element] = {
+    import scala.collection.JavaConversions._
+    contents.listIterator
   }
 
-  def addAll(c: Collection[_ <: Element]): Boolean = {
-    return contents.addAll(c)
+  override def listIterator(index: Int): util.ListIterator[Element] = {
+    import scala.collection.JavaConversions._
+    contents.listIterator(index)
   }
 
-  def addAll(index: Int, c: Collection[_ <: Element]): Boolean = {
-    return contents.addAll(index, c)
-  }
-
-  def removeAll(c: Collection[_]): Boolean = {
-    return contents.removeAll(c)
-  }
-
-  def retainAll(c: Collection[_]): Boolean = {
-    return contents.retainAll(c)
-  }
-
-  def clear {
-    contents.clear
-  }
-
-  override def equals(o: AnyRef): Boolean = {
-    return contents == o
-  }
-
-  override def hashCode: Int = {
-    return contents.hashCode
-  }
-
-  def get(index: Int): Element = {
-    return contents.get(index)
-  }
-
-  def set(index: Int, element: Element): Element = {
-    return contents.set(index, element)
-  }
-
-  def add(index: Int, element: Element) {
-    contents.add(index, element)
-  }
-
-  def remove(index: Int): Element = {
-    return contents.remove(index)
-  }
-
-  def indexOf(o: AnyRef): Int = {
-    return contents.indexOf(o)
-  }
-
-  def lastIndexOf(o: AnyRef): Int = {
-    return contents.lastIndexOf(o)
-  }
-
-  def listIterator: ListIterator[Element] = {
-    return contents.listIterator
-  }
-
-  def listIterator(index: Int): ListIterator[Element] = {
-    return contents.listIterator(index)
-  }
-
-  def subList(fromIndex: Int, toIndex: Int): List[Element] = {
-    return contents.subList(fromIndex, toIndex)
+  override def subList(fromIndex: Int, toIndex: Int): List[Element] = {
+    import scala.collection.JavaConversions._
+    contents.subList(fromIndex, toIndex).toList
   }
 }
