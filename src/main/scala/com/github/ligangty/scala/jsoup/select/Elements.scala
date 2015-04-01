@@ -1,15 +1,12 @@
 package com.github.ligangty.scala.jsoup.select
 
-import java.util
 
 import com.github.ligangty.scala.jsoup.helper.Validator._
 import com.github.ligangty.scala.jsoup.nodes.Element
 
 import scala.collection.mutable
-import scala.collection.mutable.{Buffer, ArrayBuffer}
-import scala.reflect.ClassTag
+import scala.collection.mutable.ArrayBuffer
 
-import scala.collection.JavaConversions._
 
 /**
  * A list of {@link Element}s, with methods that act on every element in the list.
@@ -29,7 +26,7 @@ class Elements private(u: Unit = ()) extends mutable.Seq[Element] with Cloneable
     contents = new ArrayBuffer[Element](initialCapacity)
   }
 
-  def this(elements: util.Collection[Element]) {
+  def this(elements: Traversable[Element]) {
     this()
     contents = ArrayBuffer() ++= elements
   }
@@ -47,10 +44,10 @@ class Elements private(u: Unit = ()) extends mutable.Seq[Element] with Cloneable
    * Creates a deep copy of these elements.
    * @return a deep copy
    */
-  override def clone: Elements = {
+  override def clone(): Elements = {
     var clone: Elements = null
     try {
-      clone = super.clone.asInstanceOf[Elements]
+      clone = super.clone().asInstanceOf[Elements]
     } catch {
       case e: CloneNotSupportedException => throw new RuntimeException(e)
     }
@@ -193,7 +190,7 @@ class Elements private(u: Unit = ()) extends mutable.Seq[Element] with Cloneable
    * @see #text()
    * @see #html()
    */
-  override def toString: String = outerHtml
+  override def toString(): String = outerHtml
 
   /**
    * Update the tag name of each matched element. For example, to change each {@code <i>} to a {@code <em>}, do
@@ -379,10 +376,8 @@ class Elements private(u: Unit = ()) extends mutable.Seq[Element] with Cloneable
    * @return all of the parents and ancestor elements of the matched elements
    */
   def parents: Elements = {
-    val combo: util.Set[Element] = new util.LinkedHashSet[Element]
-    for (e <- contents) {
-      combo.addAll(e.parents)
-    }
+    var combo: mutable.Set[Element] = new mutable.LinkedHashSet[Element]
+    for (e <- contents) combo ++= e.parents
     new Elements(combo)
   }
 
@@ -392,7 +387,6 @@ class Elements private(u: Unit = ()) extends mutable.Seq[Element] with Cloneable
      @return The first matched element, or <code>null</code> if contents is empty.
     */
   def first(): Element = if (contents.isEmpty) null else contents.head
-
 
   /**
   Get the last matched element.
@@ -422,7 +416,7 @@ class Elements private(u: Unit = ()) extends mutable.Seq[Element] with Cloneable
    */
   //  def forms: List[FormElement] = {
   //    val forms: ArrayList[FormElement] = new ArrayList[FormElement]
-  //    import scala.collection.JavaConversions._
+  //    
   //    for (el <- contents) if (el.isInstanceOf[FormElement]) forms.add(el.asInstanceOf[FormElement])
   //    return forms
   //  }
@@ -453,53 +447,25 @@ class Elements private(u: Unit = ()) extends mutable.Seq[Element] with Cloneable
     }
   }
 
-  def containsAll(c: util.Collection[_]): Boolean = {
-    import scala.collection.JavaConversions._
+  def containsAll(c: Traversable[_]): Boolean = {
     for (e <- c) if (!contents.contains(e)) return false
     true
   }
 
-  def addAll(c: util.Collection[_ <: Element]): Boolean = {
-    import scala.collection.JavaConversions._
-    contents.appendAll(c)
-    c.size() != 0
-  }
-
-  def addAll(index: Int, c: util.Collection[_ <: Element]): Boolean = {
-    import scala.collection.JavaConversions._
-    contents.addAll(index, c)
-    c.size() != 0
-  }
-
-  def removeAll(c: util.Collection[_]): Boolean = {
-    import scala.collection.JavaConversions._
-    contents.removeAll(c)
-  }
-
-  def retainAll(c: util.Collection[_]): Boolean = {
-    import scala.collection.JavaConversions._
-    contents.retainAll(c)
+  def addAll(c: Traversable[_ <: Element]): Boolean = {
+    contents ++= c
+    c.size != 0
   }
 
   def clear(): Unit = contents.clear()
 
-
   override def equals(o: Any): Boolean = contents == o
 
-  override def hashCode: Int = contents.hashCode()
+  override def hashCode(): Int = contents.hashCode()
 
   def get(index: Int): Element = contents(index)
 
-  def set(index: Int, element: Element): Element = {
-    import scala.collection.JavaConversions._
-    contents.set(index, element)
-  }
-
-  def add(index: Int, element: Element) = contents.insert(index, element)
-
-  def remove(index: Int): Element = {
-    contents.remove(index)
-  }
+  def remove(index: Int): Element = contents.remove(index)
 
   override def indexOf[A >: Element](o: A): Int = {
     contents.indexOf(o)
@@ -509,21 +475,21 @@ class Elements private(u: Unit = ()) extends mutable.Seq[Element] with Cloneable
     contents.lastIndexOf(o)
   }
 
-//  def listIterator: util.ListIterator[Element] = {
-//    contents.listIterator
-//  }
-//
-//  def listIterator(index: Int): util.ListIterator[Element] = {
-//    contents.listIterator(index)
-//  }
-//
-//  def subList(fromIndex: Int, toIndex: Int): util.List[Element] = {
-//    contents.subList(fromIndex, toIndex).toList
-//  }
+  //  def listIterator: util.ListIterator[Element] = {
+  //    contents.listIterator
+  //  }
+  //
+  //  def listIterator(index: Int): util.ListIterator[Element] = {
+  //    contents.listIterator(index)
+  //  }
+  //
+  //  def subList(fromIndex: Int, toIndex: Int): util.List[Element] = {
+  //    contents.subList(fromIndex, toIndex).toList
+  //  }
 
-  override def update(idx: Int, elem: Element): Unit = ???
+  override def update(idx: Int, elem: Element): Unit = contents.update(idx, elem)
 
-  override def apply(idx: Int): Element = ???
+  override def apply(idx: Int): Element = contents(idx)
 
   override def length: Int = contents.size
 }
