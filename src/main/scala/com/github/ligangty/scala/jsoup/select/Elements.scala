@@ -9,12 +9,14 @@ import scala.collection.mutable
 import scala.collection.mutable.{Buffer, ArrayBuffer}
 import scala.reflect.ClassTag
 
+import scala.collection.JavaConversions._
+
 /**
  * A list of {@link Element}s, with methods that act on every element in the list.
  * <p/>
  * To get an {@code Elements} object, use the {@link Element#select(String)} method.
  */
-class Elements private(u: Unit = ()) extends util.List[Element] with Cloneable {
+class Elements private(u: Unit = ()) extends mutable.Seq[Element] with Cloneable {
   private var contents: mutable.Buffer[Element] = null
 
   def this() {
@@ -29,7 +31,6 @@ class Elements private(u: Unit = ()) extends util.List[Element] with Cloneable {
 
   def this(elements: util.Collection[Element]) {
     this()
-    import scala.collection.JavaConversions._
     contents = ArrayBuffer() ++= elements
   }
 
@@ -152,7 +153,7 @@ class Elements private(u: Unit = ()) extends util.List[Element] with Cloneable {
    * @param value The value to set into each matched element
    * @return this (for chaining)
    */
-  def `val`(value: String): Elements = {
+  def value(value: String): Elements = {
     contents.foreach(_.value(value))
     this
   }
@@ -397,7 +398,7 @@ class Elements private(u: Unit = ()) extends util.List[Element] with Cloneable {
   Get the last matched element.
      @return The last matched element, or <code>null</code> if contents is empty.
     */
-  def last: Element = if (contents.isEmpty) null else contents(contents.size - 1)
+  override def last: Element = if (contents.isEmpty) null else contents(contents.size - 1)
 
   /**
    * Perform a depth-first traversal on each of the selected elements.
@@ -431,20 +432,18 @@ class Elements private(u: Unit = ()) extends util.List[Element] with Cloneable {
 
   override def isEmpty: Boolean = contents.isEmpty
 
-  override def contains(o: AnyRef): Boolean = contents.contains(o)
+  override def contains(elem: Any): Boolean = contents.contains(elem)
 
   override def iterator: Iterator[Element] = contents.iterator
 
-  override def toArray: Array[AnyRef] = contents.toArray
+  def toArray: Array[AnyRef] = contents.toArray
 
-  override def toArray[T](a: Array[T]): Array[T] = contents.map(_.asInstanceOf[T]).toArray
-
-  override def add(element: Element): Boolean = {
+  def add(element: Element): Boolean = {
     contents.append(element)
     true
   }
 
-  override def remove(o: AnyRef): Boolean = {
+  def remove(o: AnyRef): Boolean = {
     val finded = contents.indexOf(o)
     if (finded >= 0) {
       contents.remove(finded)
@@ -454,74 +453,77 @@ class Elements private(u: Unit = ()) extends util.List[Element] with Cloneable {
     }
   }
 
-  override def containsAll(c: util.Collection[_]): Boolean = {
+  def containsAll(c: util.Collection[_]): Boolean = {
     import scala.collection.JavaConversions._
     for (e <- c) if (!contents.contains(e)) return false
     true
   }
 
-  override def addAll(c: util.Collection[_ <: Element]): Boolean = {
+  def addAll(c: util.Collection[_ <: Element]): Boolean = {
     import scala.collection.JavaConversions._
     contents.appendAll(c)
     c.size() != 0
   }
 
-  override def addAll(index: Int, c: util.Collection[_ <: Element]): Boolean = {
+  def addAll(index: Int, c: util.Collection[_ <: Element]): Boolean = {
     import scala.collection.JavaConversions._
     contents.addAll(index, c)
     c.size() != 0
   }
 
-  override def removeAll(c: util.Collection[_]): Boolean = {
+  def removeAll(c: util.Collection[_]): Boolean = {
     import scala.collection.JavaConversions._
     contents.removeAll(c)
   }
 
-  override def retainAll(c: util.Collection[_]): Boolean = {
+  def retainAll(c: util.Collection[_]): Boolean = {
     import scala.collection.JavaConversions._
     contents.retainAll(c)
   }
 
-  override def clear(): Unit = contents.clear()
+  def clear(): Unit = contents.clear()
 
 
-  override def equals(o: AnyRef): Boolean = contents == o
+  override def equals(o: Any): Boolean = contents == o
 
   override def hashCode: Int = contents.hashCode()
 
-  override def get(index: Int): Element = contents(index)
+  def get(index: Int): Element = contents(index)
 
-  override def set(index: Int, element: Element): Element = {
+  def set(index: Int, element: Element): Element = {
     import scala.collection.JavaConversions._
     contents.set(index, element)
   }
 
-  override def add(index: Int, element: Element) = contents.insert(index, element)
+  def add(index: Int, element: Element) = contents.insert(index, element)
 
-  override def remove(index: Int): Element = {
+  def remove(index: Int): Element = {
     contents.remove(index)
   }
 
-  override def indexOf(o: AnyRef): Int = {
+  override def indexOf[A >: Element](o: A): Int = {
     contents.indexOf(o)
   }
 
-  override def lastIndexOf(o: AnyRef): Int = {
+  override def lastIndexOf[A >: Element](o: A): Int = {
     contents.lastIndexOf(o)
   }
 
-  override def listIterator: util.ListIterator[Element] = {
-    import scala.collection.JavaConversions._
-    contents.listIterator
-  }
+//  def listIterator: util.ListIterator[Element] = {
+//    contents.listIterator
+//  }
+//
+//  def listIterator(index: Int): util.ListIterator[Element] = {
+//    contents.listIterator(index)
+//  }
+//
+//  def subList(fromIndex: Int, toIndex: Int): util.List[Element] = {
+//    contents.subList(fromIndex, toIndex).toList
+//  }
 
-  override def listIterator(index: Int): util.ListIterator[Element] = {
-    import scala.collection.JavaConversions._
-    contents.listIterator(index)
-  }
+  override def update(idx: Int, elem: Element): Unit = ???
 
-  override def subList(fromIndex: Int, toIndex: Int): List[Element] = {
-    import scala.collection.JavaConversions._
-    contents.subList(fromIndex, toIndex).toList
-  }
+  override def apply(idx: Int): Element = ???
+
+  override def length: Int = contents.size
 }

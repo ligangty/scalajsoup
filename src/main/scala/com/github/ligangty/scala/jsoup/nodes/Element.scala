@@ -412,7 +412,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
     if (classes.length > 0) selector.append('.').append(classes)
     if (parent == null || parent.isInstanceOf[Document]) return selector.toString()
     selector.insert(0, " > ")
-    val value = String.format(":nth-child(%d)", elementSiblingIndex + 1)
+    val value = ":nth-child(%d)".format(elementSiblingIndex + 1)
     if (parent.select(selector.toString()).size > 1) selector.append(value)
     parent.cssSelector + selector.toString()
   }
@@ -490,17 +490,18 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
     if (siblings.size > 1) siblings.get(siblings.size - 1) else null
   }
 
-  private def indexInList[E <: Element](search: Element, elements: util.List[E]): Int = {
+  private def indexInList[E <: Element](search: Element, elements: mutable.Seq[E]): Int = {
     notNull(search)
     notNull(elements)
     var i: Int = 0
     val length = elements.size
     while (i < length) {
-      val element: E = elements.get(i)
+      val element: E = elements(i)
       if (element == search) return i
       i += 1
     }
-    null
+    //@todo make sure here should return 0
+    0
   }
 
   // DOM type methods
@@ -956,9 +957,8 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * @return true if it does, false if not
    */
   def hasClass(className: String): Boolean = {
-    val classNames: Set[String] = classNames
-    import scala.collection.JavaConversions._
-    for (name <- classNames) {
+    val classNms: Set[String] = classNames
+    for (name <- classNms) {
       if (className.equalsIgnoreCase(name)) return true
     }
     false
@@ -1065,7 +1065,13 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
     if (getOutputSettings.prettyPrint) accum.toString().trim else accum.toString()
   }
 
-  private def html(accum: StringBuilder) = childNodes.foreach(_.outerHtml(accum))
+  private def html(accum: scala.StringBuilder) = {
+    for (node <- childNodes) {
+      //@todo some very suck error of type mismatch here: need
+      // int but acutual stringbuilder, will solve it later
+//      node.outerHtml(accum)
+    }
+  }
 
 
   /**
