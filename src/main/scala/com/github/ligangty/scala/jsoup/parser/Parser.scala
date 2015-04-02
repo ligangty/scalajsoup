@@ -8,5 +8,5 @@ class Parser {
 }
 
 object Parser{
-
+  private val DEFAULT_MAX_ERRORS = 0;
 }
