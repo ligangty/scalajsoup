@@ -134,7 +134,10 @@ final private[parser] class CharacterReader(input: String) {
     if (posVal > start) cacheString(start, posVal - start) else ""
   }
 
-  private[parser] def consumeToAnySorted(chars: Char*): String = {
+  private[parser] def consumeToAnySorted(chars: Char*): String = consumeToAnySorted(chars.toArray)
+
+
+  private[parser] def consumeToAnySorted(chars: Array[Char]): String = {
     val start: Int = posVal
     val remaining: Int = length
     val value: Array[Char] = inputArray
@@ -170,13 +173,157 @@ final private[parser] class CharacterReader(input: String) {
     val value: Array[Char] = inputArray
     breakable {
       while (posVal < remaining) {
-        val c: Char = value(pos)
+        val c: Char = value(posVal)
         if (c == '\t' || c == '\n' || c == '\r' || c == '\f' || c == ' ' || c == '/' || c == '>' || c == TokeniserState.nullChar) break()
         posVal += 1
       }
     }
     if (posVal > start) cacheString(start, posVal - start) else ""
   }
+
+  private[parser] def consumeToEnd: String = {
+    val data: String = cacheString(posVal, length - posVal)
+    posVal = length
+    data
+  }
+
+  private[parser] def consumeLetterSequence: String = {
+    val start: Int = posVal
+    breakable {
+      while (posVal < length) {
+        val c: Char = inputArray(posVal)
+        if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))
+          posVal += 1
+        else
+          break()
+      }
+    }
+    cacheString(start, posVal - start)
+  }
+
+  private[parser] def consumeLetterThenDigitSequence: String = {
+    val start: Int = posVal
+    breakable {
+      while (posVal < length) {
+        val c: Char = inputArray(posVal)
+        if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))
+          posVal += 1
+        else break()
+      }
+    }
+    breakable {
+      while (!isEmpty) {
+        val c: Char = inputArray(posVal)
+        if (c >= '0' && c <= '9')
+          posVal += 1
+
+        else break()
+      }
+    }
+    cacheString(start, posVal - start)
+  }
+
+  private[parser] def consumeHexSequence: String = {
+    val start: Int = posVal
+    breakable {
+      while (posVal < length) {
+        val c: Char = inputArray(posVal)
+        if ((c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f'))
+          posVal += 1
+        else break()
+      }
+    }
+    cacheString(start, posVal - start)
+  }
+
+  private[parser] def consumeDigitSequence: String = {
+    val start: Int = posVal
+    breakable {
+      while (posVal < length) {
+        val c: Char = inputArray(posVal)
+        if (c >= '0' && c <= '9')
+          posVal += 1
+        else break()
+      }
+    }
+    cacheString(start, posVal - start)
+  }
+
+  private[parser] def matches(c: Char): Boolean = !isEmpty && inputArray(posVal) == c
+
+  private[parser] def matches(seq: String): Boolean = {
+    val scanLength: Int = seq.length
+    if (scanLength > length - posVal) return false
+    for (offset <- 0 to (scanLength - 1)) {
+      if (seq.charAt(offset) != inputArray(posVal + offset))
+        return false
+    }
+    true
+  }
+
+  private[parser] def matchesIgnoreCase(seq: String): Boolean = {
+    val scanLength: Int = seq.length
+    if (scanLength > length - posVal) return false
+    for (offset <- 0 to (scanLength - 1)) {
+      val upScan = seq.charAt(offset).toUpper
+      val upTarget = inputArray(posVal + offset).toUpper
+      if (upScan != upTarget) return false
+    }
+    true
+  }
+
+  private[parser] def matchesAny(seq: Char*): Boolean = {
+    if (isEmpty) return false
+    val c: Char = inputArray(posVal)
+    for (seek <- seq) {
+      if (seek == c) return true
+    }
+    false
+  }
+
+  private[parser] def matchesAnySorted(seq: Array[Char]): Boolean =
+    !isEmpty && java.util.Arrays.binarySearch(seq, inputArray(posVal)) >= 0
+
+  private[parser] def matchesLetter: Boolean = {
+    if (isEmpty) return false
+    val c: Char = inputArray(posVal)
+    (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')
+  }
+
+  private[parser] def matchesDigit: Boolean = {
+    if (isEmpty) return false
+    val c: Char = inputArray(posVal)
+    c >= '0' && c <= '9'
+  }
+
+  private[parser] def matchConsume(seq: String): Boolean = {
+    if (matches(seq)) {
+      posVal += seq.length
+      true
+    } else {
+      false
+    }
+  }
+
+  private[parser] def matchConsumeIgnoreCase(seq: String): Boolean = {
+    if (matchesIgnoreCase(seq)) {
+      posVal += seq.length
+      true
+    } else {
+      false
+    }
+  }
+
+  private[parser] def containsIgnoreCase(seq: String): Boolean = {
+    // used to check presence of </title>, </style>. only finds consistent case.
+    import java.util.Locale
+    val loScan: String = seq.toLowerCase(Locale.ENGLISH)
+    val hiScan: String = seq.toUpperCase(Locale.ENGLISH)
+    (nextIndexOf(loScan) > -1) || (nextIndexOf(hiScan) > -1)
+  }
+
+  override def toString: String = new String(inputArray, posVal, length - posVal)
+
 
   /**
    * Caches short strings, as a flywheel pattern, to reduce GC load. Just for this doc, to prevent leaks.

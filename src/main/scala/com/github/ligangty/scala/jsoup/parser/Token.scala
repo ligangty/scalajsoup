@@ -2,16 +2,13 @@ package com.github.ligangty.scala.jsoup.parser
 
 import com.github.ligangty.scala.jsoup.helper.Validator._
 import com.github.ligangty.scala.jsoup.nodes.{Attribute, Attributes}
+import Token._
 
 /**
  * Parse tokens for the Tokeniser.
  */
 abstract private[parser] class Token private() {
   private[parser] var tokType: TokenType.Value = null
-
-  private[parser] object TokenType extends Enumeration {
-    val Doctype, StartTag, EndTag, Comment, Character, EOF = Value
-  }
 
   private[parser] def tokenType: String = this.getClass.getSimpleName
 
@@ -21,63 +18,48 @@ abstract private[parser] class Token private() {
    */
   private[parser] def reset: Token
 
-  private[parser] def isDoctype: Boolean = {
-    tokType eq TokenType.Doctype
-  }
+  private[parser] def isDoctype: Boolean = tokType == TokenType.Doctype
 
   private[parser] def asDoctype: Token.Doctype = {
     this.asInstanceOf[Token.Doctype]
   }
 
-  private[parser] def isStartTag: Boolean = {
-    tokType eq TokenType.StartTag
-  }
+  private[parser] def isStartTag: Boolean = tokType == TokenType.StartTag
 
-  private[parser] def asStartTag: Token.StartTag = {
-    this.asInstanceOf[Token.StartTag]
-  }
 
-  private[parser] def isEndTag: Boolean = {
-    tokType eq TokenType.EndTag
-  }
+  private[parser] def asStartTag: Token.StartTag = this.asInstanceOf[Token.StartTag]
 
-  private[parser] def asEndTag: Token.EndTag = {
-    this.asInstanceOf[Token.EndTag]
-  }
+  private[parser] def isEndTag: Boolean = tokType == TokenType.EndTag
 
-  private[parser] def isComment: Boolean = {
-    tokType eq TokenType.Comment
-  }
+  private[parser] def asEndTag: Token.EndTag = this.asInstanceOf[Token.EndTag]
 
-  private[parser] def asComment: Token.Comment = {
-    this.asInstanceOf[Token.Comment]
-  }
+  private[parser] def isComment: Boolean = tokType == TokenType.Comment
 
-  private[parser] def isCharacter: Boolean = {
-    tokType eq TokenType.Character
-  }
+  private[parser] def asComment: Token.Comment = this.asInstanceOf[Token.Comment]
 
-  private[parser] def asCharacter: Token.Character = {
-    this.asInstanceOf[Token.Character]
-  }
+  private[parser] def isCharacter: Boolean = tokType == TokenType.Character
 
-  private[parser] def isEOF: Boolean = {
-    tokType eq TokenType.EOF
-  }
+  private[parser] def asCharacter: Token.Character = this.asInstanceOf[Token.Character]
+
+  private[parser] def isEOF: Boolean = tokType == TokenType.EOF
 
 }
 
 private[parser] object Token {
   private[parser] def reset(sb: StringBuilder): Unit = if (sb != null) sb.delete(0, sb.length)
 
-  private[parser] final class Doctype extends Token {
+  private[parser] object TokenType extends Enumeration {
+    val Doctype, StartTag, EndTag, Comment, Character, EOF = Value
+  }
+
+  private[parser] final class Doctype private(n: Unit = ()) extends Token {
     private[parser] val name: StringBuilder = new StringBuilder
     private[parser] val publicIdentifier: StringBuilder = new StringBuilder
     private[parser] val systemIdentifier: StringBuilder = new StringBuilder
     private[parser] var forceQuirks: Boolean = false
 
     private[parser] def this() {
-      this()
+      this(())
       tokType = TokenType.Doctype
     }
 
@@ -102,7 +84,7 @@ private[parser] object Token {
   }
 
   private[parser] abstract class Tag extends Token {
-    protected var tagName: String = null
+    protected[parser] var tagName: String = null
     // attribute names are generally caught in one hop, not accumulated
     private var pendingAttributeName: String = null
     // but values are accumulated, from e.g. & in hrefs
@@ -194,9 +176,9 @@ private[parser] object Token {
     }
   }
 
-  private[parser] final class StartTag() extends Tag {
+  private[parser] final class StartTag(n: Unit = ()) extends Tag {
     private[parser] def this() {
-      this()
+      this(())
       attributes = new Attributes
       tokType = TokenType.StartTag
     }
@@ -220,16 +202,16 @@ private[parser] object Token {
     }
   }
 
-  private[parser] final class EndTag extends Tag {
+  private[parser] final class EndTag private(n: Unit = ()) extends Tag {
     private[parser] def this() {
-      this()
+      this(())
       tokType = TokenType.EndTag
     }
 
     override def toString: String = "</" + name + ">"
   }
 
-  private[parser] final class Comment extends Token {
+  private[parser] final class Comment private(n: Unit = ()) extends Token {
     private[parser] val data: StringBuilder = new StringBuilder
     private[parser] var bogus: Boolean = false
 
@@ -240,7 +222,7 @@ private[parser] object Token {
     }
 
     private[parser] def this() {
-      this()
+      this(())
       tokType = TokenType.Comment
     }
 
@@ -249,11 +231,11 @@ private[parser] object Token {
     override def toString: String = "<!--" + getData + "-->"
   }
 
-  private[parser] final class Character extends Token {
+  private[parser] final class Character private(n: Unit = ()) extends Token {
     private var data: String = null
 
     private[parser] def this() {
-      this()
+      this(())
       tokType = TokenType.Character
     }
 
@@ -272,9 +254,9 @@ private[parser] object Token {
     override def toString: String = getData
   }
 
-  private[parser] final class EOF extends Token {
+  private[parser] final class EOF private(n: Unit = ()) extends Token {
     private[parser] def this() {
-      this()
+      this(())
       tokType = TokenType.EOF
     }
 
