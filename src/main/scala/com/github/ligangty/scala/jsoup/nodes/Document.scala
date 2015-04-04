@@ -6,7 +6,7 @@ import com.github.ligangty.scala.jsoup.helper.Validator
 import com.github.ligangty.scala.jsoup.parser.Tag
 
 /**
- * Created by gli on 15-3-10.
+ * A HTML Document.
  */
 class Document private(baseUri: String, locationVal: String) extends Element(Tag("#root"), baseUri) {
   private var outputSettingsVal: Document.OutputSettings = new Document.OutputSettings
@@ -27,7 +27,7 @@ class Document private(baseUri: String, locationVal: String) extends Element(Tag
     //    val html: Element = doc.appendElement("html")
     //    html.appendElement("head")
     //    html.appendElement("body")
-    return doc
+    doc
   }
 
   /**

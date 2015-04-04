@@ -244,7 +244,7 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
   /**
    * Remove (delete) this node from the DOM tree. If this node has children, they are also removed.
    */
-  def remove {
+  def remove(): Unit = {
     notNull(parentNode)
     parentNode.removeChild(this)
   }
