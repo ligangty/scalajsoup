@@ -41,8 +41,8 @@ class TextNode extends Node {
    */
   def text(text: String): TextNode = {
     this.textVal = text
-    if (attributes != null) attributes.put(TEXT_KEY, text)
-    return this
+    if (attributesVal != null) attributesVal.put(TEXT_KEY, text)
+    this
   }
 
   /**
@@ -50,7 +50,7 @@ class TextNode extends Node {
      @return text
     */
   def getWholeText: String =
-    if (attributes == null) text else attributes.get(TEXT_KEY)
+    if (attributesVal == null) textVal else attributesVal.get(TEXT_KEY)
 
   /**
   Test if this text node is blank -- that is, empty or only whitespace (including newlines).

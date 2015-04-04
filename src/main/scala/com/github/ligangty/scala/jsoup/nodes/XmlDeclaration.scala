@@ -1,18 +1,20 @@
 package com.github.ligangty.scala.jsoup.nodes
+
 import XmlDeclaration._
 
 /**
  * An XML Declaration.
  */
 class XmlDeclaration(baseUri: String, isProcessingInstruction: Boolean) extends Node(baseUri) {
+
   /**
    * Create a new XML declaration
    * @param data data
    * @param baseUri base uri
    * @param isProcessingInstruction is processing instruction
-    */
+   */
   def this(data: String, baseUri: String, isProcessingInstruction: Boolean) {
-    this(baseUri,isProcessingInstruction)
+    this(baseUri, isProcessingInstruction)
     attributes.put(DECL_KEY, data)
   }
 
@@ -25,7 +27,11 @@ class XmlDeclaration(baseUri: String, isProcessingInstruction: Boolean) extends 
   def getWholeDeclaration: String = attributes.get(DECL_KEY)
 
   private[nodes] def outerHtmlHead(accum: StringBuilder, depth: Int, out: Document.OutputSettings) {
-    accum.append("<").append(if (isProcessingInstruction) "!" else "?").append(getWholeDeclaration).append(">")
+    accum.append("<").append(if (isProcessingInstruction) {
+      "!"
+    } else {
+      "?"
+    }).append(getWholeDeclaration).append(">")
   }
 
   private[nodes] def outerHtmlTail(accum: StringBuilder, depth: Int, out: Document.OutputSettings) {}
@@ -34,5 +40,6 @@ class XmlDeclaration(baseUri: String, isProcessingInstruction: Boolean) extends 
 }
 
 private[nodes] object XmlDeclaration {
+
   private val DECL_KEY: String = "declaration"
 }
