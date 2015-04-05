@@ -546,7 +546,7 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
     accum.toString()
   }
 
-  protected def outerHtml(accum: scala.StringBuilder) {
+  protected[nodes] def outerHtml(accum: scala.StringBuilder) {
     new NodeTraversor(new Node.OuterHtmlVisitor(accum, getOutputSettings)).traverse(this)
   }
 

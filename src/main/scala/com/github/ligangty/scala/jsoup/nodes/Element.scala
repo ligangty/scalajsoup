@@ -1067,9 +1067,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
 
   private def html(accum: scala.StringBuilder) = {
     for (node <- childNodes) {
-      //@todo some very suck error of type mismatch here: need
-      // int but acutual stringbuilder, will solve it later
-//      node.outerHtml(accum)
+      node.outerHtml(accum)
     }
   }
 
