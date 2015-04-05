@@ -6,7 +6,7 @@ import com.github.ligangty.scala.jsoup.nodes.{Attributes, Element, Document}
 import scala.collection.mutable
 
 
-abstract class TreeBuilder {
+private[parser] abstract class TreeBuilder {
   private[parser] var reader: CharacterReader = null
   private[parser] var tokeniser: Tokeniser = null
   protected var doc: Document = null

@@ -8,6 +8,7 @@ import scala.util.control.Breaks._
  * CharacterReader consumes tokens off a string. To replace the old TokenQueue.
  */
 final private[parser] class CharacterReader(input: String) {
+
   private val inputArray: Array[Char] = {
     notNull(input)
     input.toCharArray
@@ -24,10 +25,18 @@ final private[parser] class CharacterReader(input: String) {
 
   private[parser] def isEmpty: Boolean = posVal >= length
 
-  private[parser] def current: Char = if (posVal >= length) EOF else input(posVal)
+  private[parser] def current: Char = if (posVal >= length) {
+    EOF
+  } else {
+    input(posVal)
+  }
 
   private[parser] def consume: Char = {
-    val value: Char = if (posVal >= length) EOF else input(posVal)
+    val value: Char = if (posVal >= length) {
+      EOF
+    } else {
+      input(posVal)
+    }
     posVal += 1
     value
   }
@@ -60,8 +69,10 @@ final private[parser] class CharacterReader(input: String) {
    * @return offset between current position and next instance of target. -1 if not found.
    */
   private[parser] def nextIndexOf(c: Char): Int = {
-    for (i <- posVal to length) {
-      if (c == inputArray(i)) return i - pos
+    for (i <- posVal to (length - 1)) {
+      if (c == inputArray(i)) {
+        return i - pos
+      }
     }
     -1
   }
@@ -75,7 +86,7 @@ final private[parser] class CharacterReader(input: String) {
   private[parser] def nextIndexOf(seq: CharSequence): Int = {
     // doesn't handle scanning for surrogates
     val startChar: Char = seq.charAt(0)
-    for (offset <- posVal to length) {
+    for (offset <- posVal to (length-1)) {
       var offs = offset
       // scan to first instance of startchar:
       if (startChar != inputArray(offs)) {
@@ -91,7 +102,9 @@ final private[parser] class CharacterReader(input: String) {
             i += 1
             j += 1
           }
-          if (i == last) return offs - posVal
+          if (i == last) {
+            return offs - posVal
+          }
         }
       }
     }
@@ -120,22 +133,29 @@ final private[parser] class CharacterReader(input: String) {
     }
   }
 
-  private[parser] def consumeToAny(chars: Char*): String = {
+  private[parser] def consumeToAny(chars: Char*): String = consumeToAny(chars.toArray)
+
+  private[parser] def consumeToAny(chars: Array[Char]): String = {
     val start: Int = posVal
     val remaining: Int = length
     breakable {
       while (posVal < remaining) {
         for (c <- chars) {
-          if (inputArray(posVal) == c) break()
+          if (inputArray(posVal) == c) {
+            break()
+          }
         }
         posVal += 1
       }
     }
-    if (posVal > start) cacheString(start, posVal - start) else ""
+    if (posVal > start) {
+      cacheString(start, posVal - start)
+    } else {
+      ""
+    }
   }
 
   private[parser] def consumeToAnySorted(chars: Char*): String = consumeToAnySorted(chars.toArray)
-
 
   private[parser] def consumeToAnySorted(chars: Array[Char]): String = {
     val start: Int = posVal
@@ -144,11 +164,17 @@ final private[parser] class CharacterReader(input: String) {
 
     breakable {
       while (posVal < remaining) {
-        if (java.util.Arrays.binarySearch(chars.toArray, value(posVal)) >= 0) break()
+        if (java.util.Arrays.binarySearch(chars.toArray, value(posVal)) >= 0) {
+          break()
+        }
         posVal += 1
       }
     }
-    if (posVal > start) cacheString(start, posVal - start) else ""
+    if (posVal > start) {
+      cacheString(start, posVal - start)
+    } else {
+      ""
+    }
   }
 
   private[parser] def consumeData: String = {
@@ -159,11 +185,17 @@ final private[parser] class CharacterReader(input: String) {
     breakable {
       while (posVal < remaining) {
         val c: Char = value(posVal)
-        if (c == '&' || c == '<' || c == TokeniserState.nullChar) break() //todo: break is not supported
+        if (c == '&' || c == '<' || c == TokeniserState.nullChar) {
+          break()
+        } //todo: break is not supported
         posVal += 1
       }
     }
-    if (posVal > start) cacheString(start, posVal - start) else ""
+    if (posVal > start) {
+      cacheString(start, posVal - start)
+    } else {
+      ""
+    }
   }
 
   private[parser] def consumeTagName: String = {
@@ -174,11 +206,17 @@ final private[parser] class CharacterReader(input: String) {
     breakable {
       while (posVal < remaining) {
         val c: Char = value(posVal)
-        if (c == '\t' || c == '\n' || c == '\r' || c == '\f' || c == ' ' || c == '/' || c == '>' || c == TokeniserState.nullChar) break()
+        if (c == '\t' || c == '\n' || c == '\r' || c == '\f' || c == ' ' || c == '/' || c == '>' || c == TokeniserState.nullChar) {
+          break()
+        }
         posVal += 1
       }
     }
-    if (posVal > start) cacheString(start, posVal - start) else ""
+    if (posVal > start) {
+      cacheString(start, posVal - start)
+    } else {
+      ""
+    }
   }
 
   private[parser] def consumeToEnd: String = {
@@ -192,10 +230,12 @@ final private[parser] class CharacterReader(input: String) {
     breakable {
       while (posVal < length) {
         val c: Char = inputArray(posVal)
-        if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))
+        if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')) {
           posVal += 1
-        else
+        }
+        else {
           break()
+        }
       }
     }
     cacheString(start, posVal - start)
@@ -206,18 +246,24 @@ final private[parser] class CharacterReader(input: String) {
     breakable {
       while (posVal < length) {
         val c: Char = inputArray(posVal)
-        if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))
+        if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')) {
           posVal += 1
-        else break()
+        }
+        else {
+          break()
+        }
       }
     }
     breakable {
       while (!isEmpty) {
         val c: Char = inputArray(posVal)
-        if (c >= '0' && c <= '9')
+        if (c >= '0' && c <= '9') {
           posVal += 1
+        }
 
-        else break()
+        else {
+          break()
+        }
       }
     }
     cacheString(start, posVal - start)
@@ -228,9 +274,12 @@ final private[parser] class CharacterReader(input: String) {
     breakable {
       while (posVal < length) {
         val c: Char = inputArray(posVal)
-        if ((c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f'))
+        if ((c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f')) {
           posVal += 1
-        else break()
+        }
+        else {
+          break()
+        }
       }
     }
     cacheString(start, posVal - start)
@@ -241,9 +290,12 @@ final private[parser] class CharacterReader(input: String) {
     breakable {
       while (posVal < length) {
         val c: Char = inputArray(posVal)
-        if (c >= '0' && c <= '9')
+        if (c >= '0' && c <= '9') {
           posVal += 1
-        else break()
+        }
+        else {
+          break()
+        }
       }
     }
     cacheString(start, posVal - start)
@@ -253,30 +305,43 @@ final private[parser] class CharacterReader(input: String) {
 
   private[parser] def matches(seq: String): Boolean = {
     val scanLength: Int = seq.length
-    if (scanLength > length - posVal) return false
+    if (scanLength > length - posVal) {
+      return false
+    }
     for (offset <- 0 to (scanLength - 1)) {
-      if (seq.charAt(offset) != inputArray(posVal + offset))
+      if (seq.charAt(offset) != inputArray(posVal + offset)) {
         return false
+      }
     }
     true
   }
 
   private[parser] def matchesIgnoreCase(seq: String): Boolean = {
     val scanLength: Int = seq.length
-    if (scanLength > length - posVal) return false
+    if (scanLength > length - posVal) {
+      return false
+    }
     for (offset <- 0 to (scanLength - 1)) {
       val upScan = seq.charAt(offset).toUpper
       val upTarget = inputArray(posVal + offset).toUpper
-      if (upScan != upTarget) return false
+      if (upScan != upTarget) {
+        return false
+      }
     }
     true
   }
 
-  private[parser] def matchesAny(seq: Char*): Boolean = {
-    if (isEmpty) return false
+  private[parser] def matchesAny(seq: Char*): Boolean = matchesAny(seq.toArray)
+
+  private[parser] def matchesAny(seq: Array[Char]): Boolean = {
+    if (isEmpty) {
+      return false
+    }
     val c: Char = inputArray(posVal)
     for (seek <- seq) {
-      if (seek == c) return true
+      if (seek == c) {
+        return true
+      }
     }
     false
   }
@@ -285,13 +350,17 @@ final private[parser] class CharacterReader(input: String) {
     !isEmpty && java.util.Arrays.binarySearch(seq, inputArray(posVal)) >= 0
 
   private[parser] def matchesLetter: Boolean = {
-    if (isEmpty) return false
+    if (isEmpty) {
+      return false
+    }
     val c: Char = inputArray(posVal)
     (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')
   }
 
   private[parser] def matchesDigit: Boolean = {
-    if (isEmpty) return false
+    if (isEmpty) {
+      return false
+    }
     val c: Char = inputArray(posVal)
     c >= '0' && c <= '9'
   }
@@ -324,7 +393,6 @@ final private[parser] class CharacterReader(input: String) {
 
   override def toString: String = new String(inputArray, posVal, length - posVal)
 
-
   /**
    * Caches short strings, as a flywheel pattern, to reduce GC load. Just for this doc, to prevent leaks.
    * <p />
@@ -336,11 +404,13 @@ final private[parser] class CharacterReader(input: String) {
     val value: Array[Char] = inputArray
     val cache: Array[String] = stringCache
     // limit (no cache):
-    if (count > maxCacheLen) return new String(value, start, count)
+    if (count > maxCacheLen) {
+      return new String(value, start, count)
+    }
     // calculate hash:
     var hash: Int = 0
     var offset: Int = start
-    for (i <- 0 to count) {
+    for (i <- 0 to (count - 1)) {
       hash = 31 * hash + value(offset)
       offset += 1
     }
@@ -390,6 +460,7 @@ final private[parser] class CharacterReader(input: String) {
 }
 
 private[parser] object CharacterReader {
+
   private[parser] val EOF: Char = -1.toChar
   private val maxCacheLen: Int = 12
 }
