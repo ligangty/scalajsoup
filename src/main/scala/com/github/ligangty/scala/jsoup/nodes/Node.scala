@@ -236,10 +236,9 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
    * @return the Document associated with this Node, or null if there is no such Document.
    */
   def ownerDocument: Document = {
-    this match {
-      case d: Document => return d
-    }
-    if (parentNodeVal == null) {
+    if (this.isInstanceOf[Document]) {
+      this.asInstanceOf[Document]
+    } else if (parentNodeVal == null) {
       null
     } else {
       parentNodeVal.ownerDocument

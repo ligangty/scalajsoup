@@ -4,12 +4,13 @@ import com.github.ligangty.scala.jsoup.helper.Validator._
 import com.github.ligangty.scala.jsoup.nodes._
 
 /**
- * Use the {@code XmlTreeBuilder} when you want to parse XML without any of the HTML DOM rules being applied to the
+ * Use the <code>XmlTreeBuilder</code> when you want to parse XML without any of the HTML DOM rules being applied to the
  * document.
- * <p>Usage example: {@code Document xmlDoc = Jsoup.parse(html, baseUrl, Parser.xmlParser());}</p>
+ * <p>Usage example: {{{Document xmlDoc = Jsoup.parse(html, baseUrl, Parser.xmlParser());}}}</p>
  *
  */
-class XmlTreeBuilder extends TreeBuilder{
+class XmlTreeBuilder extends TreeBuilder {
+
   protected override def initialiseParse(input: String, baseUri: String, errors: ParseErrorList) {
     super.initialiseParse(input, baseUri, errors)
     stack.append(doc)
@@ -46,7 +47,9 @@ class XmlTreeBuilder extends TreeBuilder{
     insertNode(el)
     if (startTag.isSelfClosing) {
       tokeniser.acknowledgeSelfClosingFlag()
-      if (!tag.isKnownTag) tag.setSelfClosing
+      if (!tag.isKnownTag) {
+        tag.setSelfClosing()
+      }
     } else {
       stack.append(el)
     }
@@ -80,14 +83,14 @@ class XmlTreeBuilder extends TreeBuilder{
    * If the stack contains an element with this tag's name, pop up the stack to remove the first occurrence. If not
    * found, skips.
    *
-   * @param endTag
+   * @param endTag endTag
    */
   private def popStackToClose(endTag: Token.EndTag) {
     val elName: String = endTag.name
     var firstFound: Element = null
     import scala.util.control.Breaks._
     breakable {
-      for (pos <-  (stack.size -1) to 0) {
+      for (pos <- (stack.size - 1).to(0, -1)) {
         val next = stack(pos)
         if (next.nodeName().equals(elName)) {
           firstFound = next
@@ -95,13 +98,16 @@ class XmlTreeBuilder extends TreeBuilder{
         }
       }
     }
-    if (firstFound == null)
-      return; // not found, skip
+    if (firstFound == null) {
+      return
+    }; // not found, skip
     breakable {
-      for (pos <- stack.size - 1 to 0){
+      for (pos <- (stack.size - 1).to(0,-1)) {
         val next = stack(pos)
         stack.remove(pos)
-        if (next == firstFound) break()
+        if (next == firstFound) {
+          break()
+        }
       }
     }
   }
