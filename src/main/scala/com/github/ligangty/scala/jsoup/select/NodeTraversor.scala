@@ -40,7 +40,7 @@ class NodeTraversor {
             depth -= 1
           }
           visitor.tail(node, depth)
-          if (node eq root) break
+          if (node eq root) break()
           node = node.nextSibling
         }
       }

@@ -20,7 +20,6 @@ class Tag private() {
   private[Tag] var formList: Boolean = false
   private[Tag] var formSubmit: Boolean = false
 
-
   private def this(tagName: String) {
     this()
     this.tagName = tagName.toLowerCase
@@ -78,15 +77,13 @@ class Tag private() {
    */
   def isData: Boolean = !canContainInline && !isEmpty
 
-
-
   /**
    * Get if this tag is self closing.
    *
    * @return if this tag should be output as self closing.
    */
   def isSelfClosing: Boolean = {
-    return isEmpty || selfClosing
+    isEmpty || selfClosing
   }
 
   /**
@@ -95,7 +92,7 @@ class Tag private() {
    * @return if a known tag
    */
   def isKnownTag: Boolean = {
-    return Tag.tags.contains(tagName)
+    Tag.tags.contains(tagName)
   }
 
   /**
@@ -105,7 +102,7 @@ class Tag private() {
    * @return if known HTML tag
    */
   def isKnownTag(tagName: String): Boolean = {
-    return Tag.tags.contains(tagName)
+    Tag.tags.contains(tagName)
   }
 
   /**
@@ -120,7 +117,7 @@ class Tag private() {
    * @return if associated with a form
    */
   def isFormListed: Boolean = {
-    return formList
+    formList
   }
 
   /**
@@ -128,52 +125,87 @@ class Tag private() {
    * @return if submittable with a form
    */
   def isFormSubmittable: Boolean = {
-    return formSubmit
+    formSubmit
   }
 
-  private[parser] def setSelfClosing: Tag = {
+  private[parser] def setSelfClosing(): Tag = {
     selfClosing = true
-    return this
+    this
   }
 
   override def equals(o: Any): Boolean = o match {
-    case that: Tag => {
+    case that: Tag =>
       that.tagName == this.tagName &&
-        that.canContainBlock == this.canContainBlock &&
-        that.canContainInline == this.canContainInline &&
-        that.isEmpty == this.isEmpty &&
-        that.isFormatAsBlock == this.isFormatAsBlock &&
-        that.isBlock == this.isBlock &&
-        that.preserveWhitespace == this.preserveWhitespace &&
-        that.selfClosing == this.selfClosing &&
-        that.formList == this.formList &&
-        that.formSubmit == this.formSubmit
-    }
+              that.canContainBlock == this.canContainBlock &&
+              that.canContainInline == this.canContainInline &&
+              that.isEmpty == this.isEmpty &&
+              that.isFormatAsBlock == this.isFormatAsBlock &&
+              that.isBlock == this.isBlock &&
+              that.preserveWhitespace == this.preserveWhitespace &&
+              that.selfClosing == this.selfClosing &&
+              that.formList == this.formList &&
+              that.formSubmit == this.formSubmit
     case _ => false
   }
 
   override def hashCode: Int = {
     var result: Int = tagName.hashCode
-    result = 31 * result + (if (isBlock) 1 else 0)
-    result = 31 * result + (if (isFormatAsBlock) 1 else 0)
-    result = 31 * result + (if (canContainBlock) 1 else 0)
-    result = 31 * result + (if (canContainInline) 1 else 0)
-    result = 31 * result + (if (isEmpty) 1 else 0)
-    result = 31 * result + (if (selfClosing) 1 else 0)
-    result = 31 * result + (if (preserveWhitespace) 1 else 0)
-    result = 31 * result + (if (formList) 1 else 0)
-    result = 31 * result + (if (formSubmit) 1 else 0)
-    return result
+    result = 31 * result + (if (isBlock) {
+      1
+    } else {
+      0
+    })
+    result = 31 * result + (if (isFormatAsBlock) {
+      1
+    } else {
+      0
+    })
+    result = 31 * result + (if (canContainBlock) {
+      1
+    } else {
+      0
+    })
+    result = 31 * result + (if (canContainInline) {
+      1
+    } else {
+      0
+    })
+    result = 31 * result + (if (isEmpty) {
+      1
+    } else {
+      0
+    })
+    result = 31 * result + (if (selfClosing) {
+      1
+    } else {
+      0
+    })
+    result = 31 * result + (if (preserveWhitespace) {
+      1
+    } else {
+      0
+    })
+    result = 31 * result + (if (formList) {
+      1
+    } else {
+      0
+    })
+    result = 31 * result + (if (formSubmit) {
+      1
+    } else {
+      0
+    })
+    result
   }
 
   override def toString: String = {
-    return tagName
+    tagName
   }
-
 
 }
 
 object Tag {
+
   private[this] val blockTags: Array[String] = Array("html", "head", "body", "frameset", "script", "noscript", "style", "meta", "link", "title", "frame", "noframes", "section", "nav", "aside", "hgroup", "header", "footer", "p", "h1", "h2", "h3", "h4", "h5", "h6", "ul", "ol", "pre", "div", "blockquote", "hr", "address", "figure", "figcaption", "form", "fieldset", "ins", "del", "s", "dl", "dt", "dd", "li", "table", "caption", "thead", "tfoot", "tbody", "colgroup", "col", "tr", "th", "td", "video", "audio", "canvas", "details", "menu", "plaintext", "template", "article", "main", "svg", "math")
   private[this] val inlineTags: Array[String] = Array("object", "base", "font", "tt", "i", "b", "u", "big", "small", "em", "strong", "dfn", "code", "samp", "kbd", "var", "cite", "abbr", "time", "acronym", "mark", "ruby", "rt", "rp", "a", "img", "br", "wbr", "map", "q", "sub", "sup", "bdo", "iframe", "embed", "span", "input", "select", "textarea", "label", "button", "optgroup", "option", "legend", "datalist", "keygen", "output", "progress", "meter", "area", "param", "source", "track", "summary", "command", "device", "area", "basefont", "bgsound", "menuitem", "param", "source", "track", "data", "bdi")
   private[this] val emptyTags: Array[String] = Array("meta", "link", "base", "frame", "img", "br", "wbr", "embed", "hr", "input", "keygen", "col", "command", "device", "area", "basefont", "bgsound", "menuitem", "param", "source", "track")
@@ -183,19 +215,18 @@ object Tag {
   private[this] val formSubmitTags: Array[String] = Array("input", "keygen", "object", "select", "textarea")
 
   // creates
-  lazy private[Tag] val tags: Map[String, Tag] = initTags
+  lazy private[Tag] val tags: Map[String, Tag] = initTags()
 
   def apply(tagName: String): Tag = {
     notNull(tagName)
     tags.get(tagName) match {
       case Some(find1: Tag) => find1
-      case None => {
+      case None =>
         notEmpty(tagName.trim.toLowerCase)
         tags.get(tagName.trim.toLowerCase) match {
           case Some(find2: Tag) => find2
           case None => new Tag(tagName, false, true)
         }
-      }
     }
   }
 

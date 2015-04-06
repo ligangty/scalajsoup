@@ -5,7 +5,7 @@ import org.scalatest.FunSuite
 
 
 /**
- * Created by gli on 3/11/15.
+ * Test for Strings
  */
 class StringsTest extends FunSuite {
   test("join Iterable") {

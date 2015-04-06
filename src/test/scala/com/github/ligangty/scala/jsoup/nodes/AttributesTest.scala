@@ -3,7 +3,7 @@ package com.github.ligangty.scala.jsoup.nodes
 import org.scalatest.FunSuite
 
 /**
- * Created by gli on 3/19/15.
+ * test for Attributes
  */
 class AttributesTest extends FunSuite {
   test("html") {

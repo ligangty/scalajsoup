@@ -2,13 +2,14 @@ package com.github.ligangty.scala.jsoup.nodes
 
 import java.nio.charset.{CharsetEncoder, Charset}
 
-import com.github.ligangty.scala.jsoup.helper.Validator
+import com.github.ligangty.scala.jsoup.helper.Validator._
 import com.github.ligangty.scala.jsoup.parser.Tag
 
 /**
  * A HTML Document.
  */
 class Document private(baseUri: String, locationVal: String) extends Element(Tag("#root"), baseUri) {
+
   private var outputSettingsVal: Document.OutputSettings = new Document.OutputSettings
   private var quirksModeVal: Document.QuirksMode = Document.QuirksMode.noQuirks
 
@@ -22,7 +23,7 @@ class Document private(baseUri: String, locationVal: String) extends Element(Tag
    * @return document with html, head, and body elements.
    */
   private[nodes] def createShell(baseUri: String): Document = {
-    Validator.notNull(baseUri)
+    notNull(baseUri)
     val doc: Document = new Document(baseUri)
     //    val html: Element = doc.appendElement("html")
     //    html.appendElement("head")
@@ -38,7 +39,7 @@ class Document private(baseUri: String, locationVal: String) extends Element(Tag
   def location: String = locationVal
 
   /**
-  Accessor to the document's {@code head} element.
+  Accessor to the document's <code>head</code> element.
      @return { @code head}
     */
   def head: Element = findFirstElementByTagName("head", this) match {
@@ -46,9 +47,8 @@ class Document private(baseUri: String, locationVal: String) extends Element(Tag
     case None => null
   }
 
-
   /**
-  Accessor to the document's {@code body} element.
+  Accessor to the document's <code>body</code> element.
      @return { @code body}
     */
   def body: Element = findFirstElementByTagName("body", this) match {
@@ -56,19 +56,19 @@ class Document private(baseUri: String, locationVal: String) extends Element(Tag
     case None => null
   }
 
-
   private def findFirstElementByTagName(tag: String, node: Node): Option[Element] = {
-    if (node.nodeName == tag) return Some(node.asInstanceOf[Element])
-    else {
-      import scala.collection.JavaConversions._
+    if (node.nodeName == tag) {
+      return Some(node.asInstanceOf[Element])
+    } else {
       for (child <- node.childNodes) {
         val found = findFirstElementByTagName(tag, child)
-        if (found != None) return found
+        if (found != None) {
+          return found
+        }
       }
     }
     None
   }
-
 
   /**
    * Get the document's current output settings.
@@ -82,6 +82,7 @@ object Document {
   object OutputSettings {
 
     object Syntax extends Enumeration {
+
       val html, xml = Value
     }
 
@@ -161,8 +162,8 @@ object Document {
     def syntax: OutputSettings.Syntax = syntaxVal
 
     /**
-     * Set the document's output syntax. Either {@code html}, with empty tags and boolean attributes (etc), or
-     * {@code xml}, with self-closing tags.
+     * Set the document's output syntax. Either <code>html</code>, with empty tags and boolean attributes (etc), or
+     * <code>xml</code>, with self-closing tags.
      * @param syntaxIn serialization syntax
      * @return the document's output settings, for chaining
      */
@@ -195,7 +196,6 @@ object Document {
      */
     def outline: Boolean = outlineVal
 
-
     /**
      * Enable or disable HTML outline mode.
      * @param outlineMode new outline setting
@@ -212,14 +212,13 @@ object Document {
      */
     def indentAmount: Int = indentAmountVal
 
-
     /**
      * Set the indent amount for pretty printing
      * @param indentAmountIn number of spaces to use for indenting each level. Must be >= 0.
      * @return this, for chaining
      */
     def indentAmount(indentAmountIn: Int): Document.OutputSettings = {
-      Validator.isTrue(indentAmountIn >= 0)
+      isTrue(indentAmountIn >= 0)
       this.indentAmountVal = indentAmountIn
       this
     }
@@ -230,9 +229,8 @@ object Document {
         clone = super.clone.asInstanceOf[Document.OutputSettings]
       }
       catch {
-        case e: CloneNotSupportedException => {
+        case e: CloneNotSupportedException =>
           throw new RuntimeException(e)
-        }
       }
       clone.charset(charset.name)
       clone.escapeModeVal = this.escapeModeVal
@@ -241,6 +239,7 @@ object Document {
   }
 
   object QuirksMode extends Enumeration {
+
     type QuirksMode = Value
     val noQuirks, quirks, limitedQuirks = Value
   }

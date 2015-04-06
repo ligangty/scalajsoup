@@ -68,7 +68,7 @@ object Strings {
   def normaliseWhitespace(string: String): String = {
     val sb = new lang.StringBuilder(string.length())
     appendNormalisedWhitespace(sb, string, false)
-    sb.toString()
+    sb.toString
   }
 
   /**

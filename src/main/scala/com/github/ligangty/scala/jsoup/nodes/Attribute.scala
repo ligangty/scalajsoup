@@ -1,12 +1,8 @@
 package com.github.ligangty.scala.jsoup.nodes
 
-import java.util.Arrays
+import java.util
 
-import com.github.ligangty.scala.jsoup.helper.Validator
 import com.github.ligangty.scala.jsoup.helper.Validator._
-import com.github.ligangty.scala.jsoup.nodes.Document.OutputSettings
-import com.github.ligangty.scala.jsoup.nodes.Document.OutputSettings.Syntax
-
 
 /**
  *
@@ -44,15 +40,14 @@ class Attribute private[Attribute]() extends java.util.Map.Entry[String, String]
   }
 
   /**
-  Get the HTML representation of this attribute; e.g. {@code href="index.html"}.
+  Get the HTML representation of this attribute; e.g. <code>href="index.html"</code>.
        @return HTML
     */
   def html: String = {
     val accum: StringBuilder = new StringBuilder
-    html(accum, (new Document("")).outputSettings)
-    accum.toString
+    html(accum, new Document("").outputSettings)
+    accum.toString()
   }
-
 
   private[nodes] def html(accum: StringBuilder, out: Document.OutputSettings) {
     accum.append(key)
@@ -64,7 +59,7 @@ class Attribute private[Attribute]() extends java.util.Map.Entry[String, String]
   }
 
   /**
-   * Get the string representation of this attribute, implemented as {@link #html()}.
+   * Get the string representation of this attribute, implemented as [[html()]].
    * @return string
    */
   override def toString: String = html
@@ -82,18 +77,16 @@ class Attribute private[Attribute]() extends java.util.Map.Entry[String, String]
   //  }
   //
 
-    private[nodes] def isDataAttribute: Boolean = {
-      return key.startsWith(Attributes.dataPrefix) && key.length > Attributes.dataPrefix.length
-    }
+  private[nodes] def isDataAttribute: Boolean =
+    key.startsWith(Attributes.dataPrefix) && key.length > Attributes.dataPrefix.length
 
   /**
    * Collapsible if it's a boolean attribute and value is empty or same as name
    */
   private[nodes] def shouldCollapseAttribute(out: Document.OutputSettings): Boolean = {
-    return (("" == value) || value.equalsIgnoreCase(key)) &&
-      (out.syntax == Document.OutputSettings.Syntax.html) &&
-      (Arrays.binarySearch(Attribute.booleanAttributes.asInstanceOf[Array[AnyRef]], key) >= 0)
-
+    (("" == value) || value.equalsIgnoreCase(key)) &&
+            (out.syntax == Document.OutputSettings.Syntax.html) &&
+            (util.Arrays.binarySearch(Attribute.booleanAttributes.asInstanceOf[Array[AnyRef]], key) >= 0)
   }
 
   override def equals(o: Any): Boolean = o match {
@@ -103,8 +96,16 @@ class Attribute private[Attribute]() extends java.util.Map.Entry[String, String]
   }
 
   override def hashCode: Int = {
-    var result: Int = if (key != null) key.hashCode else 0
-    result = 31 * result + (if (value != null) value.hashCode else 0)
+    var result: Int = if (key != null) {
+      key.hashCode
+    } else {
+      0
+    }
+    result = 31 * result + (if (value != null) {
+      value.hashCode
+    } else {
+      0
+    })
     result
   }
 
@@ -120,6 +121,7 @@ class Attribute private[Attribute]() extends java.util.Map.Entry[String, String]
 }
 
 object Attribute {
+
   private val booleanAttributes: Array[String] = Array("allowfullscreen", "async", "autofocus", "checked", "compact", "declare", "default", "defer", "disabled", "formnovalidate", "hidden", "inert", "ismap", "itemscope", "multiple", "muted", "nohref", "noresize", "noshade", "novalidate", "nowrap", "open", "readonly", "required", "reversed", "seamless", "selected", "sortable", "truespeed", "typemustmatch")
 
   def apply(key: String, value: String): Attribute = new Attribute(key.trim.toLowerCase, value)

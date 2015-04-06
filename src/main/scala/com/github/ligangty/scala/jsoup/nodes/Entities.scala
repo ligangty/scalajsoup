@@ -1,15 +1,13 @@
 package com.github.ligangty.scala.jsoup.nodes
 
-import java.io.{IOException, InputStream}
 import java.nio.charset.CharsetEncoder
-import java.util.{MissingResourceException, Properties}
 
 import com.github.ligangty.scala.jsoup.helper.Strings
 
 import scala.collection.mutable
 import scala.collection.JavaConversions._
 import scala.io.Source
-import scala.util.control.Breaks
+import scala.util.control.Breaks._
 
 /**
   */
@@ -68,7 +66,7 @@ object Entities {
   private[nodes] def escape(string: String, out: Document.OutputSettings): String = {
     val accum: StringBuilder = new StringBuilder(string.length * 2)
     escape(accum, string, out, false, false, false)
-    return accum.toString
+    accum.toString()
   }
 
   private[nodes] def escape(accum: StringBuilder, string: String, out: Document.OutputSettings, inAttribute: Boolean, normaliseWhite: Boolean, stripLeadingWhite: Boolean): Unit = {
@@ -78,17 +76,16 @@ object Entities {
     val encoder: CharsetEncoder = out.encoder
     val escapeModeMap: Map[Char, String] = escapeMode.getMap
     val length: Int = string.length
-    import scala.util.control.Breaks._
     var offset: Int = 0
     while (offset < length) {
-      var codePoint = string.codePointAt(offset)
+      val codePoint = string.codePointAt(offset)
       breakable {
         if (normaliseWhite) {
           if (Strings.isWhitespace(codePoint)) {
-            if ((stripLeadingWhite && !reachedNonWhite) || lastWasWhite) break
+            if ((stripLeadingWhite && !reachedNonWhite) || lastWasWhite) break()
             accum.append(' ')
             lastWasWhite = true
-            break
+            break()
           }
           else {
             lastWasWhite = false
@@ -131,7 +128,7 @@ object Entities {
 
   /**
    * Unescape the input string.
-   * @param string
+   * @param string string
    * @param strict if "strict" (that is, requires trailing ';' char, otherwise that's optional)
    * @return
    */

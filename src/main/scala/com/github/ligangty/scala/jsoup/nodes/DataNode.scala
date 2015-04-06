@@ -16,7 +16,7 @@ class DataNode(baseUri: String) extends Node(baseUri) {
     attributes.put(DATA_KEY, data)
   }
 
-  def nodeName: String = "#data"
+  override def nodeName(): String = "#data"
 
   /**
    * Get the data contents of this node. Will be unescaped and with original new lines, space etc.

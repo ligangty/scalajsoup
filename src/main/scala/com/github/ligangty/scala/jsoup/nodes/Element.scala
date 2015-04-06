@@ -2,7 +2,7 @@ package com.github.ligangty.scala.jsoup.nodes
 
 import java.util
 
-import com.github.ligangty.scala.jsoup.helper.{Strings, Validator}
+import com.github.ligangty.scala.jsoup.helper.Strings
 import com.github.ligangty.scala.jsoup.helper.Validator._
 import com.github.ligangty.scala.jsoup.parser.Tag
 import com.github.ligangty.scala.jsoup.select.{NodeTraversor, NodeVisitor, Elements}
@@ -18,6 +18,7 @@ import scala.collection.mutable
  *
  */
 class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, attributes) {
+
   private var tagVal: Tag = null
 
   /**
@@ -50,15 +51,15 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
   override def nodeName(): String = tagVal.getName
 
   /**
-   * Get the name of the tagVal for this element. E.g. {@code div}
+   * Get the name of the tagVal for this element. E.g. <code>div</code>
    *
    * @return the tagVal name
    */
   def tagName: String = tagVal.getName
 
   /**
-   * Change the tag of this element. For example, convert a {@code <span>} to a {@code <div>} with
-   * {@code el.tagName("div");}.
+   * Change the tag of this element. For example, convert a <code><span></code> to a <code><div></code> with
+   * <code>el.tagName("div");</code.
    *
    * @param tagName new tag name for this element
    * @return this element, for chaining
@@ -77,22 +78,25 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
   def tag: Tag = tagVal
 
   /**
-   * Test if this element is a block-level element. (E.g. {@code <div> == true} or an inline element
-   * {@code <p> == false}).
+   * Test if this element is a block-level element. (E.g. {{{<div> == true}}} or an inline element
+   * {{{<p> == false}}}).
    *
    * @return true if block, false if not (and thus inline)
    */
   def isBlock: Boolean = tag.isBlock
 
-
   /**
-   * Get the {@code id} attribute of this element.
+   * Get the <code>id</code> attribute of this element.
    *
    * @return The id attribute, if present, or an empty string if not.
    */
   def id: String = {
     val id: String = attr("id")
-    if (id == null) "" else id
+    if (id == null) {
+      ""
+    } else {
+      id
+    }
   }
 
   /**
@@ -110,13 +114,13 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * Get this element's HTML5 custom data attributes. Each attribute in the element that has a key
    * starting with "data-" is included the dataset.
    * <p>
-   * E.g., the element {@code <div data-package="jsoup" data-language="Java" class="group">...} has the dataset
-   * {@code package=jsoup, language=java}.
+   * E.g., the element {{{<div data-package="jsoup" data-language="Java" class="group">...}}} has the dataset
+   * {{{package=jsoup, language=java}}}.
    * <p>
    * This map is a filtered view of the element's attribute map. Changes to one map (add, remove, update) are reflected
    * in the other map.
    * <p>
-   * You can find elements that have data attributes using the {@code [^data-]} attribute key prefix selector.
+   * You can find elements that have data attributes using the {{{[^data-]}}} attribute key prefix selector.
    * @return a map of { @code key=value} custom data attributes.
    */
   def dataset: Map[String, String] = attributes.dataset
@@ -148,7 +152,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * a filtered list of children that are elements, and the index is based on that filtered list.
    *
    * @param index the index number of the element to retrieve
-   * @return the child element, if it exists, otherwise throws an { @code IndexOutOfBoundsException}
+   * @return the child element, if it exists, otherwise throws an <code>IndexOutOfBoundsException</code
    * @see #childNode(int)
    */
   def child(index: Int): Element = children.get(index)
@@ -156,7 +160,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
   /**
    * Get this element's child elements.
    * <p/>
-   * This is effectively a filter on {@link #childNodes()} to get Element nodes.
+   * This is effectively a filter on [[getChildNodes()]] to get Element nodes.
    * @return child elements. If this element has no children, returns an
    *         empty list.
    * @see #childNodes()
@@ -167,7 +171,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
   /**
    * Get this element's child text nodes. The list is unmodifiable but the text nodes may be manipulated.
    * <p/>
-   * This is effectively a filter on {@link #childNodes()} to get Text nodes.
+   * This is effectively a filter on [[getChildNodes()]] to get Text nodes.
    * @return child text nodes. If this element has no text nodes, returns an
    *         empty list.
    *         <p/>
@@ -183,11 +187,10 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
   def textNodes: List[TextNode] =
     childNodes.filter(_.isInstanceOf[TextNode]).map(_.asInstanceOf[TextNode]).toList
 
-
   /**
    * Get this element's child data nodes. The list is unmodifiable but the data nodes may be manipulated.
    * <p/>
-   * This is effectively a filter on {@link #childNodes()} to get Data nodes.
+   * This is effectively a filter on [[getChildNodes()]] to get Data nodes.
    * @return child data nodes. If this element has no data nodes, returns an
    *         empty list.
    * @see #data()
@@ -196,17 +199,17 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
     childNodes.filter(_.isInstanceOf[DataNode]).map(_.asInstanceOf[DataNode]).toList
 
   /**
-   * Find elements that match the {@link Selector} CSS query, with this element as the starting context. Matched elements
+   * Find elements that match the [[com.github.ligangty.scala.jsoup.select.Selector]] CSS query, with this element as the starting context. Matched elements
    * may include this element, or any of its children.
    * <p/>
-   * This method is generally more powerful to use than the DOM-type {@code getElementBy*} methods, because
+   * This method is generally more powerful to use than the DOM-type <code>getElementBy*</code methods, because
    * multiple filters can be combined, e.g.:
    * <ul>
-   * <li>{@code el.select("a[href]")} - finds links ({@code a} tags with {@code href} attributes)
-   * <li>{@code el.select("a[href*=example.com]")} - finds links pointing to example.com (loosely)
+   * <li><code>el.select("a[href]")</code> - finds links (<code>a</code> tags with <code>href</code> attributes)
+   * <li><code>el.select("a[href*=example.com]")</code> - finds links pointing to example.com (loosely)
    * </ul>
    * <p/>
-   * See the query syntax documentation in {@link org.jsoup.select.Selector}.
+   * See the query syntax documentation in [[com.github.ligangty.scala.jsoup.select.Selector]].
    *
    * @param cssQuery a { @link Selector} CSS-like query
    * @return elements that match the query (empty if none match)
@@ -255,10 +258,12 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * @return this element, for chaining.
    */
   def insertChildren(index: Int, children: Seq[_ <: Node]): Element = {
-    Validator.notNull(children, "Children collection to be inserted must not be null.")
+    notNull(children, "Children collection to be inserted must not be null.")
     var indexVal = index
     val currentSize: Int = childNodeSize
-    if (indexVal < 0) indexVal += (currentSize + 1)
+    if (indexVal < 0) {
+      indexVal += (currentSize + 1)
+    }
     isTrue(indexVal >= 0 && indexVal <= currentSize, "Insert position out of bounds.")
     val nodes: mutable.ArrayBuffer[Node] = mutable.ArrayBuffer(children: _*)
     val nodeArray: Array[Node] = nodes.toArray
@@ -353,7 +358,6 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    */
   override def before(html: String): Element = super.before(html).asInstanceOf[Element]
 
-
   /**
    * Insert the specified node into the DOM before this node (as a preceding sibling).
    * @param node to add before this element
@@ -370,7 +374,6 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * @see #before(String)
    */
   override def after(html: String): Element = super.after(html).asInstanceOf[Element]
-
 
   /**
    * Insert the specified node into the DOM after this node (as a following sibling).
@@ -406,14 +409,22 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * @return the CSS Path that can be used to retrieve the element in a selector.
    */
   def cssSelector: String = {
-    if (id.length > 0) return "#" + id
+    if (id.length > 0) {
+      return "#" + id
+    }
     val selector: StringBuilder = new StringBuilder(tagName)
     val classes: String = Strings.join(classNames, ".")
-    if (classes.length > 0) selector.append('.').append(classes)
-    if (parent == null || parent.isInstanceOf[Document]) return selector.toString()
+    if (classes.length > 0) {
+      selector.append('.').append(classes)
+    }
+    if (parent == null || parent.isInstanceOf[Document]) {
+      return selector.toString()
+    }
     selector.insert(0, " > ")
     val value = ":nth-child(%d)".format(elementSiblingIndex + 1)
-    if (parent.select(selector.toString()).size > 1) selector.append(value)
+    if (parent.select(selector.toString()).size > 1) {
+      selector.append(value)
+    }
     parent.cssSelector + selector.toString()
   }
 
@@ -423,29 +434,38 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * @return sibling elements
    */
   def siblingElements: Elements = {
-    if (parentNode == null) return new Elements(0)
+    if (parentNode == null) {
+      return new Elements(0)
+    }
     val elements: Elements = parent.children
     val siblings: Elements = new Elements(elements.size - 1)
-    import scala.collection.JavaConversions._
-    elements.foreach(a => if (a ne this) siblings.add(a))
+    elements.foreach(a => if (a ne this) {
+      siblings.add(a)
+    })
     siblings
   }
 
   /**
-   * Gets the next sibling element of this element. E.g., if a {@code div} contains two {@code p}s,
-   * the {@code nextElementSibling} of the first {@code p} is the second {@code p}.
+   * Gets the next sibling element of this element. E.g., if a <code>div</code> contains two <code>p</code>s,
+   * the <code>nextElementSibling</code> of the first <code>p</code> is the second <code>p</code>.
    * <p/>
-   * This is similar to {@link #nextSibling()}, but specifically finds only Elements
+   * This is similar to [[nextSibling()]], but specifically finds only Elements
    * @return the next element, or null if there is no next element
    * @see #previousElementSibling()
    */
   def nextElementSibling: Element = {
-    if (parentNode == null) return null
+    if (parentNode == null) {
+      return null
+    }
     val siblings: Elements = parent.children
     val index: Integer = indexInList(this, siblings)
     notNull(index)
-    if (siblings.size > index + 1) siblings.get(index + 1)
-    else null
+    if (siblings.size > index + 1) {
+      siblings.get(index + 1)
+    }
+    else {
+      null
+    }
   }
 
   /**
@@ -454,12 +474,18 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * @see #nextElementSibling()
    */
   def previousElementSibling: Element = {
-    if (parentNode == null) return null
+    if (parentNode == null) {
+      return null
+    }
     val siblings: Elements = parent.children
     val index: Integer = indexInList(this, siblings)
     notNull(index)
-    if (index > 0) siblings.get(index - 1)
-    else null
+    if (index > 0) {
+      siblings.get(index - 1)
+    }
+    else {
+      null
+    }
   }
 
   /**
@@ -468,7 +494,11 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    */
   def firstElementSibling: Element = {
     val siblings: Elements = parent.children
-    if (siblings.size > 1) siblings.get(0) else null
+    if (siblings.size > 1) {
+      siblings.get(0)
+    } else {
+      null
+    }
   }
 
   /**
@@ -477,7 +507,9 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * @return position in element sibling list
    */
   def elementSiblingIndex: Int = {
-    if (parent == null) return 0
+    if (parent == null) {
+      return 0
+    }
     indexInList(this, parent.children)
   }
 
@@ -487,7 +519,11 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    */
   def lastElementSibling: Element = {
     val siblings: Elements = parent.children
-    if (siblings.size > 1) siblings.get(siblings.size - 1) else null
+    if (siblings.size > 1) {
+      siblings.get(siblings.size - 1)
+    } else {
+      null
+    }
   }
 
   private def indexInList[E <: Element](search: Element, elements: mutable.Seq[E]): Int = {
@@ -497,7 +533,9 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
     val length = elements.size
     while (i < length) {
       val element: E = elements(i)
-      if (element == search) return i
+      if (element == search) {
+        return i
+      }
       i += 1
     }
     //@todo make sure here should return 0
@@ -523,7 +561,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * <p>
    * Note that this finds the first matching ID, starting with this element. If you search down from a different
    * starting point, it is possible to find a different element by ID. For unique element by ID within a Document,
-   * use {@link Document#getElementById(String)}
+   * use [[Document#getElementById(String)]]
    * @param id The ID to search for.
    * @return The first matching element by ID, starting with this element, or null if none found.
    */
@@ -538,8 +576,8 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
   /**
    * Find elements that have this class, including or under this element. Case insensitive.
    * <p>
-   * Elements can have multiple classes (e.g. {@code <div class="header round first">}. This method
-   * checks each class, so you can find the above with {@code el.getElementsByClass("header");}.
+   * Elements can have multiple classes (e.g. {{{<div class="header round first">}}}. This method
+   * checks each class, so you can find the above with <code>el.getElementsByClass("header");</code.
    *
    * @param className the name of the class to search for.
    * @return elements with the supplied class name, empty if none
@@ -567,7 +605,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
   }
 
   /**
-   * Find elements that have an attribute name starting with the supplied prefix. Use {@code data-} to find elements
+   * Find elements that have an attribute name starting with the supplied prefix. Use <code>data-</code> to find elements
    * that have HTML5 datasets.
    * @param keyPrefix name prefix of the attribute e.g. { @code data-}
    * @return elements that have attribute names that start with with the prefix, empty if none.
@@ -617,7 +655,6 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
     //    Collector.collect(new Evaluator.AttributeWithValueStarting(key, valuePrefix), this)
     null
   }
-
 
   /**
    * Find elements that have attributes that end with the value suffix. Case insensitive.
@@ -696,7 +733,6 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
     //    return Collector.collect(new Evaluator.IndexGreaterThan(index), this)
     null
   }
-
 
   /**
    * Find elements whose sibling index is equal to the supplied index.
@@ -789,9 +825,8 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
       pattern = util.regex.Pattern.compile(regex)
     }
     catch {
-      case e: util.regex.PatternSyntaxException => {
+      case e: util.regex.PatternSyntaxException =>
         throw new IllegalArgumentException("Pattern syntax error: " + regex, e)
-      }
     }
     getElementsMatchingOwnText(pattern)
   }
@@ -810,7 +845,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
   /**
    * Gets the combined text of this element and all its children. Whitespace is normalized and trimmed.
    * <p>
-   * For example, given HTML {@code <p>Hello  <b>there</b> now! </p>}, {@code p.text()} returns {@code "Hello there now!"}
+   * For example, given HTML {{{<p>Hello  <b>there</b> now! </p>}}}, <code>p.text()</code> returns <code> "Hello there now!"</code>
    *
    * @return unencoded text, or empty string if none.
    * @see #ownText()
@@ -826,8 +861,9 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
             appendNormalisedText(accum, textNode)
           case e: Element =>
             val element: Element = e.asInstanceOf[Element]
-            if (accum.length > 0 && (element.isBlock || (element.tag.getName == "br")) && !TextNode.lastCharIsWhitespace(accum))
+            if (accum.length > 0 && (element.isBlock || (element.tag.getName == "br")) && !TextNode.lastCharIsWhitespace(accum)) {
               accum.append(" ")
+            }
 
         }
       }
@@ -841,9 +877,9 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
   /**
    * Gets the text owned by this element only; does not get the combined text of all children.
    * <p>
-   * For example, given HTML {@code <p>Hello <b>there</b> now!</p>}, {@code p.ownText()} returns {@code "Hello now!"},
-   * whereas {@code p.text()} returns {@code "Hello there now!"}.
-   * Note that the text within the {@code b} element is not returned, as it is not a direct child of the {@code p} element.
+   * For example, given HTML {{{<p>Hello <b>there</b> now!</p>}}}, <code>p.ownText()</code>returns <code>"Hello now!"</code>,
+   * whereas <code>p.text()</code> returns <code> "Hello there now!"}}}.</code>
+   * Note that the text within the <code>b</code> element is not returned, as it is not a direct child of the <code>p</code> element.
    *
    * @return unencoded text, or empty string if none.
    * @see #text()
@@ -889,17 +925,21 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
       child match {
         case t: TextNode =>
           val textNode: TextNode = t.asInstanceOf[TextNode]
-          if (!textNode.isBlank) return true
+          if (!textNode.isBlank) {
+            return true
+          }
         case e: Element =>
           val el: Element = e.asInstanceOf[Element]
-          if (el.hasText) return true
+          if (el.hasText) {
+            return true
+          }
       }
     }
     false
   }
 
   /**
-   * Get the combined data of this element. Data is e.g. the inside of a {@code script} tag.
+   * Get the combined data of this element. Data is e.g. the inside of a <code>script</code> tag.
    * @return the data, or empty string if none
    *
    * @see #dataNodes()
@@ -928,9 +968,9 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
   def className: String = attr("class").trim
 
   /**
-   * Get all of the element's class names. E.g. on element {@code <div class="header gray"}>},
-   * returns a set of two elements {@code "header", "gray"}. Note that modifications to this set are not pushed to
-   * the backing {@code class} attribute; use the {@link #classNames(java.util.Set)} method to persist them.
+   * Get all of the element's class names. E.g. on element {{{<div class="header gray"}>}}},
+   * returns a set of two elements <code>"header", "gray"</code. Note that modifications to this set are not pushed to
+   * the backing <code>class</code> attribute; use the [[classNames(java.util.Set)]] method to persist them.
    * @return set of classnames, empty if no class attribute
    */
   def classNames: Set[String] = {
@@ -941,7 +981,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
   }
 
   /**
-  Set the element's {@code class} attribute to the supplied class names.
+  Set the element's <code>class</code> attribute to the supplied class names.
      @param classNames set of classes
   @return this element, for chaining
     */
@@ -959,13 +999,15 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
   def hasClass(className: String): Boolean = {
     val classNms: Set[String] = classNames
     for (name <- classNms) {
-      if (className.equalsIgnoreCase(name)) return true
+      if (className.equalsIgnoreCase(name)) {
+        return true
+      }
     }
     false
   }
 
   /**
-  Add a class name to this element's {@code class} attribute.
+  Add a class name to this element's <code>class</code> attribute.
      @param className class name to add
   @return this element
     */
@@ -978,7 +1020,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
   }
 
   /**
-   * Remove a class name from this element's {@code class} attribute.
+   * Remove a class name from this element's <code>class</code> attribute.
    * @param className class name to remove
    * @return this element
    */
@@ -991,15 +1033,19 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
   }
 
   /**
-  Toggle a class name on this element's {@code class} attribute: if present, remove it; otherwise add it.
+  Toggle a class name on this element's <code>class</code> attribute: if present, remove it; otherwise add it.
      @param className class name to toggle
   @return this element
     */
   def toggleClass(className: String): Element = {
     notNull(className)
     val classes: mutable.Set[String] = mutable.Set(classNames.toArray: _*)
-    if (classes.contains(className)) classes.remove(className)
-    else classes.add(className)
+    if (classes.contains(className)) {
+      classes.remove(className)
+    }
+    else {
+      classes.add(className)
+    }
     classNames(classes.toSet)
     this
   }
@@ -1008,7 +1054,11 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * Get the value of a form element (input, textarea, etc).
    * @return the value of the form element, or empty string if not set.
    */
-  def value: String = if (tagName == "textarea") text else attr("value")
+  def value: String = if (tagName == "textarea") {
+    text
+  } else {
+    attr("value")
+  }
 
   /**
    * Set the value of a form element (input, textarea, etc).
@@ -1016,45 +1066,56 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * @return this element (for chaining)
    */
   def value(value: String): Element = {
-    if (tagName == "textarea") text(value) else attr("value", value)
+    if (tagName == "textarea") {
+      text(value)
+    } else {
+      attr("value", value)
+    }
     this
   }
 
   private[nodes] def outerHtmlHead(accum: StringBuilder, depth: Int, out: Document.OutputSettings) {
     if (accum.length > 0 &&
-      out.prettyPrint &&
-      (tagVal.isFormatAsBlock || (parent != null && parent.tagVal.isFormatAsBlock) || out.outline))
+            out.prettyPrint &&
+            (tagVal.isFormatAsBlock || (parent != null && parent.tagVal.isFormatAsBlock) || out.outline)) {
       indent(accum, depth, out)
+    }
     accum.append("<").append(tagName)
     attributes.html(accum, out)
     if (childNodes.isEmpty && tagVal.isSelfClosing) {
-      if ((out.syntax eq Document.OutputSettings.Syntax.html) && tagVal.isEmpty) accum.append('>')
-      else accum.append(" />")
+      if ((out.syntax eq Document.OutputSettings.Syntax.html) && tagVal.isEmpty) {
+        accum.append('>')
+      }
+      else {
+        accum.append(" />")
+      }
     }
-    else accum.append(">")
+    else {
+      accum.append(">")
+    }
   }
 
   private[nodes] def outerHtmlTail(accum: StringBuilder, depth: Int, out: Document.OutputSettings) {
     if (!(childNodes.isEmpty && tagVal.isSelfClosing)) {
       if (out.prettyPrint && (childNodes.nonEmpty &&
-        (tagVal.isFormatAsBlock ||
-          (out.outline &&
-            (childNodes.size > 1 ||
-              (childNodes.size == 1 && !childNodes.head.isInstanceOf[TextNode])
+              (tagVal.isFormatAsBlock ||
+                      (out.outline &&
+                              (childNodes.size > 1 ||
+                                      (childNodes.size == 1 && !childNodes.head.isInstanceOf[TextNode])
+                                      )
+                              )
+                      )
               )
-            )
-          )
-        )
-      )
+      ) {
         indent(accum, depth, out)
+      }
       accum.append("</").append(tagName).append(">")
     }
   }
 
-
   /**
-   * Retrieves the element's inner HTML. E.g. on a {@code <div>} with one empty {@code <p>}, would return
-   * {@code <p></p>}. (Whereas {@link #outerHtml()} would return {@code <div><p></p></div>}.)
+   * Retrieves the element's inner HTML. E.g. on a <code><div></code> with one empty <code><p></code>, would return
+   * <code><p></p></code>. (Whereas 【[[outerHtml()]] would return {{{<div><p></p></div>}}}.)
    *
    * @return String of HTML.
    * @see #outerHtml()
@@ -1062,7 +1123,11 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
   def html: String = {
     val accum: StringBuilder = new StringBuilder
     html(accum)
-    if (getOutputSettings.prettyPrint) accum.toString().trim else accum.toString()
+    if (getOutputSettings.prettyPrint) {
+      accum.toString().trim
+    } else {
+      accum.toString()
+    }
   }
 
   private def html(accum: scala.StringBuilder) = {
@@ -1070,7 +1135,6 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
       node.outerHtml(accum)
     }
   }
-
 
   /**
    * Set this element's inner HTML. Clears the existing HTML first.
@@ -1088,17 +1152,21 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
 
   override def equals(o: Any): Boolean = o match {
     // todo: have nodes hold a child index, compare against that and parent (not children)
-
     case v: Element => this eq v
     case _ => false
   }
 
-  override def hashCode: Int = 31 * super.hashCode + (if (tag != null) tag.hashCode else 0)
+  override def hashCode: Int = 31 * super.hashCode + (if (tag != null) {
+    tag.hashCode
+  } else {
+    0
+  })
 
   override def clone(): Element = super.clone().asInstanceOf[Element]
 }
 
 private[nodes] object Element {
+
   private[nodes] def preserveWhitespace(node: Node): Boolean = {
     if (node != null && node.isInstanceOf[Element]) {
       val element: Element = node.asInstanceOf[Element]
@@ -1109,11 +1177,17 @@ private[nodes] object Element {
 
   private def appendNormalisedText(accum: java.lang.StringBuilder, textNode: TextNode) {
     val text: String = textNode.getWholeText
-    if (preserveWhitespace(textNode.parentNode)) accum.append(text)
-    else Strings.appendNormalisedWhitespace(accum, text, TextNode.lastCharIsWhitespace(accum))
+    if (preserveWhitespace(textNode.parentNode)) {
+      accum.append(text)
+    }
+    else {
+      Strings.appendNormalisedWhitespace(accum, text, TextNode.lastCharIsWhitespace(accum))
+    }
   }
 
   private def appendWhitespaceIfBr(element: Element, accum: java.lang.StringBuilder) {
-    if ((element.tag.getName == "br") && !TextNode.lastCharIsWhitespace(accum)) accum.append(" ")
+    if ((element.tag.getName == "br") && !TextNode.lastCharIsWhitespace(accum)) {
+      accum.append(" ")
+    }
   }
 }

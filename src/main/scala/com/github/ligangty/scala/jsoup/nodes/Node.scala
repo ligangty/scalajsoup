@@ -59,7 +59,7 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
    * Get an attribute's value by its key.
    * <p/>
    * To get an absolute URL from an attribute that may be a relative URL, prefix the key with <code><b>abs</b></code>,
-   * which is a shortcut to the {@link #absUrl} method.
+   * which is a shortcut to the [[absUrl]] method.
    * E.g.: <blockquote><code>String url = a.attr("abs:href");</code></blockquote>
    * @param attributeKey The attribute key.
    * @return The attribute, or empty string if not present (to avoid nulls).
@@ -151,10 +151,10 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
    * <p/>
    * If the attribute value is already absolute (i.e. it starts with a protocol, like
    * <code>http://</code> or <code>https://</code> etc), and it successfully parses as a URL, the attribute is
-   * returned directly. Otherwise, it is treated as a URL relative to the element's {@link #baseUri}, and made
+   * returned directly. Otherwise, it is treated as a URL relative to the element's [[baseUri]], and made
    * absolute using that.
    * <p/>
-   * As an alternate, you can use the {@link #attr} method with the <code>abs:</code> prefix, e.g.:
+   * As an alternate, you can use the [[attr]] method with the <code>abs:</code> prefix, e.g.:
    * <code>String absUrl = linkEl.attr("abs:href");</code>
    *
    * @param attributeKey The attribute key
@@ -236,9 +236,10 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
    * @return the Document associated with this Node, or null if there is no such Document.
    */
   def ownerDocument: Document = {
-    if (this.isInstanceOf[Document]) {
-      this.asInstanceOf[Document]
-    } else if (parentNodeVal == null) {
+    this match {
+      case d: Document => return d
+    }
+    if (parentNodeVal == null) {
       null
     } else {
       parentNodeVal.ownerDocument
@@ -347,13 +348,13 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
    * the node but keeping its children.
    * <p/>
    * For example, with the input html:<br/>
-   * {@code <div>One <span>Two <b>Three</b></span></div>}<br/>
-   * Calling {@code element.unwrap()} on the {@code span} element will result in the html:<br/>
-   * {@code <div>One Two <b>Three</b></div>}<br/>
-   * and the {@code "Two "} {@link TextNode} being returned.
+   * {{{<div>One <span>Two <b>Three</b></span></div>}}}<br/>
+   * Calling <code>element.unwrap()</code> on the <code>span</code> element will result in the html:<br/>
+   * {{{<div>One Two <b>Three</b></div>}}}<br/>
+   * and the <code>"Two "</code> [[TextNode]] being returned.
    * @return the first child of this node, after the node has been unwrapped. Null if the node had no children.
-   * @see #remove()
-   * @see #wrap(String)
+   * @see [[remove()]]
+   * @see [[wrap(String)]]
    */
   def unwrap: Node = {
     notNull(parentNodeVal)
@@ -372,8 +373,7 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
     val children: Elements = el.children
     if (children.size > 0) {
       getDeepChild(children.get(0))
-    }
-    else {
+    } else {
       el
     }
   }
@@ -457,7 +457,7 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
   }
 
   /**
-   * Retrieves this node's sibling nodes. Similar to {@link #childNodes()  node.parent.childNodes()}, but does not
+   * Retrieves this node's sibling nodes. Similar to [[childNodes()]]  [[parent.childNodes()}]], but does not
    * include this node (a node is not a sibling of itself).
    * @return node siblings. If the node has no parent, returns an empty list.
    */
@@ -599,7 +599,7 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
    * parent node. As a stand-alone object, any changes made to the clone or any of its children will not impact the
    * original node.
    * <p>
-   * The cloned node may be adopted into another Document or node structure using {@link Element#appendChild(Node)}.
+   * The cloned node may be adopted into another Document or node structure using [[Element.appendChild(Node)]].
    * @return stand-alone cloned node
    */
   override def clone(): Node = {

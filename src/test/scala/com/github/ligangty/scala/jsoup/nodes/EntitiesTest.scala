@@ -5,7 +5,7 @@ import com.github.ligangty.scala.jsoup.nodes.Entities._
 import org.scalatest.FunSuite
 
 /**
- * Created by gli on 15-3-15.
+ * Test for Entities
  */
 class EntitiesTest extends FunSuite {
   test("escape") {

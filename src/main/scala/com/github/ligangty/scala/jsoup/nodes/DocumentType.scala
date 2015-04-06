@@ -4,7 +4,7 @@ import com.github.ligangty.scala.jsoup.helper.Strings
 import DocumentType._
 
 /**
- * A {@code <!DOCTYPE>} node.
+ * A <code>&lt;!DOCTYPE&gt;</code> node.
  */
 class DocumentType(baseUri: String) extends Node(baseUri){
   /**

@@ -9,9 +9,9 @@ import scala.collection.mutable.ArrayBuffer
 
 
 /**
- * A list of {@link Element}s, with methods that act on every element in the list.
+ * A list of [[Element]]s, with methods that act on every element in the list.
  * <p/>
- * To get an {@code Elements} object, use the {@link Element#select(String)} method.
+ * To get an <code>Elements</code> object, use the [[Element.select(String)]] method.
  */
 class Elements private(u: Unit = ()) extends mutable.Seq[Element] with Cloneable {
   private var contents: mutable.Buffer[Element] = null
@@ -100,7 +100,7 @@ class Elements private(u: Unit = ()) extends mutable.Seq[Element] with Cloneable
   }
 
   /**
-   * Add the class name to every matched element's {@code class} attribute.
+   * Add the class name to every matched element's <code>class</code> attribute.
    * @param className class name to add
    * @return this
    */
@@ -110,7 +110,7 @@ class Elements private(u: Unit = ()) extends mutable.Seq[Element] with Cloneable
   }
 
   /**
-   * Remove the class name from every matched element's {@code class} attribute, if present.
+   * Remove the class name from every matched element's <code>class</code> attribute, if present.
    * @param className class name to remove
    * @return this
    */
@@ -120,7 +120,7 @@ class Elements private(u: Unit = ()) extends mutable.Seq[Element] with Cloneable
   }
 
   /**
-   * Toggle the class name on every matched element's {@code class} attribute.
+   * Toggle the class name on every matched element's <code>class</code> attribute.
    * @param className class name to add if missing, or remove if present, from every element.
    * @return this
    */
@@ -130,7 +130,7 @@ class Elements private(u: Unit = ()) extends mutable.Seq[Element] with Cloneable
   }
 
   /**
-   * Determine if any of the matched elements have this class name set in their {@code class} attribute.
+   * Determine if any of the matched elements have this class name set in their <code>class</code> attribute.
    * @param className class name to check for
    * @return true if any do, false if none do
    */
@@ -185,7 +185,7 @@ class Elements private(u: Unit = ()) extends mutable.Seq[Element] with Cloneable
   def outerHtml: String = contents.map(_.outerHtml).mkString("\n")
 
   /**
-   * Get the combined outer HTML of all matched elements. Alias of {@link #outerHtml()}.
+   * Get the combined outer HTML of all matched elements. Alias of [[outerHtml()]].
    * @return string of all element's outer HTML.
    * @see #text()
    * @see #html()
@@ -193,8 +193,8 @@ class Elements private(u: Unit = ()) extends mutable.Seq[Element] with Cloneable
   override def toString(): String = outerHtml
 
   /**
-   * Update the tag name of each matched element. For example, to change each {@code <i>} to a {@code <em>}, do
-   * {@code doc.select("i").tagName("em");}
+   * Update the tag name of each matched element. For example, to change each <code>&lt;i&gt;</code> to a <code>&lt;em&gt;</code>, do
+   * <code>doc.select("i").tagName("em");</code>
    * @param tagName the new tag name
    * @return this, for chaining
    * @see Element#tagName(String)
@@ -261,9 +261,9 @@ class Elements private(u: Unit = ()) extends mutable.Seq[Element] with Cloneable
 
   /**
    * Wrap the supplied HTML around each matched elements. For example, with HTML
-   * {@code <p><b>This</b> is <b>Jsoup</b></p>},
+   * {{{<p><b>This</b> is <b>Jsoup</b></p>}}},
    * <code>doc.select("b").wrap("&lt;i&gt;&lt;/i&gt;");</code>
-   * becomes {@code <p><i><b>This</b></i> is <i><b>jsoup</b></i></p>}
+   * becomes {{{<p><i><b>This</b></i> is <i><b>jsoup</b></i></p>}}}
    * @param html HTML to wrap around each element, e.g. { @code <div class="head"></div>}. Can be arbitrarily deep.
    * @return this (for chaining)
    * @see Element#wrap
@@ -280,9 +280,9 @@ class Elements private(u: Unit = ()) extends mutable.Seq[Element] with Cloneable
    * <p/>
    * This is useful for e.g removing unwanted formatting elements but keeping their contents.
    * <p/>
-   * E.g. with HTML: {@code <div><font>One</font> <font><a href="/">Two</a></font></div>}<br/>
-   * {@code doc.select("font").unwrap();}<br/>
-   * HTML = {@code <div>One <a href="/">Two</a></div>}
+   * E.g. with HTML: {{{<div><font>One</font> <font><a href="/">Two</a></font></div>}}}<br/>
+   * <code>doc.select("font").unwrap();</code><br/>
+   * HTML = {{{<div>One <a href="/">Two</a></div>}}}
    *
    * @return this (for chaining)
    * @see Node#unwrap
@@ -296,9 +296,9 @@ class Elements private(u: Unit = ()) extends mutable.Seq[Element] with Cloneable
    * Empty (remove all child nodes from) each matched element. This is similar to setting the inner HTML of each
    * element to nothing.
    * <p>
-   * E.g. HTML: {@code <div><p>Hello <b>there</b></p> <p>now</p></div>}<br>
+   * E.g. HTML: {{{<div><p>Hello <b>there</b></p> <p>now</p></div>}}}<br>
    * <code>doc.select("p").empty();</code><br>
-   * HTML = {@code <div><p></p> <p></p></div>}
+   * HTML = {{{<div><p></p> <p></p></div>}}}
    * @return this, for chaining
    * @see Element#empty()
    * @see #remove()
@@ -311,17 +311,17 @@ class Elements private(u: Unit = ()) extends mutable.Seq[Element] with Cloneable
   /**
    * Remove each matched element from the DOM. This is similar to setting the outer HTML of each element to nothing.
    * <p>
-   * E.g. HTML: {@code <div><p>Hello</p> <p>there</p> <img /></div>}<br>
+   * E.g. HTML: {{{<div><p>Hello</p> <p>there</p> <img /></div>}}}<br>
    * <code>doc.select("p").remove();</code><br>
-   * HTML = {@code <div> <img /></div>}
+   * HTML = {{{<div> <img /></div>}}}
    * <p>
-   * Note that this method should not be used to clean user-submitted HTML; rather, use {@link org.jsoup.safety.Cleaner} to clean HTML.
+   * Note that this method should not be used to clean user-submitted HTML; rather, use [[org.jsoup.safety.Cleaner]] to clean HTML.
    * @return this, for chaining
    * @see Element#empty()
    * @see #empty()
    */
   def remove: Elements = {
-    contents.foreach(_.remove)
+    contents.foreach(_.remove())
     this
   }
 
@@ -338,11 +338,11 @@ class Elements private(u: Unit = ()) extends mutable.Seq[Element] with Cloneable
   }
 
   /**
-   * Remove elements from this list that match the {@link Selector} query.
+   * Remove elements from this list that match the [[Selector]] query.
    * <p>
-   * E.g. HTML: {@code <div class=logo>One</div> <div>Two</div>}<br>
+   * E.g. HTML: {{{<div class=logo>One</div> <div>Two</div>}}}<br>
    * <code>Elements divs = doc.select("div").not("#logo");</code><br>
-   * Result: {@code divs: [<div>Two</div>]}
+   * Result: {{{divs: [<div>Two</div>]}}}
    * <p>
    * @param query the selector query whose results should be removed from these elements
    * @return a new elements list that contains only the filtered results
@@ -357,7 +357,7 @@ class Elements private(u: Unit = ()) extends mutable.Seq[Element] with Cloneable
   /**
    * Get the <i>nth</i> matched element as an Elements object.
    * <p>
-   * See also {@link #get(int)} to retrieve an Element.
+   * See also [[get(int)]] to retrieve an Element.
    * @param index the (zero-based) index of the element in the list to retain
    * @return Elements containing only the specified element, or, if that element did not exist, an empty list.
    */
@@ -410,7 +410,7 @@ class Elements private(u: Unit = ()) extends mutable.Seq[Element] with Cloneable
 
   //@todo need to implement FormElement to implement this method
   /**
-   * Get the {@link FormElement} forms from the selected elements, if any.
+   * Get the [[FormElement]] forms from the selected elements, if any.
    * @return a list of { @link FormElement}s pulled from the matched elements. The list will be empty if the elements contain
    *         no forms.
    */

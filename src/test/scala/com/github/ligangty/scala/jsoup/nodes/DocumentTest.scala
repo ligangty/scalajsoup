@@ -7,7 +7,7 @@ import com.github.ligangty.scala.jsoup.nodes.Entities.{EXTENDED, BASE}
 import org.scalatest.FunSuite
 
 /**
- * Created by gli on 15-3-17.
+ * test for Document
  */
 class DocumentTest extends FunSuite {
   ignore("setTextPreservesDocumentStructure") {

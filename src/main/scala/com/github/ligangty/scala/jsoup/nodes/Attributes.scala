@@ -31,10 +31,13 @@ class Attributes extends Iterable[Attribute] {
   def get(key: String): String = {
     notEmpty(key)
     attributes match {
-      case attrs if attrs != null => {
+      case attrs if attrs != null =>
         val attr = attrs.get(key.toLowerCase)
-        if (attr != null) attr.getValue else ""
-      }
+        if (attr != null) {
+          attr.getValue
+        } else {
+          ""
+        }
       case null => ""
     }
   }
@@ -55,7 +58,9 @@ class Attributes extends Iterable[Attribute] {
    */
   def put(attribute: Attribute) {
     notNull(attribute)
-    if (attributes == null) attributes = new util.LinkedHashMap[String, Attribute](2)
+    if (attributes == null) {
+      attributes = new util.LinkedHashMap[String, Attribute](2)
+    }
     attributes.put(attribute.getKey, attribute)
   }
 
@@ -65,7 +70,9 @@ class Attributes extends Iterable[Attribute] {
     */
   def remove(key: String) {
     notEmpty(key)
-    if (attributes == null) return
+    if (attributes == null) {
+      return
+    }
     attributes.remove(key.toLowerCase)
   }
 
@@ -80,9 +87,10 @@ class Attributes extends Iterable[Attribute] {
   Get the number of attributes in this set.
      @return size
     */
-  override def size: Int = {
-    if (attributes == null) return 0
-    return attributes.size
+  override def size: Int = if (attributes == null) {
+    0
+  } else {
+    attributes.size
   }
 
   /**
@@ -90,14 +98,16 @@ class Attributes extends Iterable[Attribute] {
    * @param incoming attributes to add to these attributes.
    */
   def addAll(incoming: Attributes) {
-    if (incoming.size == 0) return
-    if (attributes == null) attributes = new util.LinkedHashMap[String, Attribute](incoming.size)
+    if (incoming.size == 0) {
+      return
+    }
+    if (attributes == null) {
+      attributes = new util.LinkedHashMap[String, Attribute](incoming.size)
+    }
     attributes.putAll(incoming.attributes)
   }
 
-  def iterator: Iterator[Attribute] = {
-    return asList.iterator
-  }
+  def iterator: Iterator[Attribute] = asList.iterator
 
   /**
    * Get the attributes as a List, for iteration. Do not modify the keys of the attributes via this view, as changes
@@ -106,18 +116,20 @@ class Attributes extends Iterable[Attribute] {
    */
   def asList: List[Attribute] = {
     import scala.collection.JavaConversions._
-    if (attributes == null) List.empty
-    else attributes.entrySet().map(entry => entry.getValue).toList
+    if (attributes == null) {
+      List.empty
+    }
+    else {
+      attributes.entrySet().map(entry => entry.getValue).toList
+    }
   }
 
   /**
    * Retrieves a filtered view of attributes that are HTML5 custom data attributes; that is, attributes with keys
-   * starting with {@code data-}.
+   * starting with <code>data-</code>.
    * @return map of custom data attributes.
    */
-  def dataset: Map[String, String] = {
-    return new self.Dataset().toMap
-  }
+  def dataset: Map[String, String] = new self.Dataset().toMap
 
   /**
   Get the HTML representation of these attributes.
@@ -125,12 +137,14 @@ class Attributes extends Iterable[Attribute] {
     */
   def html: String = {
     val accum: StringBuilder = new StringBuilder
-    html(accum, (new Document("")).outputSettings)
-    return accum.toString
+    html(accum, new Document("").outputSettings)
+    accum.toString()
   }
 
   private[nodes] def html(accum: StringBuilder, out: Document.OutputSettings) {
-    if (attributes == null) return
+    if (attributes == null) {
+      return
+    }
     import scala.collection.JavaConversions._
     for (entry <- attributes.entrySet) {
       val attribute: Attribute = entry.getValue
@@ -139,77 +153,98 @@ class Attributes extends Iterable[Attribute] {
     }
   }
 
-  override def toString: String = html
+  override def toString(): String = html
 
   override def equals(o: Any): Boolean = o match {
-    case attrs:Attributes => (this eq attrs) || !(if (attributes != null) !(attributes == attrs.attributes) else attrs.attributes != null)
+    case attrs: Attributes => (this eq attrs) || !(if (attributes != null) {
+      !(attributes == attrs.attributes)
+    } else {
+      attrs.attributes != null
+    })
     case _ => false
   }
 
-  override def hashCode: Int = if (attributes != null) attributes.hashCode else 0
+  override def hashCode: Int = if (attributes != null) {
+    attributes.hashCode
+  } else {
+    0
+  }
 
   override def clone: Attributes = {
-    if (attributes == null) return new Attributes
+    if (attributes == null) {
+      return new Attributes
+    }
     var clone: Attributes = null
     try {
       clone = super.clone.asInstanceOf[Attributes]
     }
     catch {
-      case e: CloneNotSupportedException => {
+      case e: CloneNotSupportedException =>
         throw new RuntimeException(e)
-      }
     }
     clone.attributes = new util.LinkedHashMap[String, Attribute](attributes.size)
-    for (attribute <- this) clone.attributes.put(attribute.getKey, attribute.clone)
+    for (attribute <- this) {
+      clone.attributes.put(attribute.getKey, attribute.clone)
+    }
     clone
   }
 
   private[Attributes] class Dataset(u: Unit = ()) extends util.AbstractMap[String, String] {
     self =>
+
     private def this() {
       this(())
-      if (attributes == null) attributes = new util.LinkedHashMap[String, Attribute](2)
+      if (attributes == null) {
+        attributes = new util.LinkedHashMap[String, Attribute](2)
+      }
     }
 
     override def entrySet: util.Set[util.Map.Entry[String, String]] = new self.EntrySet()
 
     override def put(key: String, value: String): String = {
       val datKey: String = Attributes.dataKey(key)
-      val oldValue: String = if (hasKey(datKey)) attributes.get(datKey).getValue else null
+      val oldValue: String = if (hasKey(datKey)) {
+        attributes.get(datKey).getValue
+      } else {
+        null
+      }
       val attr: Attribute = new Attribute(datKey, value)
       attributes.put(datKey, attr)
       oldValue
     }
 
     private[Dataset] class EntrySet extends util.AbstractSet[util.Map.Entry[String, String]] {
+
       override def iterator: util.Iterator[util.Map.Entry[String, String]] = new self.DatasetIterator
 
       override def size: Int = {
         var count: Int = 0
         val iter: Iterator[_] = new DatasetIterator
-        while (iter.hasNext) ({
-          count += 1;
-          count - 1
-        })
+        while (iter.hasNext) {
+            count += 1
+        }
         count
       }
     }
 
     private[Dataset] class DatasetIterator extends util.Iterator[util.Map.Entry[String, String]] {
+
       private var attrIter: Iterator[Attribute] = attributes.values.iterator
       private var attr: Attribute = null
 
       def hasNext: Boolean = {
         while (attrIter.hasNext) {
-          attr = attrIter.next
-          if (attr.isDataAttribute) return true
+          attr = attrIter.next()
+          if (attr.isDataAttribute) {
+            return true
+          }
         }
         false
       }
 
       def next: util.Map.Entry[String, String] = new Attribute(attr.getKey.substring(Attributes.dataPrefix.length), attr.getValue)
 
-      def remove = attributes.remove(attr.getKey)
+      def remove() = attributes.remove(attr.getKey)
     }
 
   }
@@ -217,6 +252,7 @@ class Attributes extends Iterable[Attribute] {
 }
 
 private[nodes] object Attributes {
+
   private[nodes] val dataPrefix: String = "data-"
 
   def dataKey(key: String) = dataPrefix + key

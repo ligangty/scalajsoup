@@ -236,7 +236,7 @@ final private[parser] class Tokeniser {
 
   /**
    * Utility method to consume reader and unescape entities found within.
-   * @param inAttribute
+   * @param inAttribute inAttribute
    * @return unescaped string from reader
    */
   private[parser] def unescapeEntities(inAttribute: Boolean): String = {
