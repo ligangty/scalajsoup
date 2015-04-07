@@ -1,6 +1,7 @@
 package com.github.ligangty.scala.jsoup.parser
 
 import com.github.ligangty.scala.jsoup.helper.Strings
+import com.github.ligangty.scala.jsoup.nodes.DocumentType
 
 /**
  * The Tree Builder's current state. Each state embodies the processing for the state, and transitions to other states.
@@ -12,10 +13,266 @@ private[parser] object HtmlTreeBuilderState {
   }
 
   private[parser] case object Initial extends BuilderState {
+    override private[parser] def process(t: Token, tb: HtmlTreeBuilder): Unit = {
+      if (isWhitespace(t)) {
+        return true
+      }
+      else if (t.isComment) {
+        tb.insert(t.asComment)
+      }
+      else if (t.isDoctype) {
+        val d: Token.Doctype = t.asDoctype
+        val doctype: DocumentType = new DocumentType(d.getName, d.getPublicIdentifier, d.getSystemIdentifier, tb.getBaseUri)
+        tb.getDocument.appendChild(doctype)
+        if (d.isForceQuirks) {
+          tb.getDocument.quirksMode(Document.QuirksMode.quirks)
+        }
+        tb.transition(BeforeHtml)
+      }
+      else {
+        tb.transition(BeforeHtml)
+        return tb.process(t)
+      }
+      return true
+    }
+  }
+
+  private[parser] case object Initial extends BuilderState {
     override private[parser] def process(t: Token, tb: HtmlTreeBuilder): Unit ={
 
     }
   }
+  private[parser] case object Initial extends BuilderState {
+    override private[parser] def process(t: Token, tb: HtmlTreeBuilder): Unit ={
+
+    }
+  }
+  private[parser] case object Initial extends BuilderState {
+    override private[parser] def process(t: Token, tb: HtmlTreeBuilder): Unit ={
+
+    }
+  }
+  private[parser] case object Initial extends BuilderState {
+    override private[parser] def process(t: Token, tb: HtmlTreeBuilder): Unit ={
+
+    }
+  }
+  private[parser] case object Initial extends BuilderState {
+    override private[parser] def process(t: Token, tb: HtmlTreeBuilder): Unit ={
+
+    }
+  }
+  private[parser] case object Initial extends BuilderState {
+    override private[parser] def process(t: Token, tb: HtmlTreeBuilder): Unit ={
+
+    }
+  }
+  private[parser] case object Initial extends BuilderState {
+    override private[parser] def process(t: Token, tb: HtmlTreeBuilder): Unit ={
+
+    }
+  }
+  private[parser] case object Initial extends BuilderState {
+    override private[parser] def process(t: Token, tb: HtmlTreeBuilder): Unit ={
+
+    }
+  }
+  private[parser] case object Initial extends BuilderState {
+    override private[parser] def process(t: Token, tb: HtmlTreeBuilder): Unit ={
+
+    }
+  }
+  private[parser] case object Initial extends BuilderState {
+    override private[parser] def process(t: Token, tb: HtmlTreeBuilder): Unit ={
+
+    }
+  }
+  private[parser] case object Initial extends BuilderState {
+    override private[parser] def process(t: Token, tb: HtmlTreeBuilder): Unit ={
+
+    }
+  }
+  private[parser] case object Initial extends BuilderState {
+    override private[parser] def process(t: Token, tb: HtmlTreeBuilder): Unit ={
+
+    }
+  }
+  private[parser] case object Initial extends BuilderState {
+    override private[parser] def process(t: Token, tb: HtmlTreeBuilder): Unit ={
+
+    }
+  }
+  private[parser] case object Initial extends BuilderState {
+    override private[parser] def process(t: Token, tb: HtmlTreeBuilder): Unit ={
+
+    }
+  }
+  private[parser] case object Initial extends BuilderState {
+    override private[parser] def process(t: Token, tb: HtmlTreeBuilder): Unit ={
+
+    }
+  }
+  private[parser] case object Initial extends BuilderState {
+    override private[parser] def process(t: Token, tb: HtmlTreeBuilder): Unit ={
+
+    }
+  }
+  private[parser] case object Initial extends BuilderState {
+    override private[parser] def process(t: Token, tb: HtmlTreeBuilder): Unit ={
+
+    }
+  }
+  private[parser] case object Initial extends BuilderState {
+    override private[parser] def process(t: Token, tb: HtmlTreeBuilder): Unit ={
+
+    }
+  }
+  private[parser] case object Initial extends BuilderState {
+    override private[parser] def process(t: Token, tb: HtmlTreeBuilder): Unit ={
+
+    }
+  }
+  private[parser] case object Initial extends BuilderState {
+    override private[parser] def process(t: Token, tb: HtmlTreeBuilder): Unit ={
+
+    }
+  }
+  private[parser] case object Initial extends BuilderState {
+    override private[parser] def process(t: Token, tb: HtmlTreeBuilder): Unit ={
+
+    }
+  }
+  private[parser] case object Initial extends BuilderState {
+    override private[parser] def process(t: Token, tb: HtmlTreeBuilder): Unit ={
+
+    }
+  }
+  private[parser] case object Initial extends BuilderState {
+    override private[parser] def process(t: Token, tb: HtmlTreeBuilder): Unit ={
+
+    }
+  }
+  private[parser] case object Initial extends BuilderState {
+    override private[parser] def process(t: Token, tb: HtmlTreeBuilder): Unit ={
+
+    }
+  }
+  private[parser] case object Initial extends BuilderState {
+    override private[parser] def process(t: Token, tb: HtmlTreeBuilder): Unit ={
+
+    }
+  }
+  private[parser] case object Initial extends BuilderState {
+    override private[parser] def process(t: Token, tb: HtmlTreeBuilder): Unit ={
+
+    }
+  }
+  private[parser] case object Initial extends BuilderState {
+    override private[parser] def process(t: Token, tb: HtmlTreeBuilder): Unit ={
+
+    }
+  }
+  private[parser] case object Initial extends BuilderState {
+    override private[parser] def process(t: Token, tb: HtmlTreeBuilder): Unit ={
+
+    }
+  }
+  private[parser] case object Initial extends BuilderState {
+    override private[parser] def process(t: Token, tb: HtmlTreeBuilder): Unit ={
+
+    }
+  }
+  private[parser] case object Initial extends BuilderState {
+    override private[parser] def process(t: Token, tb: HtmlTreeBuilder): Unit ={
+
+    }
+  }
+  private[parser] case object Initial extends BuilderState {
+    override private[parser] def process(t: Token, tb: HtmlTreeBuilder): Unit ={
+
+    }
+  }
+  private[parser] case object Initial extends BuilderState {
+    override private[parser] def process(t: Token, tb: HtmlTreeBuilder): Unit ={
+
+    }
+  }
+  private[parser] case object Initial extends BuilderState {
+    override private[parser] def process(t: Token, tb: HtmlTreeBuilder): Unit ={
+
+    }
+  }
+  private[parser] case object Initial extends BuilderState {
+    override private[parser] def process(t: Token, tb: HtmlTreeBuilder): Unit ={
+
+    }
+  }
+  private[parser] case object Initial extends BuilderState {
+    override private[parser] def process(t: Token, tb: HtmlTreeBuilder): Unit ={
+
+    }
+  }
+  private[parser] case object Initial extends BuilderState {
+    override private[parser] def process(t: Token, tb: HtmlTreeBuilder): Unit ={
+
+    }
+  }
+  private[parser] case object Initial extends BuilderState {
+    override private[parser] def process(t: Token, tb: HtmlTreeBuilder): Unit ={
+
+    }
+  }
+  private[parser] case object Initial extends BuilderState {
+    override private[parser] def process(t: Token, tb: HtmlTreeBuilder): Unit ={
+
+    }
+  }
+  private[parser] case object Initial extends BuilderState {
+    override private[parser] def process(t: Token, tb: HtmlTreeBuilder): Unit ={
+
+    }
+  }
+  private[parser] case object Initial extends BuilderState {
+    override private[parser] def process(t: Token, tb: HtmlTreeBuilder): Unit ={
+
+    }
+  }
+  private[parser] case object Initial extends BuilderState {
+    override private[parser] def process(t: Token, tb: HtmlTreeBuilder): Unit ={
+
+    }
+  }
+  private[parser] case object Initial extends BuilderState {
+    override private[parser] def process(t: Token, tb: HtmlTreeBuilder): Unit ={
+
+    }
+  }
+  private[parser] case object Initial extends BuilderState {
+    override private[parser] def process(t: Token, tb: HtmlTreeBuilder): Unit ={
+
+    }
+  }
+  private[parser] case object Initial extends BuilderState {
+    override private[parser] def process(t: Token, tb: HtmlTreeBuilder): Unit ={
+
+    }
+  }
+  private[parser] case object Initial extends BuilderState {
+    override private[parser] def process(t: Token, tb: HtmlTreeBuilder): Unit ={
+
+    }
+  }
+  private[parser] case object Initial extends BuilderState {
+    override private[parser] def process(t: Token, tb: HtmlTreeBuilder): Unit ={
+
+    }
+  }
+  private[parser] case object Initial extends BuilderState {
+    override private[parser] def process(t: Token, tb: HtmlTreeBuilder): Unit ={
+
+    }
+  }
+
 
 
   private[HtmlTreeBuilderState] var nullString: String = String.valueOf('\u0000')

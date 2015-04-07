@@ -2,8 +2,12 @@ package com.github.ligangty.scala.jsoup.nodes
 
 import java.nio.charset.{CharsetEncoder, Charset}
 
+import com.github.ligangty.scala.jsoup.helper.Strings
 import com.github.ligangty.scala.jsoup.helper.Validator._
 import com.github.ligangty.scala.jsoup.parser.Tag
+import com.github.ligangty.scala.jsoup.select.Elements
+
+import scala.collection.mutable
 
 /**
  * A HTML Document.
@@ -18,20 +22,6 @@ class Document private(baseUri: String, locationVal: String) extends Element(Tag
   }
 
   /**
-   * Create a valid, empty shell of a document, suitable for adding more elements to.
-   * @param baseUri baseUri of document
-   * @return document with html, head, and body elements.
-   */
-  private[nodes] def createShell(baseUri: String): Document = {
-    notNull(baseUri)
-    val doc: Document = new Document(baseUri)
-    //    val html: Element = doc.appendElement("html")
-    //    html.appendElement("head")
-    //    html.appendElement("body")
-    doc
-  }
-
-  /**
    * Get the URL this Document was parsed from. If the starting URL is a redirect,
    * this will return the final URL from which the document was served from.
    * @return location
@@ -39,23 +29,130 @@ class Document private(baseUri: String, locationVal: String) extends Element(Tag
   def location: String = locationVal
 
   /**
-  Accessor to the document's <code>head</code> element.
-     @return { @code head}
-    */
+   * Accessor to the document's <code>head</code> element.
+   * @return { @code head}
+   */
   def head: Element = findFirstElementByTagName("head", this) match {
     case Some(e: Element) => e
     case None => null
   }
 
   /**
-  Accessor to the document's <code>body</code> element.
-     @return { @code body}
-    */
+   * Accessor to the document's <code>body</code> element.
+   * @return { @code body}
+   */
   def body: Element = findFirstElementByTagName("body", this) match {
     case Some(e: Element) => e
     case None => null
   }
 
+  /**
+   * Get the string contents of the document's <code>title</code> element.
+   * @return Trimmed title, or empty string if none set.
+   */
+  def title: String = {
+    val titleEl: Element = getElementsByTag("title").first()
+    if (titleEl != null) {
+      Strings.normaliseWhitespace(titleEl.text).trim
+    } else {
+      ""
+    }
+  }
+
+  /**
+   * Set the document's <code>title</code> element. Updates the existing element, or adds <code>title</code> to <code>head</code> if
+   * not present
+   * @param title string to set as title
+   */
+  def title(title: String) {
+    notNull(title)
+    val titleEl: Element = getElementsByTag("title").first()
+    if (titleEl == null) {
+      head.appendElement("title").text(title)
+    } else {
+      titleEl.text(title)
+    }
+  }
+
+  /**
+   * Create a new Element, with this document's base uri. Does not make the new element a child of this document.
+   * @param tagName element tag name (e.g. <code>a</code)
+   * @return new element
+   */
+  def createElement(tagName: String): Element = {
+    new Element(Tag(tagName), this.baseUri)
+  }
+
+  /**
+   * Normalise the document. This happens after the parse phase so generally does not need to be called.
+   * Moves any text content that is not in the body element into the body.
+   * @return this document after normalisation
+   */
+  def normalise: Document = {
+    val htmlEl: Element = findFirstElementByTagName("html", this) match {
+      case Some(e: Element) => e
+      case None => appendElement("html")
+    }
+    if (head == null) {
+      htmlEl.prependElement("head")
+    }
+    if (body == null) {
+      htmlEl.appendElement("body")
+    }
+    normaliseTextNodes(head)
+    normaliseTextNodes(htmlEl)
+    normaliseTextNodes(this)
+    normaliseStructure("head", htmlEl)
+    normaliseStructure("body", htmlEl)
+    this
+  }
+
+  // does not recurse.
+  private def normaliseTextNodes(element: Element) {
+    val toMove: mutable.Buffer[Node] = new mutable.ArrayBuffer[Node]
+    for (node <- element.childNodes) {
+      node match {
+        case tn: TextNode => if (!tn.isBlank) {
+          toMove.append(tn)
+        }
+      }
+    }
+
+    for (i <- (toMove.length - 1).to(0, -1)) {
+      val node: Node = toMove(i)
+      element.removeChild(node)
+      body.prependChild(new TextNode(" ", ""))
+      body.prependChild(node)
+    }
+  }
+
+  // merge multiple <head> or <body> contents into one, delete the remainder, and ensure they are owned by <html>
+  private def normaliseStructure(tag: String, htmlEl: Element) {
+    val elements: Elements = this.getElementsByTag(tag)
+    // will always be available as created above if not existent
+    val master: Element = elements.first()
+    if (elements.size > 1) {
+      // dupes, move contents to master
+      val toMove: mutable.Buffer[Node] = new mutable.ArrayBuffer[Node]
+      for (i <- 1 to (elements.size - 1)) {
+        val dupe: Node = elements.get(i)
+        for (node <- dupe.childNodes) {
+          toMove.append(node)
+        }
+        dupe.remove()
+      }
+
+      for (dupe <- toMove) {
+        master.appendChild(dupe)
+      }
+    }
+    // ensure parented by <html>
+    if (!(master.parent == htmlEl)) {
+      htmlEl.appendChild(master) // includes remove()
+    }
+  }
+
+  // fast method to get first by tag name, used for html, head, body finders
   private def findFirstElementByTagName(tag: String, node: Node): Option[Element] = {
     if (node.nodeName == tag) {
       return Some(node.asInstanceOf[Element])
@@ -70,14 +167,72 @@ class Document private(baseUri: String, locationVal: String) extends Element(Tag
     None
   }
 
+  override def outerHtml: String = {
+    super.html // no outer wrapper tag
+  }
+
+  /**
+   * Set the text of the <code>body</code> of this document. Any existing nodes within the body will be cleared.
+   * @param text unencoded text
+   * @return this document
+   */
+  override def text(text: String): Element = {
+    body.text(text) // overridden to not nuke doc structure
+    this
+  }
+
+  override def nodeName(): String = {
+    "#document"
+  }
+
+  override def clone(): Document = {
+    val clone: Document = super.clone().asInstanceOf[Document]
+    clone.outputSettingsVal = this.outputSettingsVal.clone
+    clone
+  }
+
   /**
    * Get the document's current output settings.
    * @return the document's current output settings.
    */
   def outputSettings: Document.OutputSettings = outputSettingsVal
+
+  /**
+   * Set the document's output settings.
+   * @param outputSettings new output settings.
+   * @return this document, for chaining.
+   */
+  def outputSettings(outputSettings: Document.OutputSettings): Document = {
+    notNull(outputSettings)
+    this.outputSettingsVal = outputSettingsVal
+    this
+  }
+
+  def quirksMode(quirksMode: Document.QuirksMode): Document = {
+    this.quirksModeVal = quirksMode
+    this
+  }
+
+  override def equals(o: Any): Boolean = {
+    super.equals(o)
+  }
 }
 
 object Document {
+
+  /**
+   * Create a valid, empty shell of a document, suitable for adding more elements to.
+   * @param baseUri baseUri of document
+   * @return document with html, head, and body elements.
+   */
+  def createShell(baseUri: String): Document = {
+    notNull(baseUri)
+    val doc: Document = new Document(baseUri)
+    val html: Element = doc.appendElement("html")
+    html.appendElement("head")
+    html.appendElement("body")
+    doc
+  }
 
   object OutputSettings {
 
@@ -245,4 +400,5 @@ object Document {
   }
 
   type QuirksMode = QuirksMode.QuirksMode
+
 }
