@@ -9,7 +9,7 @@ import com.github.ligangty.scala.jsoup.nodes.Entities
 final private[parser] class Tokeniser {
   private var reader: CharacterReader = null
   private var errors: ParseErrorList = null
-  private var state: TokeniserState = Data
+  private var state: TokeniserState.State = TokeniserState.Data
   private var emitPending: Token = null
   private var isEmitPending: Boolean = false
   private var charsString: String = null
@@ -89,13 +89,13 @@ final private[parser] class Tokeniser {
     emit(String.valueOf(c))
   }
 
-  private[parser] def getState: TokeniserState = state
+  private[parser] def getState: TokeniserState.State = state
 
-  private[parser] def transition(state: TokeniserState) {
+  private[parser] def transition(state: TokeniserState.State) {
     this.state = state
   }
 
-  private[parser] def advanceTransition(state: TokeniserState) {
+  private[parser] def advanceTransition(state: TokeniserState.State) {
     reader.advance()
     this.state = state
   }
@@ -211,11 +211,11 @@ final private[parser] class Tokeniser {
     lastStartTag
   }
 
-  private[parser] def error(state: TokeniserState) {
+  private[parser] def error(state: TokeniserState.State) {
     if (errors.canAddError) errors.append(new ParseError(reader.pos, "Unexpected character '%s' in input state [%s]", reader.current, state))
   }
 
-  private[parser] def eofError(state: TokeniserState) {
+  private[parser] def eofError(state: TokeniserState.State) {
     if (errors.canAddError) errors.append(new ParseError(reader.pos, "Unexpectedly reached end of file (EOF) in input state [%s]", state))
   }
 

@@ -208,6 +208,10 @@ class Document private(baseUri: String, locationVal: String) extends Element(Tag
     this
   }
 
+  def quirksMode(): Document.QuirksMode = {
+    quirksMode
+  }
+
   def quirksMode(quirksMode: Document.QuirksMode): Document = {
     this.quirksModeVal = quirksMode
     this
