@@ -1,12 +1,10 @@
 package com.github.ligangty.scala.jsoup.select
 
-
 import com.github.ligangty.scala.jsoup.helper.Validator._
 import com.github.ligangty.scala.jsoup.nodes.Element
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
-
 
 /**
  * A list of [[Element]]s, with methods that act on every element in the list.
@@ -14,6 +12,7 @@ import scala.collection.mutable.ArrayBuffer
  * To get an <code>Elements</code> object, use the [[Element.select(String)]] method.
  */
 class Elements private(u: Unit = ()) extends mutable.Seq[Element] with Cloneable {
+
   private var contents: mutable.Buffer[Element] = null
 
   def this() {
@@ -53,7 +52,9 @@ class Elements private(u: Unit = ()) extends mutable.Seq[Element] with Cloneable
     }
     val elements: mutable.Buffer[Element] = new mutable.ArrayBuffer[Element]()
     clone.contents = elements
-    for (e <- contents) elements.append(e.clone())
+    for (e <- contents) {
+      elements.append(e.clone())
+    }
     clone
   }
 
@@ -67,8 +68,12 @@ class Elements private(u: Unit = ()) extends mutable.Seq[Element] with Cloneable
    */
   def attr(attributeKey: String): String = {
     val founded = contents.filter(_.hasAttr(attributeKey))
-    if (founded.nonEmpty) founded.head.attr(attributeKey)
-    else ""
+    if (founded.nonEmpty) {
+      founded.head.attr(attributeKey)
+    }
+    else {
+      ""
+    }
   }
 
   /**
@@ -136,14 +141,16 @@ class Elements private(u: Unit = ()) extends mutable.Seq[Element] with Cloneable
    */
   def hasClass(className: String): Boolean = contents.filter(_.hasClass(className)).nonEmpty
 
-
   /**
    * Get the form element's value of the first matched element.
    * @return The form element's value, or empty if not set.
    * @see Element#val()
    */
-  def value: String = if (size > 0) first().value else ""
-
+  def value: String = if (size > 0) {
+    first().value
+  } else {
+    ""
+  }
 
   /**
    * Set the form element's value in each of the matched elements.
@@ -164,7 +171,6 @@ class Elements private(u: Unit = ()) extends mutable.Seq[Element] with Cloneable
    * @see Element#text()
    */
   def text: String = contents.map(_.text).mkString(" ")
-
 
   def hasText: Boolean = contents.exists(_.hasText)
 
@@ -361,8 +367,11 @@ class Elements private(u: Unit = ()) extends mutable.Seq[Element] with Cloneable
    * @param index the (zero-based) index of the element in the list to retain
    * @return Elements containing only the specified element, or, if that element did not exist, an empty list.
    */
-  def eq(index: Int): Elements = if (contents.size > index) new Elements(get(index)) else new Elements
-
+  def eq(index: Int): Elements = if (contents.size > index) {
+    new Elements(get(index))
+  } else {
+    new Elements
+  }
 
   /**
    * Test if any of the matched elements match the supplied query.
@@ -377,7 +386,9 @@ class Elements private(u: Unit = ()) extends mutable.Seq[Element] with Cloneable
    */
   def parents: Elements = {
     var combo: mutable.Set[Element] = new mutable.LinkedHashSet[Element]
-    for (e <- contents) combo ++= e.parents
+    for (e <- contents) {
+      combo ++= e.parents
+    }
     new Elements(combo)
   }
 
@@ -386,13 +397,21 @@ class Elements private(u: Unit = ()) extends mutable.Seq[Element] with Cloneable
   Get the first matched element.
      @return The first matched element, or <code>null</code> if contents is empty.
     */
-  def first(): Element = if (contents.isEmpty) null else contents.head
+  def first(): Element = if (contents.isEmpty) {
+    null
+  } else {
+    contents.head
+  }
 
   /**
   Get the last matched element.
      @return The last matched element, or <code>null</code> if contents is empty.
     */
-  override def last: Element = if (contents.isEmpty) null else contents(contents.size - 1)
+  override def last: Element = if (contents.isEmpty) {
+    null
+  } else {
+    contents(contents.size - 1)
+  }
 
   /**
    * Perform a depth-first traversal on each of the selected elements.
@@ -410,7 +429,7 @@ class Elements private(u: Unit = ()) extends mutable.Seq[Element] with Cloneable
 
   //@todo need to implement FormElement to implement this method
   /**
-   * Get the [[FormElement]] forms from the selected elements, if any.
+   * Get the [[com.github.ligangty.scala.jsoup.nodes.FormElement]] forms from the selected elements, if any.
    * @return a list of { @link FormElement}s pulled from the matched elements. The list will be empty if the elements contain
    *         no forms.
    */
@@ -437,6 +456,11 @@ class Elements private(u: Unit = ()) extends mutable.Seq[Element] with Cloneable
     true
   }
 
+  def add(index: Int, element: Element): Boolean = {
+    contents.insert(index, element)
+    true
+  }
+
   def remove(o: AnyRef): Boolean = {
     val finded = contents.indexOf(o)
     if (finded >= 0) {
@@ -448,7 +472,11 @@ class Elements private(u: Unit = ()) extends mutable.Seq[Element] with Cloneable
   }
 
   def containsAll(c: Traversable[_]): Boolean = {
-    for (e <- c) if (!contents.contains(e)) return false
+    for (e <- c) {
+      if (!contents.contains(e)) {
+        return false
+      }
+    }
     true
   }
 
