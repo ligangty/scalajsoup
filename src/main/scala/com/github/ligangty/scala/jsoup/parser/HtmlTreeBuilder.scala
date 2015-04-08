@@ -322,15 +322,15 @@ private[parser] class HtmlTreeBuilder extends TreeBuilder {
     }
   }
 
-  private[parser] def clearStackToTableContext {
+  private[parser] def clearStackToTableContext(): Unit = {
     clearStackToContext("table")
   }
 
-  private[parser] def clearStackToTableBodyContext {
+  private[parser] def clearStackToTableBodyContext(): Unit  ={
     clearStackToContext("tbody", "tfoot", "thead")
   }
 
-  private[parser] def clearStackToTableRowContext {
+  private[parser] def clearStackToTableRowContext(): Unit = {
     clearStackToContext("tr")
   }
 
@@ -374,6 +374,163 @@ private[parser] class HtmlTreeBuilder extends TreeBuilder {
     val i: Int = queue.lastIndexOf(out)
     Validator.isTrue(i != -1)
     queue.update(i, in)
+  }
+
+  private[parser] def resetInsertionMode(): Unit = {
+    var last: Boolean = false
+    breakable {
+      for (pos <- (stack.size - 1).to(0, -1)) {
+        var node: Element = stack(pos)
+        if (pos == 0) {
+          last = true
+          node = contextElement
+        }
+        val name: String = node.nodeName()
+        if ("select" == name) {
+          transition(HtmlTreeBuilderState.InSelect)
+          break()// frag
+        }        else if ("td" == name || ("td" == name) && !last) {
+          transition(HtmlTreeBuilderState.InCell)
+          break()
+        }        else if ("tr" == name) {
+          transition(HtmlTreeBuilderState.InRow)
+          break()
+        }        else if (("tbody" == name) || ("thead" == name) || ("tfoot" == name)) {
+          transition(HtmlTreeBuilderState.InTableBody)
+          break()
+        }        else if ("caption" == name) {
+          transition(HtmlTreeBuilderState.InCaption)
+          break()
+        }        else if ("colgroup" == name) {
+          transition(HtmlTreeBuilderState.InColumnGroup)
+          break()// frag
+        }        else if ("table" == name) {
+          transition(HtmlTreeBuilderState.InTable)
+          break()
+        }        else if ("head" == name) {
+          transition(HtmlTreeBuilderState.InBody)
+          break()// frag
+        }        else if ("body" == name) {
+          transition(HtmlTreeBuilderState.InBody)
+          break()
+        }        else if ("frameset" == name) {
+          transition(HtmlTreeBuilderState.InFrameset)
+          break()// frag
+        }        else if ("html" == name) {
+          transition(HtmlTreeBuilderState.BeforeHead)
+          break()// frag
+        }        else if (last) {
+          transition(HtmlTreeBuilderState.InBody)
+          break()// frag
+        }
+      }
+    }
+  }
+
+  // todo: tidy up in specific scope methods
+  private var specificScopeTarget: Array[String] = Array(null)
+
+  private def inSpecificScope(targetName: String, baseTypes: Array[String], extraTypes: Array[String]): Boolean = {
+    specificScopeTarget(0) = targetName
+    return inSpecificScope(specificScopeTarget, baseTypes, extraTypes)
+  }
+
+  private def inSpecificScope(targetNames: Array[String], baseTypes: Array[String], extraTypes: Array[String]): Boolean = {
+    for (pos <- (stack.size - 1).to(0, -1)) {
+      val el: Element = stack(pos)
+      val elName: String = el.nodeName()
+      if (Strings.in(elName, targetNames:_*)) return true
+      if (Strings.in(elName, baseTypes:_*)) return false
+      if (extraTypes != null && Strings.in(elName, extraTypes:_*)) return false
+    }
+    Validator.fail("Should not be reachable")
+    return false
+  }
+
+  private[parser] def inScope(targetNames: Array[String]): Boolean = {
+    return inSpecificScope(targetNames, HtmlTreeBuilder.TagsSearchInScope, null)
+  }
+
+  private[parser] def inScope(targetName: String): Boolean = {
+    return inScope(targetName, null)
+  }
+
+  private[parser] def inScope(targetName: String, extras: Array[String]): Boolean = {
+    return inSpecificScope(targetName, HtmlTreeBuilder.TagsSearchInScope, extras)
+    // todo: in mathml namespace: mi, mo, mn, ms, mtext annotation-xml
+    // todo: in svg namespace: forignOjbect, desc, title
+  }
+
+  private[parser] def inListItemScope(targetName: String): Boolean = {
+    return inScope(targetName, HtmlTreeBuilder.TagSearchList)
+  }
+
+  private[parser] def inButtonScope(targetName: String): Boolean = {
+    return inScope(targetName, HtmlTreeBuilder.TagSearchButton)
+  }
+
+  private[parser] def inTableScope(targetName: String): Boolean = {
+    return inSpecificScope(targetName, HtmlTreeBuilder.TagSearchTableScope, null)
+  }
+
+  private[parser] def inSelectScope(targetName: String): Boolean = {
+    for (pos <- (stack.size - 1).to(0, -1)) {
+      val el: Element = stack(pos)
+      val elName: String = el.nodeName
+      if (elName == targetName) return true
+      if (!Strings.in(elName, HtmlTreeBuilder.TagSearchSelectScope:_*)) return false
+    }
+    Validator.fail("Should not be reachable");
+    return false;
+  }
+
+  private[parser] def setHeadElement(headElement: Element) {
+    this.headElement = headElement
+  }
+
+  private[parser] def getHeadElement: Element = {
+    return headElement
+  }
+
+  private[parser] def isFosterInserts: Boolean = {
+    return fosterInserts
+  }
+
+  private[parser] def setFosterInserts(fosterInserts: Boolean) {
+    this.fosterInserts = fosterInserts
+  }
+
+  private[parser] def getFormElement: FormElement = {
+    return formElement
+  }
+
+  private[parser] def setFormElement(formElement: FormElement) {
+    this.formElement = formElement
+  }
+
+  private[parser] def newPendingTableCharacters():Unit= {
+    pendingTableCharacters = new mutable.ArrayBuffer[String]
+  }
+
+  private[parser] def getPendingTableCharacters: mutable.Buffer[String] = {
+    return pendingTableCharacters
+  }
+
+  private[parser] def setPendingTableCharacters(pendingTableCharacters: mutable.Buffer[String]) {
+    this.pendingTableCharacters = pendingTableCharacters
+  }
+
+  /**
+  *11.2.5.2 Closing elements that have implied end tags<p/>
+     When the steps below require the UA to generate implied end tags, then, while the current node is a dd element, a
+     dt element, an li element, an option element, an optgroup element, a p element, an rp element, or an rt element,
+     the UA must pop the current node off the stack of open elements.
+
+     @param excludeTag If a step requires the UA to generate implied end tags but lists an element to exclude from the
+     process, then the UA must perform the above steps as if that element was not in the above list.
+    */
+  private[parser] def generateImpliedEndTags(excludeTag: String) {
+    while ((excludeTag != null && !(currentElement.nodeName == excludeTag)) && Strings.in(currentElement.nodeName, HtmlTreeBuilder.TagSearchEndTags:_*)) pop
   }
 
   override protected def process(token: Token): Boolean = ???
