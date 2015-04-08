@@ -407,7 +407,7 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
     out.parentNodeVal = null
   }
 
-  protected def removeChild(out: Node) {
+  protected[nodes] def removeChild(out: Node) {
     isTrue(out.parentNodeVal eq this)
     val index: Int = out.siblingIndex
     childNodes.remove(index)

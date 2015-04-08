@@ -17,7 +17,7 @@ class XmlTreeBuilder extends TreeBuilder {
     doc.outputSettings.syntax(Document.OutputSettings.Syntax.xml)
   }
 
-  protected def process(token: Token): Boolean = {
+  override protected[parser] def process(token: Token): Boolean = {
     // start tag, end tag, doctype, comment, character, eof
     token.tokType match {
       case Token.TokenType.StartTag =>

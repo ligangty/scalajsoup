@@ -252,41 +252,41 @@ class HttpConnection extends Connection {
 
 object HttpConnection {
 
-  private[HttpConnection] abstract class Base[T <: Connection.Base] extends Connection.Base[T] {
+  private[HttpConnection] abstract class Base[T <: Connection.Base[T]] protected(n:Unit=()) extends Connection.Base[T] {
     protected[helper] var urlVal: URL = null
     protected[helper] var methodVal: Connection.Method.Method = null
     protected[helper] var headersMap: mutable.Map[String, String] = null
     protected[helper] var cookiesMap: mutable.Map[String, String] = null
 
     private def this() {
-      this()
+      this(())
       this.headersMap = new mutable.LinkedHashMap[String, String]
       this.cookiesMap = new mutable.LinkedHashMap[String, String]
     }
 
     def url: URL = {
-      return urlVal
+      urlVal
     }
 
     def url(url: URL): T = {
       notNull(url, "URL must not be null")
       this.urlVal = url
-      return this.asInstanceOf[T]
+      this.asInstanceOf[T]
     }
 
     def method: Connection.Method.Method = {
-      return methodVal
+      methodVal
     }
 
     def method(method: Connection.Method.Method): T = {
       notNull(method, "Method must not be null")
       this.methodVal = method
-      return this.asInstanceOf[T]
+      this.asInstanceOf[T]
     }
 
     def header(name: String): String = {
       notNull(name, "Header name must not be null")
-      return getHeaderCaseInsensitive(name)
+      getHeaderCaseInsensitive(name)
     }
 
     def header(name: String, value: String): T = {
@@ -294,19 +294,19 @@ object HttpConnection {
       notNull(value, "Header value must not be null")
       removeHeader(name)
       headersMap.put(name, value)
-      return this.asInstanceOf[T]
+      this.asInstanceOf[T]
     }
 
     def hasHeader(name: String): Boolean = {
       notEmpty(name, "Header name must not be empty")
-      return getHeaderCaseInsensitive(name) != null
+      getHeaderCaseInsensitive(name) != null
     }
 
     /**
      * Test if the request has a header with this value (case insensitive).
      */
     def hasHeaderWithValue(name: String, value: String): Boolean = {
-      return hasHeader(name) && header(name).equalsIgnoreCase(value)
+      hasHeader(name) && header(name).equalsIgnoreCase(value)
     }
 
     def removeHeader(name: String): T = {
@@ -339,25 +339,25 @@ object HttpConnection {
 
     def cookie(name: String): String = {
       notEmpty(name, "Cookie name must not be empty")
-      return cookiesMap(name)
+      cookiesMap(name)
     }
 
     def cookie(name: String, value: String): T = {
       notEmpty(name, "Cookie name must not be empty")
       notNull(value, "Cookie value must not be null")
       cookiesMap.put(name, value)
-      return this.asInstanceOf[T]
+      this.asInstanceOf[T]
     }
 
     def hasCookie(name: String): Boolean = {
       notEmpty(name, "Cookie name must not be empty")
-      return cookiesMap.keys.exists(_ == name)
+      cookiesMap.keys.exists(_ == name)
     }
 
     def removeCookie(name: String): T = {
       notEmpty(name, "Cookie name must not be empty")
       cookiesMap.remove(name)
-      return this.asInstanceOf[T]
+      this.asInstanceOf[T]
     }
 
     def cookies: Map[String, String] = cookiesMap.toMap
@@ -373,7 +373,7 @@ object HttpConnection {
     }
   }
 
-  class Request extends HttpConnection.Base[Connection.Request] with Connection.Request {
+  class Request private(n:Unit=()) extends HttpConnection.Base[Connection.Request] with Connection.Request {
     private var timeoutMilliseconds: Int = 0
     private var maxBodySizeBytes: Int = 0
     private var followRedirectsVal: Boolean = false
@@ -384,7 +384,7 @@ object HttpConnection {
     private var validateTSLCertificatesVal: Boolean = true
 
     private def this() {
-      this()
+      this(())
       timeoutMilliseconds = 3000
       maxBodySizeBytes = 1024 * 1024
       followRedirectsVal = true
@@ -455,7 +455,7 @@ object HttpConnection {
       this
     }
 
-    def data: Seq[Connection.KeyVal] = {
+    override def data: Seq[Connection.KeyVal] = {
       dataVal.toSeq
     }
 

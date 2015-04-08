@@ -58,7 +58,7 @@ private[parser] class HtmlTreeBuilder extends TreeBuilder {
       root = new Element(Tag("html"), baseUri)
       doc.appendChild(root)
       stack.append(root)
-      resetInsertionMode
+      resetInsertionMode()
       val contextChain: Elements = context.parents
       contextChain.add(0, context)
       breakable {
@@ -79,7 +79,7 @@ private[parser] class HtmlTreeBuilder extends TreeBuilder {
     }
   }
 
-  protected[parser] def process(token: Token): Boolean = {
+  override protected[parser] def process(token: Token): Boolean = {
     currentToken = token
     this.stateVal.process(token, this)
   }
@@ -102,7 +102,7 @@ private[parser] class HtmlTreeBuilder extends TreeBuilder {
   }
 
   private[parser] def originalState: HtmlTreeBuilderState.BuilderState = {
-    return originalState
+    originalStateVal
   }
 
   private[parser] def framesetOk(framesetOk: Boolean) {
@@ -110,15 +110,15 @@ private[parser] class HtmlTreeBuilder extends TreeBuilder {
   }
 
   private[parser] def framesetOk: Boolean = {
-    return framesetOkVal
+    framesetOkVal
   }
 
   private[parser] def getDocument: Document = {
-    return doc
+    doc
   }
 
   private[parser] def getBaseUri: String = {
-    return baseUri
+    baseUri
   }
 
   private[parser] def maybeSetBaseUri(base: Element) {
@@ -134,7 +134,7 @@ private[parser] class HtmlTreeBuilder extends TreeBuilder {
   }
 
   private[parser] def isFragmentParsing: Boolean = {
-    return fragmentParsing
+    fragmentParsing
   }
 
   private[parser] def error(state: HtmlTreeBuilderState.BuilderState) {
@@ -153,18 +153,17 @@ private[parser] class HtmlTreeBuilder extends TreeBuilder {
       tokeniser.transition(TokeniserState.Data)
       // ensure we get out of whatever state we are in. emitted for yielded processing
       tokeniser.emit(emptyEnd.reset.name(el.tagName))
-      return el
+      el
     }
     val el: Element = new Element(Tag(startTag.name), baseUri, startTag.attributes)
     insert(el)
     el
-    null
   }
 
   private[parser] def insertStartTag(startTagName: String): Element = {
     val el: Element = new Element(Tag(startTagName), baseUri)
     insert(el)
-    return el
+    el
   }
 
   private[parser] def insert(el: Element) {
@@ -188,7 +187,7 @@ private[parser] class HtmlTreeBuilder extends TreeBuilder {
         tokeniser.acknowledgeSelfClosingFlag()
       }
     }
-    return el
+    el
   }
 
   private[parser] def insertForm(startTag: Token.StartTag, onStack: Boolean): FormElement = {
@@ -199,7 +198,7 @@ private[parser] class HtmlTreeBuilder extends TreeBuilder {
     if (onStack) {
       stack.append(el)
     }
-    return el
+    el
   }
 
   private[parser] def insert(commentToken: Token.Comment) {
@@ -230,16 +229,15 @@ private[parser] class HtmlTreeBuilder extends TreeBuilder {
       currentElement.appendChild(node)
     }
     // connect form controls to their form element
-    if (node.isInstanceOf[Element] && (node.asInstanceOf[Element]).tag.isFormListed) {
-      if (formElement != null) {
-        formElement.addElement(node.asInstanceOf[Element])
-      }
+    node match {
+      case e: Element if e.tag.isFormListed =>
+        if (formElement != null) formElement.addElement(node.asInstanceOf[Element])
     }
   }
 
   private[parser] def pop: Element = {
     val size: Int = stack.size
-    return stack.remove(size - 1)
+    stack.remove(size - 1)
   }
 
   private[parser] def push(element: Element) {
@@ -247,11 +245,11 @@ private[parser] class HtmlTreeBuilder extends TreeBuilder {
   }
 
   private[parser] def getStack: mutable.Buffer[Element] = {
-    return stack
+    stack
   }
 
   private[parser] def onStack(el: Element): Boolean = {
-    return isElementInQueue(stack, el)
+    isElementInQueue(stack, el)
   }
 
   private def isElementInQueue(queue: mutable.Buffer[Element], element: Element): Boolean = {
@@ -271,7 +269,7 @@ private[parser] class HtmlTreeBuilder extends TreeBuilder {
         return next
       }
     }
-    return null
+    null
   }
 
   private[parser] def removeFromStack(el: Element): Boolean = {
@@ -282,7 +280,7 @@ private[parser] class HtmlTreeBuilder extends TreeBuilder {
         return true
       }
     }
-    return false
+    false
   }
 
   private[parser] def popStackToClose(elName: String) {
@@ -326,7 +324,7 @@ private[parser] class HtmlTreeBuilder extends TreeBuilder {
     clearStackToContext("table")
   }
 
-  private[parser] def clearStackToTableBodyContext(): Unit  ={
+  private[parser] def clearStackToTableBodyContext(): Unit = {
     clearStackToContext("tbody", "tfoot", "thead")
   }
 
@@ -357,7 +355,7 @@ private[parser] class HtmlTreeBuilder extends TreeBuilder {
         }
       }
     }
-    return null
+    null
   }
 
   private[parser] def insertOnStackAfter(after: Element, in: Element) {
@@ -388,40 +386,40 @@ private[parser] class HtmlTreeBuilder extends TreeBuilder {
         val name: String = node.nodeName()
         if ("select" == name) {
           transition(HtmlTreeBuilderState.InSelect)
-          break()// frag
-        }        else if ("td" == name || ("td" == name) && !last) {
+          break() // frag
+        } else if ("td" == name || ("td" == name) && !last) {
           transition(HtmlTreeBuilderState.InCell)
           break()
-        }        else if ("tr" == name) {
+        } else if ("tr" == name) {
           transition(HtmlTreeBuilderState.InRow)
           break()
-        }        else if (("tbody" == name) || ("thead" == name) || ("tfoot" == name)) {
+        } else if (("tbody" == name) || ("thead" == name) || ("tfoot" == name)) {
           transition(HtmlTreeBuilderState.InTableBody)
           break()
-        }        else if ("caption" == name) {
+        } else if ("caption" == name) {
           transition(HtmlTreeBuilderState.InCaption)
           break()
-        }        else if ("colgroup" == name) {
+        } else if ("colgroup" == name) {
           transition(HtmlTreeBuilderState.InColumnGroup)
-          break()// frag
-        }        else if ("table" == name) {
+          break() // frag
+        } else if ("table" == name) {
           transition(HtmlTreeBuilderState.InTable)
           break()
-        }        else if ("head" == name) {
+        } else if ("head" == name) {
           transition(HtmlTreeBuilderState.InBody)
-          break()// frag
-        }        else if ("body" == name) {
+          break() // frag
+        } else if ("body" == name) {
           transition(HtmlTreeBuilderState.InBody)
           break()
-        }        else if ("frameset" == name) {
+        } else if ("frameset" == name) {
           transition(HtmlTreeBuilderState.InFrameset)
-          break()// frag
-        }        else if ("html" == name) {
+          break() // frag
+        } else if ("html" == name) {
           transition(HtmlTreeBuilderState.BeforeHead)
-          break()// frag
-        }        else if (last) {
+          break() // frag
+        } else if (last) {
           transition(HtmlTreeBuilderState.InBody)
-          break()// frag
+          break() // frag
         }
       }
     }
@@ -432,56 +430,56 @@ private[parser] class HtmlTreeBuilder extends TreeBuilder {
 
   private def inSpecificScope(targetName: String, baseTypes: Array[String], extraTypes: Array[String]): Boolean = {
     specificScopeTarget(0) = targetName
-    return inSpecificScope(specificScopeTarget, baseTypes, extraTypes)
+    inSpecificScope(specificScopeTarget, baseTypes, extraTypes)
   }
 
   private def inSpecificScope(targetNames: Array[String], baseTypes: Array[String], extraTypes: Array[String]): Boolean = {
     for (pos <- (stack.size - 1).to(0, -1)) {
       val el: Element = stack(pos)
       val elName: String = el.nodeName()
-      if (Strings.in(elName, targetNames:_*)) return true
-      if (Strings.in(elName, baseTypes:_*)) return false
-      if (extraTypes != null && Strings.in(elName, extraTypes:_*)) return false
+      if (Strings.in(elName, targetNames: _*)) return true
+      if (Strings.in(elName, baseTypes: _*)) return false
+      if (extraTypes != null && Strings.in(elName, extraTypes: _*)) return false
     }
     Validator.fail("Should not be reachable")
-    return false
+    false
   }
 
   private[parser] def inScope(targetNames: Array[String]): Boolean = {
-    return inSpecificScope(targetNames, HtmlTreeBuilder.TagsSearchInScope, null)
+    inSpecificScope(targetNames, HtmlTreeBuilder.TagsSearchInScope, null)
   }
 
   private[parser] def inScope(targetName: String): Boolean = {
-    return inScope(targetName, null)
+    inScope(targetName, null)
   }
 
   private[parser] def inScope(targetName: String, extras: Array[String]): Boolean = {
-    return inSpecificScope(targetName, HtmlTreeBuilder.TagsSearchInScope, extras)
+    inSpecificScope(targetName, HtmlTreeBuilder.TagsSearchInScope, extras)
     // todo: in mathml namespace: mi, mo, mn, ms, mtext annotation-xml
     // todo: in svg namespace: forignOjbect, desc, title
   }
 
   private[parser] def inListItemScope(targetName: String): Boolean = {
-    return inScope(targetName, HtmlTreeBuilder.TagSearchList)
+    inScope(targetName, HtmlTreeBuilder.TagSearchList)
   }
 
   private[parser] def inButtonScope(targetName: String): Boolean = {
-    return inScope(targetName, HtmlTreeBuilder.TagSearchButton)
+    inScope(targetName, HtmlTreeBuilder.TagSearchButton)
   }
 
   private[parser] def inTableScope(targetName: String): Boolean = {
-    return inSpecificScope(targetName, HtmlTreeBuilder.TagSearchTableScope, null)
+    inSpecificScope(targetName, HtmlTreeBuilder.TagSearchTableScope, null)
   }
 
   private[parser] def inSelectScope(targetName: String): Boolean = {
     for (pos <- (stack.size - 1).to(0, -1)) {
       val el: Element = stack(pos)
-      val elName: String = el.nodeName
+      val elName: String = el.nodeName()
       if (elName == targetName) return true
-      if (!Strings.in(elName, HtmlTreeBuilder.TagSearchSelectScope:_*)) return false
+      if (!Strings.in(elName, HtmlTreeBuilder.TagSearchSelectScope: _*)) return false
     }
-    Validator.fail("Should not be reachable");
-    return false;
+    Validator.fail("Should not be reachable")
+    false
   }
 
   private[parser] def setHeadElement(headElement: Element) {
@@ -489,11 +487,11 @@ private[parser] class HtmlTreeBuilder extends TreeBuilder {
   }
 
   private[parser] def getHeadElement: Element = {
-    return headElement
+    headElement
   }
 
   private[parser] def isFosterInserts: Boolean = {
-    return fosterInserts
+    fosterInserts
   }
 
   private[parser] def setFosterInserts(fosterInserts: Boolean) {
@@ -501,19 +499,19 @@ private[parser] class HtmlTreeBuilder extends TreeBuilder {
   }
 
   private[parser] def getFormElement: FormElement = {
-    return formElement
+    formElement
   }
 
   private[parser] def setFormElement(formElement: FormElement) {
     this.formElement = formElement
   }
 
-  private[parser] def newPendingTableCharacters():Unit= {
+  private[parser] def newPendingTableCharacters(): Unit = {
     pendingTableCharacters = new mutable.ArrayBuffer[String]
   }
 
   private[parser] def getPendingTableCharacters: mutable.Buffer[String] = {
-    return pendingTableCharacters
+    pendingTableCharacters
   }
 
   private[parser] def setPendingTableCharacters(pendingTableCharacters: mutable.Buffer[String]) {
@@ -521,19 +519,19 @@ private[parser] class HtmlTreeBuilder extends TreeBuilder {
   }
 
   /**
-  *11.2.5.2 Closing elements that have implied end tags<p/>
+   * 11.2.5.2 Closing elements that have implied end tags<p/>
      When the steps below require the UA to generate implied end tags, then, while the current node is a dd element, a
      dt element, an li element, an option element, an optgroup element, a p element, an rp element, or an rt element,
      the UA must pop the current node off the stack of open elements.
 
      @param excludeTag If a step requires the UA to generate implied end tags but lists an element to exclude from the
      process, then the UA must perform the above steps as if that element was not in the above list.
-    */
+   */
   private[parser] def generateImpliedEndTags(excludeTag: String) {
-    while ((excludeTag != null && !(currentElement.nodeName == excludeTag)) && Strings.in(currentElement.nodeName, HtmlTreeBuilder.TagSearchEndTags:_*)) pop
+    while ((excludeTag != null && !(currentElement.nodeName == excludeTag)) && Strings.in(currentElement.nodeName(), HtmlTreeBuilder.TagSearchEndTags: _*)) pop
   }
 
-  private[parser] def generateImpliedEndTags():Unit = {
+  private[parser] def generateImpliedEndTags(): Unit = {
     generateImpliedEndTags(null)
   }
 
@@ -541,24 +539,24 @@ private[parser] class HtmlTreeBuilder extends TreeBuilder {
     // todo: mathml's mi, mo, mn
     // todo: svg's foreigObject, desc, title
     val name: String = el.nodeName()
-    return Strings.in(name, HtmlTreeBuilder.TagSearchSpecial:_*)
+    Strings.in(name, HtmlTreeBuilder.TagSearchSpecial: _*)
   }
 
   private[parser] def lastFormattingElement: Element = {
-    return if (formattingElements.size > 0) formattingElements(formattingElements.size - 1) else null
+    if (formattingElements.size > 0) formattingElements(formattingElements.size - 1) else null
   }
 
   private[parser] def removeLastFormattingElement(): Element = {
     val size: Int = formattingElements.size
-    if (size > 0) return formattingElements.remove(size - 1)
-    else return null
+    if (size > 0) formattingElements.remove(size - 1)
+    else null
   }
 
   // active formatting elements
   private[parser] def pushActiveFormattingElements(in: Element) {
     var numSeen: Int = 0
     breakable {
-      for (pos <- (formattingElements.size -1).to(0,-1)) {
+      for (pos <- (formattingElements.size - 1).to(0, -1)) {
         val el: Element = formattingElements(pos)
         if (el == null) break() // mark
 
@@ -576,12 +574,12 @@ private[parser] class HtmlTreeBuilder extends TreeBuilder {
 
   private def isSameFormattingElement(a: Element, b: Element): Boolean = {
     // same if: same namespace, tag, and attributes. Element.equals only checks tag, might in future check children
-    return (a.nodeName == b.nodeName) && (a.attributes == b.attributes)
-        // && a.namespace().equals(b.namespace())
+    (a.nodeName == b.nodeName) && (a.attributes == b.attributes)
+    // && a.namespace().equals(b.namespace())
     // todo: namespaces
   }
 
-  private[parser] def reconstructFormattingElements():Unit = {
+  private[parser] def reconstructFormattingElements(): Unit = {
     val last: Element = lastFormattingElement
     if (last == null || onStack(last)) return
     var entry: Element = last
@@ -590,38 +588,107 @@ private[parser] class HtmlTreeBuilder extends TreeBuilder {
     var skip: Boolean = false
     breakable {
       while (true) {
-        if (pos == 0) {// step 4. if none before, skip to 8
+        if (pos == 0) {
+          // step 4. if none before, skip to 8
           skip = true
           break()
         }
         pos -= 1
-        entry = formattingElements(pos)// step 5. one earlier than entry
+        entry = formattingElements(pos) // step 5. one earlier than entry
         if (entry == null || onStack(entry)) // step 6 - neither marker nor on stack
-          break()// jump to 8, else continue back to 4
+          break() // jump to 8, else continue back to 4
       }
     }
     breakable {
       while (true) {
-        if (!skip)  { // step 7: on later than entry
+        if (!skip) {
+          // step 7: on later than entry
           pos += 1
           entry = formattingElements(pos)
         }
-        Validator.notNull(entry)// should not occur, as we break at last element
+        Validator.notNull(entry) // should not occur, as we break at last element
         // 8. create new element from element, 9 insert into current node, onto stack
         skip = false // can only skip increment from 4.
-        val newEl: Element = insertStartTag(entry.nodeName())// todo: avoid fostering here?
-        // newEl.namespace(entry.namespace()); // todo: namespaces
+        val newEl: Element = insertStartTag(entry.nodeName()) // todo: avoid fostering here?
+        // newEl.namespace(entry.namespace()) // todo: namespaces
         newEl.attributes.addAll(entry.attributes)
         // 10. replace entry with new entry
         formattingElements.update(pos, newEl)
         // 11
-        if (pos == size - 1)  // if not last entry in list, jump to 7
+        if (pos == size - 1) // if not last entry in list, jump to 7
           break()
       }
     }
   }
 
-  override protected def process(token: Token): Boolean = ???
+  private[parser] def clearFormattingElementsToLastMarker(): Unit = {
+    breakable {
+      while (formattingElements.nonEmpty) {
+        val el: Element = removeLastFormattingElement()
+        if (el == null) break()
+      }
+    }
+  }
+
+  private[parser] def removeFromActiveFormattingElements(el: Element) {
+    breakable {
+      for (pos <- (formattingElements.size - 1).to(0, -1)) {
+        val next: Element = formattingElements(pos)
+        if (next eq el) {
+          formattingElements.remove(pos)
+          break()
+        }
+      }
+    }
+  }
+
+  private[parser] def isInActiveFormattingElements(el: Element): Boolean = {
+    isElementInQueue(formattingElements, el)
+  }
+
+  private[parser] def getActiveFormattingElement(nodeName: String): Element = {
+    breakable {
+      for (pos <- (formattingElements.size - 1).to(0, -1)) {
+        val next: Element = formattingElements(pos)
+        if (next == null) break()
+        else if (next.nodeName == nodeName) return next
+      }
+    }
+    null
+  }
+
+  private[parser] def replaceActiveFormattingElement(out: Element, in: Element) {
+    replaceInQueue(formattingElements, out, in)
+  }
+
+  private[parser] def insertMarkerToFormattingElements(): Unit = {
+    formattingElements.append(null)
+  }
+
+  private[parser] def insertInFosterParent(in: Node) {
+    var fosterParent: Element = null
+    val lastTable: Element = getFromStack("table")
+    var isLastTableParent: Boolean = false
+    if (lastTable != null) {
+      if (lastTable.parent != null) {
+        fosterParent = lastTable.parent
+        isLastTableParent = true
+      }
+      else fosterParent = aboveOnStack(lastTable)
+    } else {
+      fosterParent = stack.head
+    }
+    if (isLastTableParent) {
+      Validator.notNull(lastTable)
+      lastTable.before(in)
+    }
+    else fosterParent.appendChild(in)
+  }
+
+  override def toString: String = {
+    "TreeBuilder{" + "currentToken=" + currentToken + ", state=" + state + ", currentElement=" + currentElement + '}'
+  }
+
 }
 
 private[parser] object HtmlTreeBuilder {

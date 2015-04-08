@@ -48,9 +48,9 @@ private[parser] abstract class TreeBuilder {
     }
   }
 
-  protected def process(token: Token): Boolean
+  protected[parser] def process(token: Token): Boolean
 
-  protected def processStartTag(name: String): Boolean = process(start.reset.name(name))
+  protected[parser] def processStartTag(name: String): Boolean = process(start.reset.name(name))
 
 
   def processStartTag(name: String, attrs: Attributes): Boolean = {
@@ -59,9 +59,9 @@ private[parser] abstract class TreeBuilder {
     process(start)
   }
 
-  protected def processEndTag(name: String): Boolean = process(end.reset.name(name))
+  protected[parser] def processEndTag(name: String): Boolean = process(end.reset.name(name))
 
-  protected def currentElement: Element = {
+  protected[parser] def currentElement: Element = {
     val size: Int = stack.size
     if (size > 0) stack(size - 1) else null
   }

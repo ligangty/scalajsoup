@@ -293,12 +293,12 @@ object Connection {
    * Common methods for Requests and Responses
    * @param T Type of Base, either Request or Response
    */
-  trait Base[T <: Base] {
+  trait Base[T <: Base[T]] {
     /**
      * Get the URL
      * @return URL
      */
-    def urlVal: URL
+    def url: URL
 
     /**
      * Set the URL
@@ -365,7 +365,7 @@ object Connection {
      * Retrieve all of the request/response headers as a map
      * @return headers
      */
-    def headersMap: Map[String, String]
+    def headers: Map[String, String]
 
     /**
      * Get a cookie value by name from this request/response.
@@ -500,7 +500,7 @@ object Connection {
      * Get all of the request's data parameters
      * @return collection of keyvals
      */
-    def data: Collection[Connection.KeyVal]
+    def data: Seq[Connection.KeyVal]
 
     /**
      * Specify the parser to use when parsing the document.
