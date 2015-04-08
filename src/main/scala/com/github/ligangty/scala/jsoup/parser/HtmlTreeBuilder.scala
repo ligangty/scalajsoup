@@ -533,6 +533,94 @@ private[parser] class HtmlTreeBuilder extends TreeBuilder {
     while ((excludeTag != null && !(currentElement.nodeName == excludeTag)) && Strings.in(currentElement.nodeName, HtmlTreeBuilder.TagSearchEndTags:_*)) pop
   }
 
+  private[parser] def generateImpliedEndTags():Unit = {
+    generateImpliedEndTags(null)
+  }
+
+  private[parser] def isSpecial(el: Element): Boolean = {
+    // todo: mathml's mi, mo, mn
+    // todo: svg's foreigObject, desc, title
+    val name: String = el.nodeName()
+    return Strings.in(name, HtmlTreeBuilder.TagSearchSpecial:_*)
+  }
+
+  private[parser] def lastFormattingElement: Element = {
+    return if (formattingElements.size > 0) formattingElements(formattingElements.size - 1) else null
+  }
+
+  private[parser] def removeLastFormattingElement(): Element = {
+    val size: Int = formattingElements.size
+    if (size > 0) return formattingElements.remove(size - 1)
+    else return null
+  }
+
+  // active formatting elements
+  private[parser] def pushActiveFormattingElements(in: Element) {
+    var numSeen: Int = 0
+    breakable {
+      for (pos <- (formattingElements.size -1).to(0,-1)) {
+        val el: Element = formattingElements(pos)
+        if (el == null) break() // mark
+
+        if (isSameFormattingElement(in, el))
+          numSeen += 1
+
+        if (numSeen == 3) {
+          formattingElements.remove(pos)
+          break()
+        }
+      }
+    }
+    formattingElements.append(in)
+  }
+
+  private def isSameFormattingElement(a: Element, b: Element): Boolean = {
+    // same if: same namespace, tag, and attributes. Element.equals only checks tag, might in future check children
+    return (a.nodeName == b.nodeName) && (a.attributes == b.attributes)
+        // && a.namespace().equals(b.namespace())
+    // todo: namespaces
+  }
+
+  private[parser] def reconstructFormattingElements():Unit = {
+    val last: Element = lastFormattingElement
+    if (last == null || onStack(last)) return
+    var entry: Element = last
+    val size: Int = formattingElements.size
+    var pos: Int = size - 1
+    var skip: Boolean = false
+    breakable {
+      while (true) {
+        if (pos == 0) {// step 4. if none before, skip to 8
+          skip = true
+          break()
+        }
+        pos -= 1
+        entry = formattingElements(pos)// step 5. one earlier than entry
+        if (entry == null || onStack(entry)) // step 6 - neither marker nor on stack
+          break()// jump to 8, else continue back to 4
+      }
+    }
+    breakable {
+      while (true) {
+        if (!skip)  { // step 7: on later than entry
+          pos += 1
+          entry = formattingElements(pos)
+        }
+        Validator.notNull(entry)// should not occur, as we break at last element
+        // 8. create new element from element, 9 insert into current node, onto stack
+        skip = false // can only skip increment from 4.
+        val newEl: Element = insertStartTag(entry.nodeName())// todo: avoid fostering here?
+        // newEl.namespace(entry.namespace()); // todo: namespaces
+        newEl.attributes.addAll(entry.attributes)
+        // 10. replace entry with new entry
+        formattingElements.update(pos, newEl)
+        // 11
+        if (pos == size - 1)  // if not last entry in list, jump to 7
+          break()
+      }
+    }
+  }
+
   override protected def process(token: Token): Boolean = ???
 }
 
