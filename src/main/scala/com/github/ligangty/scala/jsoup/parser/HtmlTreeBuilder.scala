@@ -86,7 +86,7 @@ private[parser] class HtmlTreeBuilder extends TreeBuilder {
 
   private[parser] def process(token: Token, state: HtmlTreeBuilderState.BuilderState): Boolean = {
     currentToken = token
-    stateVal.process(token, this)
+    state.process(token, this)
   }
 
   private[parser] def transition(state: HtmlTreeBuilderState.BuilderState) {
@@ -232,6 +232,7 @@ private[parser] class HtmlTreeBuilder extends TreeBuilder {
     node match {
       case e: Element if e.tag.isFormListed =>
         if (formElement != null) formElement.addElement(node.asInstanceOf[Element])
+      case _ =>
     }
   }
 

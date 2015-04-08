@@ -32,7 +32,7 @@ class TextNode extends Node {
    * @return Unencoded, normalised text.
    * @see TextNode#getWholeText()
    */
-  def text: String = TextNode.normaliseWhitespace(getWholeText)
+  def text(): String = TextNode.normaliseWhitespace(getWholeText)
 
   /**
    * Set the text content of this text node.

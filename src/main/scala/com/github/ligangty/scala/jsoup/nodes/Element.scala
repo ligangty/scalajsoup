@@ -851,7 +851,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * @see #ownText()
    * @see #textNodes()
    */
-  def text: String = {
+  def text(): String = {
     val accum: java.lang.StringBuilder = new java.lang.StringBuilder
     new NodeTraversor(new NodeVisitor {
       def head(node: Node, depth: Int) {
