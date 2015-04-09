@@ -9,6 +9,8 @@ import java.util.Collection
 
 import com.github.ligangty.scala.jsoup.parser.Parser
 
+import scala.collection.mutable
+
 /**
  * A Connection provides a convenient interface to fetch content from the web, and parse them into Documents.
  * <p/>
@@ -266,26 +268,55 @@ object Connection {
 
   object Method {
 
+    def valueOf(value: String): Method = {
+      value match {
+        case "GET" => GET()
+        case "POST" => POST()
+        case "PUT" => PUT()
+        case "DELETE" => DELETE()
+        case "PATCH" => PATCH()
+      }
+    }
+
     /**
      * GET and POST http methods.
      */
     sealed abstract class Method(hasBdy: Boolean) {
+
       /**
        * Check if this HTTP method has/needs a request body
        * @return if body needed
        */
       def hasBody: Boolean = hasBdy
+
+      def name: String
+
     }
 
-    case class GET(hasBdy: Boolean = false) extends Method(hasBdy)
+    case class GET(hasBdy: Boolean = false) extends Method(hasBdy) {
 
-    case class POST(hasBdy: Boolean = true) extends Method(hasBdy)
+      override def name = "GET"
+    }
 
-    case class PUT(hasBdy: Boolean = true) extends Method(hasBdy)
+    case class POST(hasBdy: Boolean = true) extends Method(hasBdy) {
 
-    case class DELETE(hasBdy: Boolean = false) extends Method(hasBdy)
+      override def name = "POST"
+    }
 
-    case class PATCH(hasBdy: Boolean = true) extends Method(hasBdy)
+    case class PUT(hasBdy: Boolean = true) extends Method(hasBdy) {
+
+      override def name = "PUT"
+    }
+
+    case class DELETE(hasBdy: Boolean = false) extends Method(hasBdy) {
+
+      override def name = "DELETE"
+    }
+
+    case class PATCH(hasBdy: Boolean = true) extends Method(hasBdy) {
+
+      override def name = "PATCH"
+    }
 
   }
 
@@ -294,6 +325,7 @@ object Connection {
    * @param T Type of Base, either Request or Response
    */
   trait Base[T <: Base[T]] {
+
     /**
      * Get the URL
      * @return URL
@@ -410,6 +442,7 @@ object Connection {
    * Represents a HTTP request.
    */
   trait Request extends Base[Connection.Request] {
+
     /**
      * Get the request timeout, in milliseconds.
      * @return the timeout in milliseconds.
@@ -500,7 +533,7 @@ object Connection {
      * Get all of the request's data parameters
      * @return collection of keyvals
      */
-    def data: Seq[Connection.KeyVal]
+    def data: mutable.Buffer[Connection.KeyVal]
 
     /**
      * Specify the parser to use when parsing the document.
@@ -520,6 +553,7 @@ object Connection {
    * Represents a HTTP response.
    */
   trait Response extends Base[Connection.Response] {
+
     /**
      * Get the status code of the response.
      * @return status code
@@ -569,6 +603,7 @@ object Connection {
    * A Key Value tuple.
    */
   trait KeyVal {
+
     /**
      * Update the key of a keyval
      * @param key new key

@@ -1,258 +1,234 @@
 package com.github.ligangty.scala.jsoup.helper
 
-import java.io.InputStream
-import java.net.{SocketTimeoutException, MalformedURLException, URL}
+import java.io._
+import java.net._
+import java.nio.ByteBuffer
+import java.nio.charset.Charset
+import java.security.{KeyManagementException, NoSuchAlgorithmException, SecureRandom}
+import java.security.cert.X509Certificate
+import java.util.zip.GZIPInputStream
+import javax.net.ssl._
 
-import com.github.ligangty.scala.jsoup.Connection
+import com.github.ligangty.scala.jsoup.{UnsupportedMimeTypeException, HttpStatusException, Connection}
 import Validator._
-import com.github.ligangty.scala.jsoup.Connection.Method.Method
-import com.github.ligangty.scala.jsoup.Connection.{KeyVal, Request, Response}
+import com.github.ligangty.scala.jsoup.helper.HttpConnection.KeyVal
 import com.github.ligangty.scala.jsoup.nodes.Document
 import com.github.ligangty.scala.jsoup.parser.Parser
 
 import scala.collection.mutable
+import scala.util.matching.Regex
 
-class HttpConnection extends Connection {
-  /**
-   * Set the request URL to fetch. The protocol must be HTTP or HTTPS.
-   * @param url URL to connect to
-   * @return this Connection, for chaining
-   */
-  override def url(url: URL): Connection = ???
+class HttpConnection private(n: Unit) extends Connection {
 
-  /**
-   * Provide an alternate parser to use when parsing the response to a Document.
-   * @param parser alternate parser
-   * @return this Connection, for chaining
-   */
-  override def parser(parser: Parser): Connection = ???
+  private var req: Connection.Request = null
+  private var res: Connection.Response = null
 
-  /**
-   * Disable/enable TSL certificates validation for HTTPS requests.
-   * <p/>
-   * By default this is <b>true</b>; all
-   * connections over HTTPS perform normal validation of certificates, and will abort requests if the provided
-   * certificate does not validate.
-   * <p/>
-   * Some servers use expired, self-generated certificates; or your JDK may not
-   * support SNI hosts. In which case, you may want to enable this setting.
-   * <p/> <b>Be careful</b> and understand why you need to disable these validations.
-   * @param value if should validate TSL (SSL) certificates. <b>true</b> by default.
-   * @return this Connection, for chaining
-   */
-  override def validateTLSCertificates(value: Boolean): Connection = ???
+  private def this() {
+    this(())
+    req = new HttpConnection.Request
+    res = new HttpConnection.Response
+  }
 
-  /**
-   * Execute the request as a GET, and parse the result.
-   * @return parsed Document
-   * @throws MalformedURLException if the request URL is not a HTTP or HTTPS URL, or is otherwise malformed
-   * @throws HttpStatusException if the response is not OK and HTTP response errors are not ignored
-   * @throws UnsupportedMimeTypeException if the response mime type is not supported and those errors are not ignored
-   * @throws SocketTimeoutException if the connection times out
-   * @throws IOException on error
-   */
-  override def get: Document = ???
+  def url(url: URL): Connection = {
+    req.url(url)
+    this
+  }
 
-  /**
-   * Add a request data parameter. Request parameters are sent in the request query string for GETs, and in the
-   * request body for POSTs. A request may have multiple values of the same name.
-   * @param key data key
-   * @param value data value
-   * @return this Connection, for chaining
-   */
-  override def data(key: String, value: String): Connection = ???
+  def url(url: String): Connection = {
+    Validator.notEmpty(url, "Must supply a valid URL")
+    try {
+      req.url(new URL(HttpConnection.encodeUrl(url)))
+    } catch {
+      case e: MalformedURLException =>
+        throw new IllegalArgumentException("Malformed URL: " + url, e)
+    }
+    this
+  }
 
-  /**
-   * Add an input stream as a request data paramater. For GETs, has no effect, but for POSTS this will upload the
-   * input stream.
-   * @param key data key (form item name)
-   * @param filename the name of the file to present to the remove server. Typically just the name, not path,
-   *                 component.
-   * @param inputStream the input stream to upload, that you probably obtained from a { @link java.io.FileInputStream}.
-   *                    You must close the InputStream in a { @code finally} block.
-   * @return this Connections, for chaining
-   */
-  override def data(key: String, filename: String, inputStream: InputStream): Connection = ???
+  def userAgent(userAgent: String): Connection = {
+    Validator.notNull(userAgent, "User agent must not be null")
+    req.header("User-Agent", userAgent)
+    this
+  }
 
-  /**
-   * Adds all of the supplied data to the request data parameters
-   * @param data collection of data parameters
-   * @return this Connection, for chaining
-   */
-  override def data(data: Traversable[KeyVal]): Connection = ???
+  def timeout(millis: Int): Connection = {
+    req.timeout(millis)
+    this
+  }
 
-  /**
-   * Adds all of the supplied data to the request data parameters
-   * @param data map of data parameters
-   * @return this Connection, for chaining
-   */
-  override def data(data: Map[String, String]): Connection = ???
+  def maxBodySize(bytes: Int): Connection = {
+    req.maxBodySize(bytes)
+    this
+  }
 
-  /**
-   * Add a number of request data parameters. Multiple parameters may be set at once, e.g.: <code>.data("name",
-   * "jsoup", "language", "Java", "language", "English");</code> creates a query string like:
-   * <code>?name=jsoup&language=Java&language=English</code>
-   * @param keyvals a set of key value pairs.
-   * @return this Connection, for chaining
-   */
-  override def data(keyvals: String*): Connection = ???
+  def followRedirects(followRedirects: Boolean): Connection = {
+    req.followRedirects(followRedirects)
+    this
+  }
 
-  /**
-   * Add a number of request data parameters. Multiple parameters may be set at once, e.g.: <code>.data("name",
-   * "jsoup", "language", "Java", "language", "English");</code> creates a query string like:
-   * <code>?name=jsoup&language=Java&language=English</code>
-   * @param keyvals a set of key value pairs.
-   * @return this Connection, for chaining
-   */
-  override def data(keyvals: Array[String]): Connection = ???
+  def referrer(referrer: String): Connection = {
+    Validator.notNull(referrer, "Referrer must not be null")
+    req.header("Referer", referrer)
+    this
+  }
 
-  /**
-   * Set the request URL to fetch. The protocol must be HTTP or HTTPS.
-   * @param url URL to connect to
-   * @return this Connection, for chaining
-   */
-  override def url(url: String): Connection = ???
+  def method(method: Connection.Method.Method): Connection = {
+    req.method(method)
+    this
+  }
 
-  /**
-   * Execute the request.
-   * @return a response object
-   * @throws MalformedURLException if the request URL is not a HTTP or HTTPS URL, or is otherwise malformed
-   * @throws HttpStatusException if the response is not OK and HTTP response errors are not ignored
-   * @throws UnsupportedMimeTypeException if the response mime type is not supported and those errors are not ignored
-   * @throws SocketTimeoutException if the connection times out
-   * @throws IOException on error
-   */
-  override def execute: Response = ???
+  def ignoreHttpErrors(ignoreHttpErrors: Boolean): Connection = {
+    req.ignoreHttpErrors(ignoreHttpErrors)
+    this
+  }
 
-  /**
-   * Set the request method to use, GET or POST. Default is GET.
-   * @param method HTTP request method
-   * @return this Connection, for chaining
-   */
-  override def method(method: Method): Connection = ???
+  def ignoreContentType(ignoreContentType: Boolean): Connection = {
+    req.ignoreContentType(ignoreContentType)
+    this
+  }
 
-  /**
-   * Configures the connection to (not) follow server redirects. By default this is <b>true</b>.
-   * @param followRedirects true if server redirects should be followed.
-   * @return this Connection, for chaining
-   */
-  override def followRedirects(followRedirects: Boolean): Connection = ???
+  def ValidatorTLSCertificates(value: Boolean): Connection = {
+    req.validateTLSCertificates(value)
+    this
+  }
 
-  /**
-   * Set a request header.
-   * @param name header name
-   * @param value header value
-   * @return this Connection, for chaining
-   * @see org.jsoup.Connection.Request#headers()
-   */
-  override def header(name: String, value: String): Connection = ???
+  def data(key: String, value: String): Connection = {
+    req.data(KeyVal.create(key, value))
+    this
+  }
 
-  /**
-   * Set the request referrer (aka "referer") header.
-   * @param referrer referrer to use
-   * @return this Connection, for chaining
-   */
-  override def referrer(referrer: String): Connection = ???
+  def data(key: String, filename: String, inputStream: InputStream): Connection = {
+    req.data(KeyVal.create(key, filename, inputStream))
+    this
+  }
 
-  /**
-   * Configures the connection to not throw exceptions when a HTTP error occurs. (4xx - 5xx, e.g. 404 or 500). By
-   * default this is <b>false</b>; an IOException is thrown if an error is encountered. If set to <b>true</b>, the
-   * response is populated with the error body, and the status message will reflect the error.
-   * @param ignoreHttpErrors - false (default) if HTTP errors should be ignored.
-   * @return this Connection, for chaining
-   */
-  override def ignoreHttpErrors(ignoreHttpErrors: Boolean): Connection = ???
+  def data(data: Map[String, String]): Connection = {
+    Validator.notNull(data, "Data map must not be null")
+    import scala.collection.JavaConversions._
+    for (entry <- data.entrySet) {
+      req.data(KeyVal.create(entry.getKey, entry.getValue))
+    }
+    this
+  }
 
-  /**
-   * Set a cookie to be sent in the request.
-   * @param name name of cookie
-   * @param value value of cookie
-   * @return this Connection, for chaining
-   */
-  override def cookie(name: String, value: String): Connection = ???
+  def data(keyvals: String*): Connection = {
+    Validator.notNull(keyvals, "Data key value pairs must not be null")
+    Validator.isTrue(keyvals.length % 2 == 0, "Must supply an even number of key value pairs")
+    for (i <- 0.to(keyvals.length - 1, 2)) {
+      val key: String = keyvals(i)
+      val value: String = keyvals(i + 1)
+      Validator.notEmpty(key, "Data key must not be empty")
+      Validator.notNull(value, "Data value must not be null")
+      req.data(KeyVal.create(key, value))
+    }
+    this
+  }
 
-  /**
-   * Execute the request as a POST, and parse the result.
-   * @return parsed Document
-   * @throws MalformedURLException if the request URL is not a HTTP or HTTPS URL, or is otherwise malformed
-   * @throws HttpStatusException if the response is not OK and HTTP response errors are not ignored
-   * @throws UnsupportedMimeTypeException if the response mime type is not supported and those errors are not ignored
-   * @throws SocketTimeoutException if the connection times out
-   * @throws IOException on error
-   */
-  override def post: Document = ???
+  def data(data: Traversable[Connection.KeyVal]): Connection = {
+    Validator.notNull(data, "Data collection must not be null")
+    for (entry <- data) {
+      req.data(entry)
+    }
+    this
+  }
 
-  /**
-   * Ignore the document's Content-Type when parsing the response. By default this is <b>false</b>, an unrecognised
-   * content-type will cause an IOException to be thrown. (This is to prevent producing garbage by attempting to parse
-   * a JPEG binary image, for example.) Set to true to force a parse attempt regardless of content type.
-   * @param ignoreContentType set to true if you would like the content type ignored on parsing the response into a
-   *                          Document.
-   * @return this Connection, for chaining
-   */
-  override def ignoreContentType(ignoreContentType: Boolean): Connection = ???
+  def header(name: String, value: String): Connection = {
+    req.header(name, value)
+    this
+  }
 
-  /**
-   * Adds each of the supplied cookies to the request.
-   * @param cookies map of cookie name -> value pairs
-   * @return this Connection, for chaining
-   */
-  override def cookies(cookies: Map[String, String]): Connection = ???
+  def cookie(name: String, value: String): Connection = {
+    req.cookie(name, value)
+    this
+  }
 
-  /**
-   * Set the maximum bytes to read from the (uncompressed) connection into the body, before the connection is closed,
-   * and the input truncated. The default maximum is 1MB. A max size of zero is treated as an infinite amount (bounded
-   * only by your patience and the memory available on your machine).
-   * @param bytes number of bytes to read from the input before truncating
-   * @return this Connection, for chaining
-   */
-  override def maxBodySize(bytes: Int): Connection = ???
+  def cookies(cookies: Map[String, String]): Connection = {
+    Validator.notNull(cookies, "Cookie map must not be null")
+    for (entry <- cookies) {
+      req.cookie(entry._1, entry._2)
+    }
+    this
+  }
 
-  /**
-   * Set the connection's request
-   * @param request new request object
-   * @return this Connection, for chaining
-   */
-  override def request(request: Request): Connection = ???
+  def parser(parser: Parser): Connection = {
+    req.parser(parser)
+    this
+  }
 
-  /**
-   * Get the request object associated with this connection
-   * @return request
-   */
-  override def request: Request = ???
+  @throws(classOf[IOException])
+  def get: Document = {
+    req.method(Connection.Method.GET())
+    execute
+    res.parse
+  }
 
-  /**
-   * Set the request timeouts (connect and read). If a timeout occurs, an IOException will be thrown. The default
-   * timeout is 3 seconds (3000 millis). A timeout of zero is treated as an infinite timeout.
-   * @param millis number of milliseconds (thousandths of a second) before timing out connects or reads.
-   * @return this Connection, for chaining
-   */
-  override def timeout(millis: Int): Connection = ???
+  @throws(classOf[IOException])
+  def post: Document = {
+    req.method(Connection.Method.POST())
+    execute
+    res.parse
+  }
 
-  /**
-   * Set the connection's response
-   * @param response new response
-   * @return this Connection, for chaining
-   */
-  override def response(response: Response): Connection = ???
+  @throws(classOf[IOException])
+  def execute: Connection.Response = {
+    res = HttpConnection.Response.execute(req)
+    res
+  }
 
-  /**
-   * Get the response, once the request has been executed
-   * @return response
-   */
-  override def response: Response = ???
+  def request: Connection.Request = {
+    req
+  }
 
-  /**
-   * Set the request user-agent header.
-   * @param userAgent user-agent to use
-   * @return this Connection, for chaining
-   */
-  override def userAgent(userAgent: String): Connection = ???
+  def request(request: Connection.Request): Connection = {
+    req = request
+    this
+  }
+
+  def response: Connection.Response = {
+    res
+  }
+
+  def response(response: Connection.Response): Connection = {
+    res = response
+    this
+  }
 }
 
 object HttpConnection {
 
-  private[HttpConnection] abstract class Base[T <: Connection.Base[T]] protected(n:Unit=()) extends Connection.Base[T] {
+  val CONTENT_ENCODING: String = "Content-Encoding"
+  private val CONTENT_TYPE: String = "Content-Type"
+  private val MULTIPART_FORM_DATA: String = "multipart/form-data"
+  private val FORM_URL_ENCODED: String = "application/x-www-form-urlencoded"
+
+  def connect(url: String): Connection = {
+    val con: Connection = new HttpConnection
+    con.url(url)
+    con
+  }
+
+  def connect(url: URL): Connection = {
+    val con: Connection = new HttpConnection
+    con.url(url)
+    con
+  }
+
+  private def encodeUrl(url: String): String = {
+    if (url == null) {
+      return null
+    }
+    url.replaceAll(" ", "%20")
+  }
+
+  private def encodeMimeName(value: String): String = {
+    if (value == null) {
+      return null
+    }
+    value.replaceAll("\"", "%22")
+  }
+
+  private[HttpConnection] abstract class Base[T <: Connection.Base[T]] protected(n: Unit = ()) extends Connection.Base[T] {
+
     protected[helper] var urlVal: URL = null
     protected[helper] var methodVal: Connection.Method.Method = null
     protected[helper] var headersMap: mutable.Map[String, String] = null
@@ -312,7 +288,9 @@ object HttpConnection {
     def removeHeader(name: String): T = {
       notEmpty(name, "Header name must not be empty")
       val entry = scanHeaders(name)
-      if (entry != null) headersMap.remove(entry._1)
+      if (entry != null) {
+        headersMap.remove(entry._1)
+      }
       this.asInstanceOf[T]
     }
 
@@ -321,10 +299,14 @@ object HttpConnection {
     private def getHeaderCaseInsensitive(name: String): String = {
       notNull(name, "Header name must not be null")
       var value: String = headersMap(name)
-      if (value == null) value = headersMap(name.toLowerCase)
+      if (value == null) {
+        value = headersMap(name.toLowerCase)
+      }
       if (value == null) {
         val entry = scanHeaders(name)
-        if (entry != null) value = entry._2
+        if (entry != null) {
+          value = entry._2
+        }
       }
       value
     }
@@ -332,7 +314,9 @@ object HttpConnection {
     private def scanHeaders(name: String): Tuple2[String, String] = {
       val lc: String = name.toLowerCase
       for (entry <- headersMap) {
-        if (entry._1.toLowerCase == lc) return entry
+        if (entry._1.toLowerCase == lc) {
+          return entry
+        }
       }
       null
     }
@@ -364,6 +348,7 @@ object HttpConnection {
   }
 
   object KeyVal {
+
     def create(key: String, value: String): HttpConnection.KeyVal = {
       new HttpConnection.KeyVal().key(key).value(value)
     }
@@ -373,7 +358,8 @@ object HttpConnection {
     }
   }
 
-  class Request private(n:Unit=()) extends HttpConnection.Base[Connection.Request] with Connection.Request {
+  class Request private(n: Unit = ()) extends HttpConnection.Base[Connection.Request] with Connection.Request {
+
     private var timeoutMilliseconds: Int = 0
     private var maxBodySizeBytes: Int = 0
     private var followRedirectsVal: Boolean = false
@@ -381,7 +367,7 @@ object HttpConnection {
     private var ignoreHttpErrorsVal: Boolean = false
     private var ignoreContentTypeVal: Boolean = false
     private var parserVal: Parser = null
-    private var validateTSLCertificatesVal: Boolean = true
+    private var ValidatorTSLCertificatesVal: Boolean = true
 
     private def this() {
       this(())
@@ -428,11 +414,11 @@ object HttpConnection {
     }
 
     def validateTLSCertificates: Boolean = {
-      validateTSLCertificatesVal
+      ValidatorTSLCertificatesVal
     }
 
     def validateTLSCertificates(value: Boolean) {
-      validateTSLCertificatesVal = value
+      ValidatorTSLCertificatesVal = value
     }
 
     def ignoreHttpErrors(ignoreHttpErrors: Boolean): Connection.Request = {
@@ -455,8 +441,8 @@ object HttpConnection {
       this
     }
 
-    override def data: Seq[Connection.KeyVal] = {
-      dataVal.toSeq
+    override def data: mutable.Buffer[Connection.KeyVal] = {
+      dataVal.toBuffer
     }
 
     def parser(parser: Parser): HttpConnection.Request = {
@@ -469,11 +455,435 @@ object HttpConnection {
     }
   }
 
+  object Response {
+
+    private[Response] val MAX_REDIRECTS: Int = 20
+    private[Response] var sslSocketFactory: SSLSocketFactory = null
+    private[Response] val LOCATION: String = "Location"
+    /*
+     * For example {{{application/atom+xml;charsetVal=utf-8}}}.
+     * Stepping through it: start with <code>"application/"</code>, follow with word
+     * characters up to a <code>"+xml"</code>, and then maybe more (<code>.*</code>).
+     */
+    private[Response] val xmlContentTypeRxp: Regex = """application/\w+\+xml.*""".r
+
+    @throws(classOf[IOException])
+    private[helper] def execute(req: Connection.Request): HttpConnection.Response = {
+      execute(req, null)
+    }
+
+    @throws(classOf[IOException])
+    private[helper] def execute(req: Connection.Request, previousResponse: HttpConnection.Response): HttpConnection.Response = {
+      Validator.notNull(req, "Request must not be null")
+      val protocol: String = req.url.getProtocol
+      if (!(protocol == "http") && !(protocol == "https")) {
+        throw new MalformedURLException("Only http & https protocols supported")
+      }
+      // set up the request for execution
+      var mimeBoundary: String = null
+      if (!req.method.hasBody && req.data.size > 0) {
+        serialiseRequestUrl(req) // appends query string
+      }
+      else if (req.method.hasBody) {
+        mimeBoundary = setOutputContentType(req)
+      }
+      val conn: HttpURLConnection = createConnection(req)
+      var res: HttpConnection.Response = null
+      try {
+        conn.connect()
+        if (conn.getDoOutput) {
+          writePost(req, conn.getOutputStream, mimeBoundary)
+        }
+        val status: Int = conn.getResponseCode
+        res = new HttpConnection.Response(previousResponse)
+        res.setupFromConnection(conn, previousResponse)
+        res.req = req
+        // redirect if there's a location header (from 3xx, or 201 etc)
+        if (res.hasHeader(LOCATION) && req.followRedirects) {
+          // always redirect with a get. any data param from original req are dropped.
+          req.method(Connection.Method.GET())
+          req.data.clear()
+          var location: String = res.header(LOCATION)
+          // fix broken Location: http:/temp/AAG_New/en/index.php
+          if (location != null && location.startsWith("http:/") && location.charAt(6) != '/') {
+            location = location.substring(6)
+          }
+          req.url(new URL(req.url, encodeUrl(location)))
+          // add response cookies to request (for e.g. login posts)
+          for (cookie <- res.cookies) {
+            req.cookie(cookie._1, cookie._2)
+          }
+          return execute(req, res)
+        }
+        if ((status < 200 || status >= 400) && !req.ignoreHttpErrors) {
+          throw new HttpStatusException("HTTP error fetching URL", status, req.url.toString)
+        }
+        // check that we can handle the returned content type; if not, abort before fetching it
+        val contentType: String = res.contentTypeVal
+        if (contentType != null &&
+                !req.ignoreContentType &&
+                !contentType.startsWith("text/") &&
+                !contentType.startsWith("application/xml") &&
+                !xmlContentTypeRxp.matcher(contentType).matches) {
+          throw new UnsupportedMimeTypeException("Unhandled content type. Must be text/*, application/xml, or application/xhtml+xml", contentType, req.url.toString)
+        }
+        var bodyStream: InputStream = null
+        var dataStream: InputStream = null
+        try {
+          dataStream = if (conn.getErrorStream != null) {
+            conn.getErrorStream
+          } else {
+            conn.getInputStream
+          }
+          bodyStream = if (res.hasHeaderWithValue(CONTENT_ENCODING, "gzip")) {
+            new BufferedInputStream(new GZIPInputStream(dataStream))
+          } else {
+            new BufferedInputStream(dataStream)
+          }
+          res.byteData = DataUtil.readToByteBuffer(bodyStream, req.maxBodySize)
+          res.charsetVal = DataUtil.getCharsetFromContentType(res.contentTypeVal) // may be null, readInputStream deals with it
+        } finally {
+          if (bodyStream != null) {
+            bodyStream.close()
+          }
+          if (dataStream != null) {
+            dataStream.close()
+          }
+        }
+      } finally {
+        // per Java's documentation, this is not necessary, and precludes keepalives. However in practise,
+        // connection errors will not be released quickly enough and can cause a too many open files error.
+        conn.disconnect()
+      }
+      res.executed = true
+      res
+    }
+
+    // set up connection defaults, and details from request
+    @throws(classOf[IOException])
+    private[Response] def createConnection(req: Connection.Request): HttpURLConnection = {
+      val conn: HttpURLConnection = req.url.openConnection.asInstanceOf[HttpURLConnection]
+      conn.setRequestMethod(req.method.name)
+      conn.setInstanceFollowRedirects(false) // don't rely on native redirection support
+      conn.setConnectTimeout(req.timeout)
+      conn.setReadTimeout(req.timeout)
+      conn match {
+        case con: HttpsURLConnection =>
+          if (!req.validateTLSCertificates) {
+            initUnSecureTSL
+            con.setSSLSocketFactory(sslSocketFactory)
+            con.setHostnameVerifier(getInsecureVerifier)
+          }
+        case _ =>
+      }
+      if (req.method.hasBody) {
+        conn.setDoOutput(true)
+      }
+      if (req.cookies.size > 0) {
+        conn.addRequestProperty("Cookie", getRequestCookieString(req))
+      }
+      for (header <- req.headers) {
+        conn.addRequestProperty(header._1, header._2)
+      }
+      conn
+    }
+
+    /**
+     * Instantiate Hostname Verifier that does nothing.
+     * This is used for connections with disabled SSL certificates validation.
+     *
+     * @return Hostname Verifier that does nothing and accepts all hostnames
+     */
+    private[Response] def getInsecureVerifier: HostnameVerifier = {
+      new HostnameVerifier {
+        def verify(urlHostName: String, session: SSLSession): Boolean = {
+          true
+        }
+      }
+    }
+
+    /**
+     * Initialise Trust manager that does not validate certificate chains and
+     * add it to current SSLContext.
+     * <p/>
+     * please not that this method will only perform action if sslSocketFactory is not yet
+     * instantiated.
+     *
+     * @throws IOException
+     */
+    @throws(classOf[IOException])
+    private[Response] def initUnSecureTSL(): Unit = {
+      if (sslSocketFactory == null) {
+        // Create a trust manager that does not validate certificate chains
+        val trustAllCerts: Array[TrustManager] = Array[TrustManager](new X509TrustManager {
+          def checkClientTrusted(chain: Array[X509Certificate], authType: String) {}
+
+          def checkServerTrusted(chain: Array[X509Certificate], authType: String) {}
+
+          def getAcceptedIssuers: Array[X509Certificate] = {
+            null
+          }
+        })
+        // Install the all-trusting trust manager
+        var sslContext: SSLContext = null
+        try {
+          sslContext = SSLContext.getInstance("SSL")
+          sslContext.init(null, trustAllCerts, new SecureRandom())
+          // Create an ssl socket factory with our all-trusting manager
+          sslSocketFactory = sslContext.getSocketFactory
+        }
+        catch {
+          case e: NoSuchAlgorithmException | KeyManagementException =>
+            throw new IOException("Can't create unsecure trust manager")
+        }
+      }
+    }
+
+    private def setOutputContentType(req: Connection.Request): String = {
+      // multipart mode, for files. add the header if we see something with an inputstream, and return a non-null boundary
+      var needsMulti: Boolean = false
+      import scala.util.control.Breaks._
+      breakable {
+        for (keyVal <- req.data) {
+          if (keyVal.hasInputStream) {
+            needsMulti = true
+            break()
+          }
+        }
+      }
+      var bound: String = null
+      if (needsMulti) {
+        bound = DataUtil.mimeBoundary
+        req.header(CONTENT_TYPE, MULTIPART_FORM_DATA + "; boundary=" + bound)
+      } else {
+        req.header(CONTENT_TYPE, FORM_URL_ENCODED)
+      }
+      bound
+    }
+
+    @throws(classOf[IOException])
+    private def writePost(req: Connection.Request, outputStream: OutputStream, bound: String) {
+      val data: mutable.Buffer[Connection.KeyVal] = req.data
+      val w: BufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream, DataUtil.defaultCharset))
+      if (bound != null) {
+        // boundary will be set if we're in multipart mode
+        for (keyVal <- data) {
+          w.write("--")
+          w.write(bound)
+          w.write("\r\n")
+          w.write("Content-Disposition: form-data; name=\"")
+          w.write(encodeMimeName(keyVal.key)) // encodes " to %22
+          w.write("\"")
+          if (keyVal.hasInputStream) {
+            w.write("; filename=\"")
+            w.write(encodeMimeName(keyVal.value))
+            w.write("\"\r\nContent-Type: application/octet-stream\r\n\r\n")
+            w.flush()
+            DataUtil.crossStreams(keyVal.inputStream, outputStream)
+            outputStream.flush()
+          } else {
+            w.write("\r\n\r\n")
+            w.write(keyVal.value)
+          }
+          w.write("\r\n")
+        }
+        w.write("--")
+        w.write(bound)
+        w.write("--")
+      } else {
+        // regular form data (application/x-www-form-urlencoded)
+        var first: Boolean = true
+        for (keyVal <- data) {
+          if (!first) {
+            w.append('&')
+          } else {
+            first = false
+          }
+          w.write(URLEncoder.encode(keyVal.key, DataUtil.defaultCharset))
+          w.write('=')
+          w.write(URLEncoder.encode(keyVal.value, DataUtil.defaultCharset))
+        }
+      }
+      w.close()
+    }
+
+    private def getRequestCookieString(req: Connection.Request): String = {
+      val sb: StringBuilder = new StringBuilder
+      var first: Boolean = true
+      for (cookie <- req.cookies) {
+        if (!first) {
+          sb.append("; ")
+        } else {
+          first = false
+        }
+        sb.append(cookie._1).append('=').append(cookie._2)
+        // todo: spec says only ascii, no escaping / encoding defined. validate on set? or escape somehow here?
+      }
+      sb.toString()
+    }
+
+    @throws(classOf[IOException])
+    private def serialiseRequestUrl(req: Connection.Request) {
+      val in: URL = req.url
+      val url: StringBuilder = new StringBuilder
+      var first: Boolean = true
+      // reconstitute the query, ready for appends
+      url.append(in.getProtocol).append("://").append(in.getAuthority).append(in.getPath).append("?")
+      if (in.getQuery != null) {
+        url.append(in.getQuery)
+        first = false
+      }
+      for (keyVal <- req.data) {
+        if (!first) {
+          url.append('&')
+        } else {
+          first = false
+        }
+        url.append(URLEncoder.encode(keyVal.key, DataUtil.defaultCharset)).append('=').append(URLEncoder.encode(keyVal.value, DataUtil.defaultCharset))
+      }
+      req.url(new URL(url.toString()))
+      req.data.clear()
+    }
+  }
+
+  class Response private(n: Unit = ()) extends HttpConnection.Base[Connection.Response] with Connection.Response {
+
+    private var statusCodeVal: Int = 0
+    private var statusMessageVal: String = null
+    private var byteData: ByteBuffer = null
+    private var charsetVal: String = null
+    private var contentTypeVal: String = null
+    private var executed: Boolean = false
+    private var numRedirects: Int = 0
+    private var req: Connection.Request = null
+
+    private[helper] def this() {
+      this(())
+    }
+
+    @throws(classOf[IOException])
+    private def this(previousResponse: HttpConnection.Response) {
+      this(())
+      if (previousResponse != null) {
+        numRedirects = previousResponse.numRedirects + 1
+        if (numRedirects >= Response.MAX_REDIRECTS) {
+          throw new IOException("Too many redirects occurred trying to load URL %s".format(previousResponse.url))
+        }
+      }
+    }
+
+    def statusCode: Int = {
+      statusCodeVal
+    }
+
+    def statusMessage: String = {
+      statusMessageVal
+    }
+
+    def charset: String = {
+      charsetVal
+    }
+
+    def contentType: String = {
+      contentTypeVal
+    }
+
+    @throws(classOf[IOException])
+    def parse: Document = {
+      Validator.isTrue(executed, "Request must be executed (with .execute(), .get(), or .post() before parsing response")
+      val doc: Document = DataUtil.parseByteData(byteData, charsetVal, url.toExternalForm, req.parser)
+      byteData.rewind
+      charsetVal = doc.outputSettings.charset.name // update charset from meta-equiv, possibly
+      doc
+    }
+
+    def body: String = {
+      Validator.isTrue(executed, "Request must be executed (with .execute(), .get(), or .post() before getting response body")
+      // charset gets set from header on execute, and from meta-equiv on parse. parse may not have happened yet
+      var body: String = null
+      if (charsetVal == null) {
+        body = Charset.forName(DataUtil.defaultCharset).decode(byteData).toString
+      }
+      else {
+        body = Charset.forName(charset).decode(byteData).toString
+      }
+      byteData.rewind
+      body
+    }
+
+    def bodyAsBytes: Array[Byte] = {
+      Validator.isTrue(executed, "Request must be executed (with .execute(), .get(), or .post() before getting response body")
+      byteData.array
+    }
+
+    @throws(classOf[IOException])
+    private def setupFromConnection(conn: HttpURLConnection, previousResponse: Connection.Response) {
+      methodVal = Connection.Method.valueOf(conn.getRequestMethod)
+      urlVal = conn.getURL
+      statusCodeVal = conn.getResponseCode
+      statusMessageVal = conn.getResponseMessage
+      contentTypeVal = conn.getContentType
+      import scala.collection.JavaConversions._
+      val resHeaders = conn.getHeaderFields.toMap
+      processResponseHeaders(resHeaders)
+      // if from a redirect, map previous response cookies into this response
+      if (previousResponse != null) {
+        for (prevCookie <- previousResponse.cookies) {
+          if (!hasCookie(prevCookie._1)) {
+            cookie(prevCookie._1, prevCookie._2)
+          }
+        }
+      }
+    }
+
+    private[helper] def processResponseHeaders(resHeaders: Map[String, java.util.List[String]]) {
+      import scala.util.control.Breaks
+
+      for (entry <- resHeaders) {
+        val continue = new Breaks
+        continue.breakable {
+          val name: String = entry._1
+          if (name == null) {
+            continue.break() // http/1.1 line
+          }
+          import scala.collection.JavaConversions._
+          val values: List[String] = entry._2.toList
+          if (name.equalsIgnoreCase("Set-Cookie")) {
+            for (value <- values) {
+              val inContinue = new Breaks
+              inContinue.breakable {
+                if (value == null) {
+                  inContinue.break()
+                }
+                val cd: TokenQueue = new TokenQueue(value)
+                val cookieName: String = cd.chompTo("=").trim
+                var cookieVal: String = cd.consumeTo(";").trim
+                if (cookieVal == null) {
+                  cookieVal = ""
+                }
+                // ignores path, date, domain, validateTLSCertificates et al. req'd?
+                // name not blank, value not null
+                if (cookieName != null && cookieName.length > 0) {
+                  cookie(cookieName, cookieVal)
+                }
+              }
+            }
+          } else {
+            // only take the first instance of each header
+            if (values.nonEmpty) {
+              header(name, values.head)
+            }
+          }
+        }
+      }
+    }
+  }
+
   class KeyVal private[HttpConnection]() extends Connection.KeyVal {
+
     private var keyVal: String = null
     private var valueVal: String = null
     private var stream: InputStream = null
-
 
     def key(key: String): HttpConnection.KeyVal = {
       notEmpty(key, "Data keyVal must not be empty")
