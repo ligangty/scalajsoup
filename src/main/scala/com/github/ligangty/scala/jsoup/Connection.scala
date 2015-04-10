@@ -161,15 +161,6 @@ trait Connection {
   def data(keyvals: String*): Connection
 
   /**
-   * Add a number of request data parameters. Multiple parameters may be set at once, e.g.: <code>.data("name",
-   * "jsoup", "language", "Java", "language", "English");</code> creates a query string like:
-   * <code>?name=jsoup&language=Java&language=English</code>
-   * @param keyvals a set of key value pairs.
-   * @return this Connection, for chaining
-   */
-  def data(keyvals: Array[String]): Connection
-
-  /**
    * Set a request header.
    * @param name header name
    * @param value header value

@@ -7,6 +7,7 @@ import com.github.ligangty.scala.jsoup.nodes.Entities
  * Readers the input stream into tokens.
  */
 final private[parser] class Tokeniser {
+
   private var reader: CharacterReader = null
   private var errors: ParseErrorList = null
   private var state: TokeniserState.State = TokeniserState.Data
@@ -35,7 +36,9 @@ final private[parser] class Tokeniser {
       error("Self closing flag not acknowledged")
       selfClosingFlagAcknowledged = true
     }
-    while (!isEmitPending) state.read(this, reader)
+    while (!isEmitPending) {
+      state.read(this, reader)
+    }
     // if emit is pending, a non-character token was found: return any chars in buffer, and leave token for next read:
     if (charsBuilder.length > 0) {
       val str: String = charsBuilder.toString()
@@ -59,11 +62,15 @@ final private[parser] class Tokeniser {
     if (token.tokType == Token.TokenType.StartTag) {
       val startTag: Token.StartTag = token.asInstanceOf[Token.StartTag]
       lastStartTag = startTag.tagName
-      if (startTag.selfClosing) selfClosingFlagAcknowledged = false
+      if (startTag.selfClosing) {
+        selfClosingFlagAcknowledged = false
+      }
     }
     else if (token.tokType == Token.TokenType.EndTag) {
       val endTag: Token.EndTag = token.asInstanceOf[Token.EndTag]
-      if (endTag.attributes != null) error("Attributes incorrectly present on end tag")
+      if (endTag.attributes != null) {
+        error("Attributes incorrectly present on end tag")
+      }
     }
   }
 
@@ -108,18 +115,27 @@ final private[parser] class Tokeniser {
   private val charRefHolder: Array[Char] = new Array[Char](1)
 
   private[parser] def consumeCharacterReference(additionalAllowedCharacter: Option[Char], inAttribute: Boolean): Array[Char] = {
-    if (reader.isEmpty) return null
+    if (reader.isEmpty) {
+      return null
+    }
     additionalAllowedCharacter match {
       case Some(char) if char == reader.current => return null
+      case _ =>
     }
-//    if (additionalAllowedCharacter != null && additionalAllowedCharacter == reader.current) return null
-    if (reader.matchesAnySorted(Tokeniser.notCharRefCharsSorted)) return null
+    // if (additionalAllowedCharacter != null && additionalAllowedCharacter == reader.current) return null
+    if (reader.matchesAnySorted(Tokeniser.notCharRefCharsSorted)) {
+      return null
+    }
     val charRef: Array[Char] = charRefHolder
     reader.mark()
     if (reader.matchConsume("#")) {
       // numbered
       val isHexMode: Boolean = reader.matchConsumeIgnoreCase("X")
-      val numRef: String = if (isHexMode) reader.consumeHexSequence else reader.consumeDigitSequence
+      val numRef: String = if (isHexMode) {
+        reader.consumeHexSequence
+      } else {
+        reader.consumeDigitSequence
+      }
       if (numRef.length == 0) {
         // didn't match anything
         characterReferenceError("numeric reference with no numerals")
@@ -127,10 +143,16 @@ final private[parser] class Tokeniser {
         return null
       }
       // missing semi
-      if (!reader.matchConsume(";")) characterReferenceError("missing semicolon")
+      if (!reader.matchConsume(";")) {
+        characterReferenceError("missing semicolon")
+      }
       var charval: Int = -1
       try {
-        val base: Int = if (isHexMode) 16 else 10
+        val base: Int = if (isHexMode) {
+          16
+        } else {
+          10
+        }
         charval = Integer.valueOf(numRef, base)
       } catch {
         // skip
@@ -146,7 +168,9 @@ final private[parser] class Tokeniser {
         if (charval < Character.MIN_SUPPLEMENTARY_CODE_POINT) {
           charRef(0) = charval.toChar
           charRef
-        } else Character.toChars(charval)
+        } else {
+          Character.toChars(charval)
+        }
       }
     } else {
       // named
@@ -158,7 +182,9 @@ final private[parser] class Tokeniser {
       if (!found) {
         reader.rewindToMark()
         // named with semicolon
-        if (looksLegit) characterReferenceError(String.format("invalid named referenece '%s'", nameRef))
+        if (looksLegit) {
+          characterReferenceError(String.format("invalid named referenece '%s'", nameRef))
+        }
         return null
       }
       if (inAttribute && (reader.matchesLetter || reader.matchesDigit || reader.matchesAny('=', '-', '_'))) {
@@ -166,14 +192,20 @@ final private[parser] class Tokeniser {
         return null
       }
       // missing semi
-      if (!reader.matchConsume(";")) characterReferenceError("missing semicolon")
+      if (!reader.matchConsume(";")) {
+        characterReferenceError("missing semicolon")
+      }
       charRef(0) = Entities.getCharacterByName(nameRef)
       charRef
     }
   }
 
   private[parser] def createTagPending(start: Boolean): Token.Tag = {
-    tagPending = if (start) startPending.reset else endPending.reset
+    tagPending = if (start) {
+      startPending.reset
+    } else {
+      endPending.reset
+    }
     tagPending
   }
 
@@ -207,24 +239,34 @@ final private[parser] class Tokeniser {
   }
 
   private[parser] def appropriateEndTagName: String = {
-    if (lastStartTag == null) return null
+    if (lastStartTag == null) {
+      return null
+    }
     lastStartTag
   }
 
   private[parser] def error(state: TokeniserState.State) {
-    if (errors.canAddError) errors.append(new ParseError(reader.pos, "Unexpected character '%s' in input state [%s]", reader.current, state))
+    if (errors.canAddError) {
+      errors.append(new ParseError(reader.pos, "Unexpected character '%s' in input state [%s]", reader.current, state))
+    }
   }
 
   private[parser] def eofError(state: TokeniserState.State) {
-    if (errors.canAddError) errors.append(new ParseError(reader.pos, "Unexpectedly reached end of file (EOF) in input state [%s]", state))
+    if (errors.canAddError) {
+      errors.append(new ParseError(reader.pos, "Unexpectedly reached end of file (EOF) in input state [%s]", state))
+    }
   }
 
   private def characterReferenceError(message: String) {
-    if (errors.canAddError) errors.append(new ParseError(reader.pos, "Invalid character reference: %s", message))
+    if (errors.canAddError) {
+      errors.append(new ParseError(reader.pos, "Invalid character reference: %s", message))
+    }
   }
 
   private def error(errorMsg: String) {
-    if (errors.canAddError) errors.append(new ParseError(reader.pos, errorMsg))
+    if (errors.canAddError) {
+      errors.append(new ParseError(reader.pos, errorMsg))
+    }
   }
 
   private[parser] def currentNodeInHtmlNS: Boolean = {
@@ -246,8 +288,12 @@ final private[parser] class Tokeniser {
       if (reader.matches('&')) {
         reader.consume
         val c: Array[Char] = consumeCharacterReference(None, inAttribute)
-        if (c == null || c.length == 0) builder.append('&')
-        else builder.append(c)
+        if (c == null || c.length == 0) {
+          builder.append('&')
+        }
+        else {
+          builder.append(c)
+        }
       }
     }
     builder.toString()
@@ -255,6 +301,7 @@ final private[parser] class Tokeniser {
 }
 
 private[parser] object Tokeniser {
+
   private[parser] val replacementChar: Char = '\uFFFD'
   private val notCharRefCharsSorted: Array[Char] = Array[Char]('\t', '\n', '\r', '\f', ' ', '<', '&').sorted
 }

@@ -1,6 +1,7 @@
 package com.github.ligangty.scala.jsoup.helper
 
 import java.io.File
+import com.github.ligangty.scala.jsoup.integration.ParseTest
 import org.w3c.dom
 import com.github.ligangty.scala.jsoup.{Jsoup, nodes}
 

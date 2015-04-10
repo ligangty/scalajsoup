@@ -13,7 +13,7 @@ import com.github.ligangty.scala.jsoup.{UnsupportedMimeTypeException, HttpStatus
 import Validator._
 import com.github.ligangty.scala.jsoup.helper.HttpConnection.KeyVal
 import com.github.ligangty.scala.jsoup.nodes.Document
-import com.github.ligangty.scala.jsoup.parser.Parser
+import com.github.ligangty.scala.jsoup.parser.{TokenQueue, Parser}
 
 import scala.collection.mutable
 import scala.util.matching.Regex
@@ -87,7 +87,7 @@ class HttpConnection private(n: Unit) extends Connection {
     this
   }
 
-  def ValidatorTLSCertificates(value: Boolean): Connection = {
+  def validateTLSCertificates(value: Boolean): Connection = {
     req.validateTLSCertificates(value)
     this
   }
@@ -358,7 +358,7 @@ object HttpConnection {
     }
   }
 
-  class Request private(n: Unit = ()) extends HttpConnection.Base[Connection.Request] with Connection.Request {
+  class Request private(n: Unit = ()) extends HttpConnection.Base[Connection.Request]() with Connection.Request {
 
     private var timeoutMilliseconds: Int = 0
     private var maxBodySizeBytes: Int = 0
@@ -369,7 +369,7 @@ object HttpConnection {
     private var parserVal: Parser = null
     private var ValidatorTSLCertificatesVal: Boolean = true
 
-    private def this() {
+    private[HttpConnection] def this() {
       this(())
       timeoutMilliseconds = 3000
       maxBodySizeBytes = 1024 * 1024
@@ -524,7 +524,7 @@ object HttpConnection {
                 !req.ignoreContentType &&
                 !contentType.startsWith("text/") &&
                 !contentType.startsWith("application/xml") &&
-                !xmlContentTypeRxp.matcher(contentType).matches) {
+                xmlContentTypeRxp.findFirstIn(contentType).isEmpty) {
           throw new UnsupportedMimeTypeException("Unhandled content type. Must be text/*, application/xml, or application/xhtml+xml", contentType, req.url.toString)
         }
         var bodyStream: InputStream = null
@@ -570,7 +570,7 @@ object HttpConnection {
       conn match {
         case con: HttpsURLConnection =>
           if (!req.validateTLSCertificates) {
-            initUnSecureTSL
+            initUnSecureTSL()
             con.setSSLSocketFactory(sslSocketFactory)
             con.setHostnameVerifier(getInsecureVerifier)
           }
@@ -633,7 +633,9 @@ object HttpConnection {
           sslSocketFactory = sslContext.getSocketFactory
         }
         catch {
-          case e: NoSuchAlgorithmException | KeyManagementException =>
+          case e: NoSuchAlgorithmException =>
+            throw new IOException("Can't create unsecure trust manager")
+          case e: KeyManagementException =>
             throw new IOException("Can't create unsecure trust manager")
         }
       }

@@ -53,7 +53,7 @@ class Document private(baseUri: String, locationVal: String) extends Element(Tag
   def title: String = {
     val titleEl: Element = getElementsByTag("title").first()
     if (titleEl != null) {
-      Strings.normaliseWhitespace(titleEl.text).trim
+      Strings.normaliseWhitespace(titleEl.text()).trim
     } else {
       ""
     }
@@ -209,7 +209,7 @@ class Document private(baseUri: String, locationVal: String) extends Element(Tag
   }
 
   def quirksMode(): Document.QuirksMode = {
-    quirksMode
+    quirksModeVal
   }
 
   def quirksMode(quirksMode: Document.QuirksMode): Document = {
