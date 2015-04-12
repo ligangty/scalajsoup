@@ -366,15 +366,15 @@ class TokenQueue private() {
   def consumeAttributeKey: String = {
     val start: Int = pos
     while (!isEmpty && (matchesWord || matchesAnyChar('-', '_', ':'))) {
-        pos += 1
+      pos += 1
     }
     queue.substring(start, pos)
   }
 
   /**
-  Consume and return whatever is left on the queue.
-     @return remained of queue.
-    */
+   * Consume and return whatever is left on the queue.
+   * @return remained of queue.
+   */
   def remainder: String = {
     val remainder: String = queue.substring(pos, queue.length)
     pos = queue.length

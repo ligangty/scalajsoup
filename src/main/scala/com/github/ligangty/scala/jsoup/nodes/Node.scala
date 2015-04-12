@@ -198,10 +198,10 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
   def getChildNode(index: Int): Node = childNodes(index)
 
   /**
-  Get this node's children. Presented as an unmodifiable list: new children can not be added, but the child nodes
-     themselves can be manipulated.
-     @return list of children. If no children, returns an empty list.
-    */
+   * Get this node's children. Presented as an unmodifiable list: new children can not be added, but the child nodes
+   * themselves can be manipulated.
+   * @return list of children. If no children, returns an empty list.
+   */
   def getChildNodes: Seq[Node] = childNodes.toSeq
 
   /**

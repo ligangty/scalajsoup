@@ -1,7 +1,7 @@
 package com.github.ligangty.scala.jsoup.select
 
 import com.github.ligangty.scala.jsoup.helper.Validator._
-import com.github.ligangty.scala.jsoup.nodes.Element
+import com.github.ligangty.scala.jsoup.nodes.{FormElement, Element}
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
@@ -170,7 +170,7 @@ class Elements private(u: Unit = ()) extends mutable.Seq[Element] with Cloneable
    * @return string of all text: unescaped and no HTML.
    * @see Element#text()
    */
-  def text: String = contents.map(_.text).mkString(" ")
+  def text: String = contents.map(_.text()).mkString(" ")
 
   def hasText: Boolean = contents.exists(_.hasText)
 
@@ -338,9 +338,7 @@ class Elements private(u: Unit = ()) extends mutable.Seq[Element] with Cloneable
    * @return the filtered list of elements, or an empty list if none match.
    */
   def select(query: String): Elements = {
-    //@todo Selector not implemented yet
-    //    return Selector.select(query, this)
-    null
+    Selector.select(query, this)
   }
 
   /**
@@ -427,18 +425,14 @@ class Elements private(u: Unit = ()) extends mutable.Seq[Element] with Cloneable
     this
   }
 
-  //@todo need to implement FormElement to implement this method
   /**
    * Get the [[com.github.ligangty.scala.jsoup.nodes.FormElement]] forms from the selected elements, if any.
    * @return a list of { @link FormElement}s pulled from the matched elements. The list will be empty if the elements contain
    *         no forms.
    */
-  //  def forms: List[FormElement] = {
-  //    val forms: ArrayList[FormElement] = new ArrayList[FormElement]
-  //    
-  //    for (el <- contents) if (el.isInstanceOf[FormElement]) forms.add(el.asInstanceOf[FormElement])
-  //    return forms
-  //  }
+  def forms: Seq[FormElement] = {
+    contents.filter(_.isInstanceOf[FormElement]).map(_.asInstanceOf[FormElement])
+  }
 
   // implements List<Element> delegates:
   override def size: Int = contents.size

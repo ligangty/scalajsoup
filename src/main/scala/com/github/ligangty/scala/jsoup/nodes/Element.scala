@@ -4,11 +4,12 @@ import java.util
 
 import com.github.ligangty.scala.jsoup.helper.Strings
 import com.github.ligangty.scala.jsoup.helper.Validator._
-import com.github.ligangty.scala.jsoup.parser.Tag
-import com.github.ligangty.scala.jsoup.select.{NodeTraversor, NodeVisitor, Elements}
+import com.github.ligangty.scala.jsoup.parser.{Parser, Tag}
+import com.github.ligangty.scala.jsoup.select._
 import Element._
 
 import scala.collection.mutable
+import scala.util.matching.Regex
 
 /**
  * A HTML element consists of a tag name, attributes, and child nodes (including text nodes and
@@ -216,9 +217,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * @see org.jsoup.select.Selector
    */
   def select(cssQuery: String): Elements = {
-    //TODO: need to implement Selector
-    //    return Selector.select(cssQuery, this)
-    new Elements()
+    Selector.select(cssQuery, this)
   }
 
   /**
@@ -328,10 +327,9 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * @see #html(String)
    */
   def append(html: String): Element = {
-    //TODO: Parser Not implemented yet
-    //    notNull(html)
-    //    val nodes: List[Node] = Parser.parseFragment(html, this, baseUri)
-    //    addChildren(nodes.toArray)
+    notNull(html)
+    val nodes: Seq[Node] = Parser.parseFragment(html, this, baseUri)
+    addChildren(nodes.toArray)
     this
   }
 
@@ -342,10 +340,9 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * @see #html(String)
    */
   def prepend(html: String): Element = {
-    //TODO: Parser Not implemented yet
-    //    notNull(html)
-    //    val nodes: List[Node] = Parser.parseFragment(html, this, baseUri)
-    //    addChildren(0, nodes.toArray)
+    notNull(html)
+    val nodes: Seq[Node] = Parser.parseFragment(html, this, baseUri)
+    addChildren(0, nodes.toArray)
     this
   }
 
@@ -549,11 +546,8 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * @return a matching unmodifiable list of elements. Will be empty if this element and none of its children match.
    */
   def getElementsByTag(tagName: String): Elements = {
-    //todo Collector and Evaluator not implemented yet
-    //    notEmpty(tagName)
-    //    tagName = tagName.toLowerCase.trim
-    //    return Collector.collect(new Evaluator.Tag(tagName), this)
-    null
+    notEmpty(tagName)
+    Collector.collect(new Evaluator.Tag(tagName.toLowerCase.trim), this)
   }
 
   /**
@@ -566,11 +560,13 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * @return The first matching element by ID, starting with this element, or null if none found.
    */
   def getElementById(id: String): Element = {
-    //todo Collector and Evaluator not implemented yet
-    //    notEmpty(id)
-    //    val elements: Elements = Collector.collect(new Evaluator.Id(id), this)
-    //    if (elements.size > 0) elements.get(0) else null
-    null
+    notEmpty(id)
+    val elements: Elements = Collector.collect(new Evaluator.Id(id), this)
+    if (elements.size > 0) {
+      elements.get(0)
+    } else {
+      null
+    }
   }
 
   /**
@@ -585,10 +581,8 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * @see #classNames()
    */
   def getElementsByClass(className: String): Elements = {
-    //todo Collector and Evaluator not implemented yet
-    //    notEmpty(className)
-    //    Collector.collect(new Evaluator.Class(className), this)
-    null
+    notEmpty(className)
+    Collector.collect(new Evaluator.Class(className), this)
   }
 
   /**
@@ -598,10 +592,8 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * @return elements that have this attribute, empty if none
    */
   def getElementsByAttribute(key: String): Elements = {
-    //todo Collector and Evaluator not implemented yet
     notEmpty(key)
-    //    Collector.collect(new Evaluator.Attribute(key.trim.toLowerCase), this)
-    null
+    Collector.collect(new Evaluator.Attribute(key.trim.toLowerCase), this)
   }
 
   /**
@@ -611,10 +603,8 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * @return elements that have attribute names that start with with the prefix, empty if none.
    */
   def getElementsByAttributeStarting(keyPrefix: String): Elements = {
-    //todo Collector and Evaluator not implemented yet
-    //    notEmpty(keyPrefix)
-    //    Collector.collect(new Evaluator.AttributeStarting(keyPrefix.trim.toLowerCase), this)
-    null
+    notEmpty(keyPrefix)
+    Collector.collect(new Evaluator.AttributeStarting(keyPrefix.trim.toLowerCase), this)
   }
 
   /**
@@ -625,9 +615,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * @return elements that have this attribute with this value, empty if none
    */
   def getElementsByAttributeValue(key: String, value: String): Elements = {
-    //todo Collector and Evaluator not implemented yet
-    //    Collector.collect(new Evaluator.AttributeWithValue(key, value), this)
-    null
+    Collector.collect(new Evaluator.AttributeWithValue(key, value), this)
   }
 
   /**
@@ -638,9 +626,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * @return elements that do not have a matching attribute
    */
   def getElementsByAttributeValueNot(key: String, value: String): Elements = {
-    //todo Collector and Evaluator not implemented yet
-    //    Collector.collect(new Evaluator.AttributeWithValueNot(key, value), this)
-    null
+    Collector.collect(new Evaluator.AttributeWithValueNot(key, value), this)
   }
 
   /**
@@ -651,9 +637,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * @return elements that have attributes that start with the value prefix
    */
   def getElementsByAttributeValueStarting(key: String, valuePrefix: String): Elements = {
-    //todo Collector and Evaluator not implemented yet
-    //    Collector.collect(new Evaluator.AttributeWithValueStarting(key, valuePrefix), this)
-    null
+    Collector.collect(new Evaluator.AttributeWithValueStarting(key, valuePrefix), this)
   }
 
   /**
@@ -664,9 +648,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * @return elements that have attributes that end with the value suffix
    */
   def getElementsByAttributeValueEnding(key: String, valueSuffix: String): Elements = {
-    //todo Collector and Evaluator not implemented yet
-    //    Collector.collect(new Evaluator.AttributeWithValueEnding(key, valueSuffix), this)
-    null
+    Collector.collect(new Evaluator.AttributeWithValueEnding(key, valueSuffix), this)
   }
 
   /**
@@ -677,9 +659,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * @return elements that have attributes containing this text
    */
   def getElementsByAttributeValueContaining(key: String, `match`: String): Elements = {
-    //todo Collector and Evaluator not implemented yet
-    //    Collector.collect(new Evaluator.AttributeWithValueContaining(key, `match`), this)
-    null
+    Collector.collect(new Evaluator.AttributeWithValueContaining(key, `match`), this)
   }
 
   /**
@@ -688,10 +668,8 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * @param pattern compiled regular expression to match against attribute values
    * @return elements that have attributes matching this regular expression
    */
-  def getElementsByAttributeValueMatching(key: String, pattern: util.regex.Pattern): Elements = {
-    //todo Collector and Evaluator not implemented yet
-    //    Collector.collect(new Evaluator.AttributeWithValueMatching(key, pattern), this)
-    null
+  def getElementsByAttributeValueMatching(key: String, pattern: Regex): Elements = {
+    Collector.collect(new Evaluator.AttributeWithValueMatching(key, pattern), this)
   }
 
   /**
@@ -701,15 +679,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * @return elements that have attributes matching this regular expression
    */
   def getElementsByAttributeValueMatching(key: String, regex: String): Elements = {
-    var pattern: util.regex.Pattern = null
-    try {
-      pattern = util.regex.Pattern.compile(regex)
-    }
-    catch {
-      case e: util.regex.PatternSyntaxException =>
-        throw new IllegalArgumentException("Pattern syntax error: " + regex, e)
-    }
-    getElementsByAttributeValueMatching(key, pattern)
+    getElementsByAttributeValueMatching(key, new Regex(regex))
   }
 
   /**
@@ -718,9 +688,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * @return elements less than index
    */
   def getElementsByIndexLessThan(index: Int): Elements = {
-    //todo Collector and Evaluator not implemented yet
-    //    return Collector.collect(new Evaluator.IndexLessThan(index), this)
-    null
+    Collector.collect(new Evaluator.IndexLessThan(index), this)
   }
 
   /**
@@ -729,9 +697,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * @return elements greater than index
    */
   def getElementsByIndexGreaterThan(index: Int): Elements = {
-    //todo Collector and Evaluator not implemented yet
-    //    return Collector.collect(new Evaluator.IndexGreaterThan(index), this)
-    null
+    Collector.collect(new Evaluator.IndexGreaterThan(index), this)
   }
 
   /**
@@ -740,9 +706,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * @return elements equal to index
    */
   def getElementsByIndexEquals(index: Int): Elements = {
-    //todo Collector and Evaluator not implemented yet
-    //    return Collector.collect(new Evaluator.IndexEquals(index), this)
-    null
+    Collector.collect(new Evaluator.IndexEquals(index), this)
   }
 
   /**
@@ -753,9 +717,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * @see Element#text()
    */
   def getElementsContainingText(searchText: String): Elements = {
-    //todo Collector and Evaluator not implemented yet
-    //    return Collector.collect(new Evaluator.ContainsText(searchText), this)
-    null
+    Collector.collect(new Evaluator.ContainsText(searchText), this)
   }
 
   /**
@@ -766,21 +728,17 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * @see Element#ownText()
    */
   def getElementsContainingOwnText(searchText: String): Elements = {
-    //todo Collector and Evaluator not implemented yet
-    //    return Collector.collect(new Evaluator.ContainsOwnText(searchText), this)
-    null
+    Collector.collect(new Evaluator.ContainsOwnText(searchText), this)
   }
 
   /**
    * Find elements whose text matches the supplied regular expression.
    * @param pattern regular expression to match text against
    * @return elements matching the supplied regular expression.
-   * @see Element#text()
+   * @see Element.text()
    */
-  def getElementsMatchingText(pattern: util.regex.Pattern): Elements = {
-    //todo Collector and Evaluator not implemented yet
-    //    return Collector.collect(new Evaluator.Matches(pattern), this)
-    null
+  def getElementsMatchingText(pattern: Regex): Elements = {
+    Collector.collect(new Evaluator.Matches(pattern), this)
   }
 
   /**
@@ -790,15 +748,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * @see Element#text()
    */
   def getElementsMatchingText(regex: String): Elements = {
-    var pattern: util.regex.Pattern = null
-    try {
-      pattern = util.regex.Pattern.compile(regex)
-    }
-    catch {
-      case e: util.regex.PatternSyntaxException =>
-        throw new IllegalArgumentException("Pattern syntax error: " + regex, e)
-    }
-    getElementsMatchingText(pattern)
+    getElementsMatchingText(new Regex(regex))
   }
 
   /**
@@ -807,10 +757,8 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * @return elements matching the supplied regular expression.
    * @see Element#ownText()
    */
-  def getElementsMatchingOwnText(pattern: util.regex.Pattern): Elements = {
-    //todo Collector and Evaluator not implemented yet
-    //    return Collector.collect(new Evaluator.MatchesOwn(pattern), this)
-    null
+  def getElementsMatchingOwnText(pattern: Regex): Elements = {
+    Collector.collect(new Evaluator.MatchesOwn(pattern), this)
   }
 
   /**
@@ -820,15 +768,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * @see Element#ownText()
    */
   def getElementsMatchingOwnText(regex: String): Elements = {
-    var pattern: util.regex.Pattern = null
-    try {
-      pattern = util.regex.Pattern.compile(regex)
-    }
-    catch {
-      case e: util.regex.PatternSyntaxException =>
-        throw new IllegalArgumentException("Pattern syntax error: " + regex, e)
-    }
-    getElementsMatchingOwnText(pattern)
+    getElementsMatchingOwnText(new Regex(regex))
   }
 
   /**
@@ -837,9 +777,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * @return all elements
    */
   def getAllElements: Elements = {
-    //todo Collector and Evaluator not implemented yet
-    //    return Collector.collect(new Evaluator.AllElements, this)
-    null
+    Collector.collect(new Evaluator.AllElements, this)
   }
 
   /**
@@ -1055,7 +993,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * @return the value of the form element, or empty string if not set.
    */
   def value: String = if (tagName == "textarea") {
-    text
+    text()
   } else {
     attr("value")
   }

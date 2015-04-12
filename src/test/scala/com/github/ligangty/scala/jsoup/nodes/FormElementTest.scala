@@ -37,7 +37,7 @@ class FormElementTest extends FunSuite {
     val con: Connection = form.submit
     assert(Connection.Method.GET() == con.request.method)
     assert("http://example.com/search" == con.request.url.toExternalForm)
-    val dataList: List[Connection.KeyVal] = con.request.data.asInstanceOf[List[Connection.KeyVal]]
+    val dataList: Seq[Connection.KeyVal] = con.request.data.toSeq
     assert("q=jsoup" == dataList(0).toString)
     doc.select("form").attr("method", "post")
     val con2: Connection = form.submit
