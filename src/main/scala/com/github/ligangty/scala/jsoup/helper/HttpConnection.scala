@@ -227,18 +227,12 @@ object HttpConnection {
     value.replaceAll("\"", "%22")
   }
 
-  private[HttpConnection] abstract class Base[T <: Connection.Base[T]] protected(n: Unit = ()) extends Connection.Base[T] {
+  private[HttpConnection] abstract class Base[T <: Connection.Base[T]] protected extends Connection.Base[T] {
 
     protected[helper] var urlVal: URL = null
     protected[helper] var methodVal: Connection.Method.Method = null
-    protected[helper] var headersMap: mutable.Map[String, String] = null
-    protected[helper] var cookiesMap: mutable.Map[String, String] = null
-
-    private def this() {
-      this(())
-      this.headersMap = new mutable.LinkedHashMap[String, String]
-      this.cookiesMap = new mutable.LinkedHashMap[String, String]
-    }
+    protected[helper] var headersMap: mutable.Map[String, String] = new mutable.LinkedHashMap[String, String]
+    protected[helper] var cookiesMap: mutable.Map[String, String] = new mutable.LinkedHashMap[String, String]
 
     def url: URL = {
       urlVal
@@ -294,21 +288,23 @@ object HttpConnection {
       this.asInstanceOf[T]
     }
 
-    def headers: Map[String, String] = headersMap.toMap
+    def headers: mutable.Map[String, String] = headersMap
 
     private def getHeaderCaseInsensitive(name: String): String = {
       notNull(name, "Header name must not be null")
-      var value: String = headersMap(name)
-      if (value == null) {
-        value = headersMap(name.toLowerCase)
+      headersMap.get(name) match {
+        case Some(valu) => return valu
+        case None =>
+          headersMap.get(name.toLowerCase) match {
+            case Some(valu) => return valu
+            case None =>
+              val entry = scanHeaders(name)
+              if (entry != null) {
+                return entry._2
+              }
+          }
       }
-      if (value == null) {
-        val entry = scanHeaders(name)
-        if (entry != null) {
-          value = entry._2
-        }
-      }
-      value
+      null
     }
 
     private def scanHeaders(name: String): Tuple2[String, String] = {

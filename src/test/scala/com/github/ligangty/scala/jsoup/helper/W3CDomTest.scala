@@ -15,7 +15,19 @@ class W3CDomTest extends FunSuite {
     val w3c: W3CDom = new W3CDom
     val wDoc: dom.Document = w3c.fromJsoup(doc)
     val out: String = w3c.asString(wDoc)
-    assert("<html>\n" + "<head>\n" + "<META http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n" + "<title>W3c</title>\n" + "</head>\n" + "<body>\n" + "<p class=\"one\" id=\"12\">Text</p>\n" + "<!-- comment -->\n" + "<invalid>What<script>alert('!')</script>\n" + "</invalid>\n" + "</body>\n" + "</html>\n" == out)
+    assert("<html>\n" +
+            "<head>\n" +
+            "<META http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n" +
+            "<title>W3c</title>\n" +
+            "</head>\n" +
+            "<body>\n" +
+            "<p class=\"one\" id=\"12\">Text</p>\n" +
+            "<!-- comment -->\n" +
+            "<invalid>What<script>alert('!')</script>\n" +
+            "</invalid>\n" +
+            "</body>\n" +
+            "</html>\n" == out)
+
   }
 
   test("convertsGoogle") {

@@ -177,8 +177,7 @@ class Attributes extends Iterable[Attribute] {
     var clone: Attributes = null
     try {
       clone = super.clone.asInstanceOf[Attributes]
-    }
-    catch {
+    } catch {
       case e: CloneNotSupportedException =>
         throw new RuntimeException(e)
     }
@@ -221,7 +220,7 @@ class Attributes extends Iterable[Attribute] {
         var count: Int = 0
         val iter: Iterator[_] = new DatasetIterator
         while (iter.hasNext) {
-            count += 1
+          count += 1
         }
         count
       }

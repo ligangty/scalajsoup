@@ -1,6 +1,6 @@
 package com.github.ligangty.scala.jsoup.nodes
 
-import java.lang._
+import com.github.ligangty.scala.jsoup.Jsoup
 import com.github.ligangty.scala.jsoup.nodes.Entities._
 import org.scalatest.FunSuite
 
@@ -8,6 +8,7 @@ import org.scalatest.FunSuite
  * Test for Entities
  */
 class EntitiesTest extends FunSuite {
+
   test("escape") {
     val text: String = "Hello &<> Å å π 新 there ¾ © »"
     val escapedAscii: String = Entities.escape(text, new Document.OutputSettings().charset("ascii").escapeMode(BASE))
@@ -20,15 +21,65 @@ class EntitiesTest extends FunSuite {
     assert("Hello &amp;&lt;&gt; &#xc5; &#xe5; &#x3c0; &#x65b0; there &#xbe; &#xa9; &#xbb;" == escapedAsciiXhtml)
     assert("Hello &amp;&lt;&gt; Å å π 新 there ¾ © »" == escapedUtfFull)
     assert("Hello &amp;&lt;&gt; Å å π 新 there ¾ © »" == escapedUtfMin)
-    //    assert(text==Entities.unescape(escapedAscii))
-    //    assert(text== Entities.unescape(escapedAsciiFull))
-    //    assert(text==Entities.unescape(escapedAsciiXhtml))
-    //    assert(text==Entities.unescape(escapedUtfFull))
-    //    assert(text==Entities.unescape(escapedUtfMin))
+    // odd that it's defined as aring in base but angst in full
+
+    // round trip
+    assert(text == Entities.unescape(escapedAscii))
+    assert(text == Entities.unescape(escapedAsciiFull))
+    assert(text == Entities.unescape(escapedAsciiXhtml))
+    assert(text == Entities.unescape(escapedUtfFull))
+    assert(text == Entities.unescape(escapedUtfMin))
   }
 
-  ignore("unescape"){
-    fail("not implemented yet!")
+  test("escapeSupplementaryCharacter") {
+    val text: String = new String(Character.toChars(135361))
+    val escapedAscii: String = Entities.escape(text, new Document.OutputSettings().charset("ascii").escapeMode(Entities.BASE))
+    assert("&#x210c1;" == escapedAscii)
+    val escapedUtf: String = Entities.escape(text, new Document.OutputSettings().charset("UTF-8").escapeMode(Entities.BASE))
+    assert(text == escapedUtf)
+  }
+
+  test("unescape") {
+    val text: String = "Hello &amp;&LT&gt; &reg &angst; &angst &#960; &#960 &#x65B0; there &! &frac34; &copy; &COPY;"
+    assert("Hello &<> ® Å &angst π π 新 there &! ¾ © ©" == Entities.unescape(text))
+
+    assert("&0987654321; &unknown" == Entities.unescape("&0987654321; &unknown"))
+  }
+
+  test("strictUnescape") {
+    val text: String = "Hello &amp= &amp;"
+    assert("Hello &amp= &" == Entities.unescape(text, true))
+    assert("Hello &= &" == Entities.unescape(text))
+    assert("Hello &= &" == Entities.unescape(text, false))
+  }
+
+  test("caseSensitive") {
+    val unescaped: String = "Ü ü & &"
+    assert("&Uuml; &uuml; &amp; &amp;" == Entities.escape(unescaped, new Document.OutputSettings().charset("ascii").escapeMode(Entities.EXTENDED)))
+    val escaped: String = "&Uuml; &uuml; &amp; &AMP"
+    assert("Ü ü & &" == Entities.unescape(escaped))
+  }
+
+  test("quoteReplacements") {
+    val escaped: String = "&#92; &#36;"
+    val unescaped: String = "\\ $"
+    assert(unescaped == Entities.unescape(escaped))
+  }
+
+  test("letterDigitEntities") {
+    val html: String = "<p>&sup1;&sup2;&sup3;&frac14;&frac12;&frac34;</p>"
+    val doc: Document = Jsoup.parse(html)
+    doc.outputSettings.charset("ascii")
+    val p: Element = doc.select("p").first()
+    assert("&sup1;&sup2;&sup3;&frac14;&frac12;&frac34;" == p.html)
+    assert("¹²³¼½¾" == p.text)
+    doc.outputSettings.charset("UTF-8")
+    assert("¹²³¼½¾" == p.html)
+  }
+
+  test("noSpuriousDecodes") {
+    val string: String = "http://www.foo.com?a=1&num_rooms=1&children=0&int=VA&b=2"
+    assert(string == Entities.unescape(string))
   }
 
   test("isBaseNamedEntity") {

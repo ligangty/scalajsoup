@@ -388,7 +388,7 @@ object Connection {
      * Retrieve all of the request/response headers as a map
      * @return headers
      */
-    def headers: Map[String, String]
+    def headers: mutable.Map[String, String]
 
     /**
      * Get a cookie value by name from this request/response.

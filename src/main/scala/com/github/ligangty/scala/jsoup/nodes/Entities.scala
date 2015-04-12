@@ -3,6 +3,7 @@ package com.github.ligangty.scala.jsoup.nodes
 import java.nio.charset.CharsetEncoder
 
 import com.github.ligangty.scala.jsoup.helper.Strings
+import com.github.ligangty.scala.jsoup.parser.Parser
 
 import scala.collection.mutable
 import scala.collection.JavaConversions._
@@ -133,7 +134,7 @@ object Entities {
    * @return
    */
   private[nodes] def unescape(string: String, strict: Boolean): String = {
-//    return Parser.unescapeEntities(string, strict)
+    return Parser.unescapeEntities(string, strict)
     ""
   }
 

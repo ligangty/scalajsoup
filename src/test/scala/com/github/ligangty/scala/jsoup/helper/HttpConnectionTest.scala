@@ -35,10 +35,10 @@ class HttpConnectionTest extends FunSuite {
 
   test("caseInsensitiveHeaders") {
     val res: Connection.Response = new HttpConnection.Response
-    val headers: mutable.Map[String, String] = mutable.Map(res.headers.toSeq: _*)
-    headers.put("Accept-Encoding", "gzip")
-    headers.put("content-type", "text/html")
-    headers.put("refErrer", "http://example.com")
+    val headers: mutable.Map[String, String] = res.headers
+    headers("Accept-Encoding") = "gzip"
+    headers("content-type") = "text/html"
+    headers("refErrer") = "http://example.com"
     assert(res.hasHeader("Accept-Encoding"))
     assert(res.hasHeader("accept-encoding"))
     assert(res.hasHeader("accept-Encoding"))

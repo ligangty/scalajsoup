@@ -13,7 +13,7 @@ class ElementTest extends FunSuite {
 
   private val reference: String = "<div id=div1><p>Hello</p><p>Another <b>element</b></p><div id=div2><img src=foo.png></div></div>"
 
-  ignore("getElementsByTagName") {
+  test("getElementsByTagName") {
     val doc: Document = Jsoup.parse(reference)
     val divs: mutable.Seq[Element] = doc.getElementsByTag("div")
     assert(2 == divs.size)
@@ -31,7 +31,7 @@ class ElementTest extends FunSuite {
     assert(0 == empty.size)
   }
 
-  ignore("getNamespacedElementsByTag") {
+  test("getNamespacedElementsByTag") {
     val doc: Document = Jsoup.parse("<div><abc:def id=1>Hello</abc:def></div>")
     val els: Elements = doc.getElementsByTag("abc:def")
     assert(1 == els.size)
@@ -39,7 +39,7 @@ class ElementTest extends FunSuite {
     assert("abc:def" == els.first().tagName)
   }
 
-  ignore("testGetElementById") {
+  test("testGetElementById") {
     val doc: Document = Jsoup.parse(reference)
     val div: Element = doc.getElementById("div1")
     assert("div1" == div.id)
@@ -51,40 +51,40 @@ class ElementTest extends FunSuite {
     assert("span" == span.tagName)
   }
 
-  ignore("testGetText") {
+  test("testGetText") {
     val doc: Document = Jsoup.parse(reference)
     assert("Hello Another element" == doc.text())
     assert("Another element" == doc.getElementsByTag("p")(1).text())
   }
 
-  ignore("testGetChildText") {
+  test("testGetChildText") {
     val doc: Document = Jsoup.parse("<p>Hello <b>there</b> now")
     val p: Element = doc.select("p").first()
     assert("Hello there now" == p.text())
     assert("Hello now" == p.ownText)
   }
 
-  ignore("testNormalisesText") {
+  test("testNormalisesText") {
     val h: String = "<p>Hello<p>There.</p> \n <p>Here <b>is</b> \n s<b>om</b>e text."
     val doc: Document = Jsoup.parse(h)
     val text: String = doc.text()
     assert("Hello There. Here is some text." == text)
   }
 
-  ignore("testKeepsPreText") {
+  test("testKeepsPreText") {
     val h: String = "<p>Hello \n \n there.</p> <div><pre>  What's \n\n  that?</pre>"
     val doc: Document = Jsoup.parse(h)
     assert("Hello there.   What's \n\n  that?" == doc.text())
   }
 
-  ignore("testKeepsPreTextInCode") {
+  test("testKeepsPreTextInCode") {
     val h: String = "<pre><code>code\n\ncode</code></pre>"
     val doc: Document = Jsoup.parse(h)
     assert("code\n\ncode" == doc.text())
     assert("<pre><code>code\n\ncode</code></pre>" == doc.body.html)
   }
 
-  ignore("testBrHasSpace") {
+  test("testBrHasSpace") {
     var doc: Document = Jsoup.parse("<p>Hello<br>there</p>")
     assert("Hello there" == doc.text())
     assert("Hello there" == doc.select("p").first().ownText)
@@ -92,7 +92,7 @@ class ElementTest extends FunSuite {
     assert("Hello there" == doc.text())
   }
 
-  ignore("testGetSiblings") {
+  test("testGetSiblings") {
     val doc: Document = Jsoup.parse("<div><p>Hello<p id=1>there<p>this<p>is<p>an<p id=last>element</div>")
     val p: Element = doc.getElementById("1")
     assert("there" == p.text())
@@ -102,7 +102,7 @@ class ElementTest extends FunSuite {
     assert("element" == p.lastElementSibling.text())
   }
 
-  ignore("testGetParents") {
+  test("testGetParents") {
     val doc: Document = Jsoup.parse("<div><p>Hello <span>there</span></div>")
     val span: Element = doc.select("span").first()
     val parents: Elements = span.parents
@@ -113,7 +113,7 @@ class ElementTest extends FunSuite {
     assert("html" == parents.get(3).tagName)
   }
 
-  ignore("testElementSiblingIndex") {
+  test("testElementSiblingIndex") {
     val doc: Document = Jsoup.parse("<div><p>One</p>...<p>Two</p>...<p>Three</p>")
     val ps: Elements = doc.select("p")
     assert(0 == ps.get(0).elementSiblingIndex)
@@ -121,7 +121,7 @@ class ElementTest extends FunSuite {
     assert(2 == ps.get(2).elementSiblingIndex)
   }
 
-  ignore("testGetElementsWithClass") {
+  test("testGetElementsWithClass") {
     val doc: Document = Jsoup.parse("<div class='mellow yellow'><span class=mellow>Hello <b class='yellow'>Yellow!</b></span><p>Empty</p></div>")
     val els: mutable.Seq[Element] = doc.getElementsByClass("mellow")
     assert(2 == els.size)
@@ -135,7 +135,7 @@ class ElementTest extends FunSuite {
     assert(0 == none.size)
   }
 
-  ignore("testGetElementsWithAttribute") {
+  test("testGetElementsWithAttribute") {
     val doc: Document = Jsoup.parse("<div style='bold'><p title=qux><p><b style></b></p></div>")
     val els: mutable.Seq[Element] = doc.getElementsByAttribute("style")
     assert(2 == els.size)
@@ -145,14 +145,14 @@ class ElementTest extends FunSuite {
     assert(0 == none.size)
   }
 
-  ignore("testGetElementsWithAttributeDash") {
+  test("testGetElementsWithAttributeDash") {
     val doc: Document = Jsoup.parse("<meta http-equiv=content-type value=utf8 id=1> <meta name=foo content=bar id=2> <div http-equiv=content-type value=utf8 id=3>")
     val meta: Elements = doc.select("meta[http-equiv=content-type], meta[charset]")
     assert(1 == meta.size)
     assert("1" == meta.first().id)
   }
 
-  ignore("testGetElementsWithAttributeValue") {
+  test("testGetElementsWithAttributeValue") {
     val doc: Document = Jsoup.parse("<div style='bold'><p><p><b style></b></p></div>")
     val els: mutable.Seq[Element] = doc.getElementsByAttributeValue("style", "bold")
     assert(1 == els.size)
@@ -161,7 +161,7 @@ class ElementTest extends FunSuite {
     assert(0 == none.size)
   }
 
-  ignore("testClassDomMethods") {
+  test("testClassDomMethods") {
     val doc: Document = Jsoup.parse("<div><span class=' mellow yellow '>Hello <b>Yellow</b></span></div>")
     val els: mutable.Seq[Element] = doc.getElementsByAttribute("class")
     val span: Element = els(0)
@@ -178,7 +178,7 @@ class ElementTest extends FunSuite {
     assert(!doc.hasClass("mellow"))
   }
 
-  ignore("testClassUpdates") {
+  test("testClassUpdates") {
     val doc: Document = Jsoup.parse("<div class='mellow yellow'></div>")
     val div: Element = doc.select("div").first()
     div.addClass("green")
@@ -190,34 +190,34 @@ class ElementTest extends FunSuite {
     assert("mellow red" == div.className)
   }
 
-  ignore("testOuterHtml") {
+  test("testOuterHtml") {
     val doc: Document = Jsoup.parse("<div title='Tags &amp;c.'><img src=foo.png><p><!-- comment -->Hello<p>there")
     assert("<html><head></head><body><div title=\"Tags &amp;c.\"><img src=\"foo.png\"><p><!-- comment -->Hello</p><p>there</p></div></body></html>" == TextUtil.stripNewlines(doc.outerHtml))
   }
 
-  ignore("testInnerHtml") {
+  test("testInnerHtml") {
     val doc: Document = Jsoup.parse("<div>\n <p>Hello</p> </div>")
     assert("<p>Hello</p>" == doc.getElementsByTag("div").get(0).html)
   }
 
-  ignore("testFormatHtml") {
+  test("testFormatHtml") {
     val doc: Document = Jsoup.parse("<title>Format test</title><div><p>Hello <span>jsoup <span>users</span></span></p><p>Good.</p></div>")
     assert("<html>\n <head>\n  <title>Format test</title>\n </head>\n <body>\n  <div>\n   <p>Hello <span>jsoup <span>users</span></span></p>\n   <p>Good.</p>\n  </div>\n </body>\n</html>" == doc.html)
   }
 
-  ignore("testFormatOutline") {
+  test("testFormatOutline") {
     val doc: Document = Jsoup.parse("<title>Format test</title><div><p>Hello <span>jsoup <span>users</span></span></p><p>Good.</p></div>")
     doc.outputSettings.outline(true)
     assert("<html>\n <head>\n  <title>Format test</title>\n </head>\n <body>\n  <div>\n   <p>\n    Hello \n    <span>\n     jsoup \n     <span>users</span>\n    </span>\n   </p>\n   <p>Good.</p>\n  </div>\n </body>\n</html>" == doc.html)
   }
 
-  ignore("testSetIndent") {
+  test("testSetIndent") {
     val doc: Document = Jsoup.parse("<div><p>Hello\nthere</p></div>")
     doc.outputSettings.indentAmount(0)
     assert("<html>\n<head></head>\n<body>\n<div>\n<p>Hello there</p>\n</div>\n</body>\n</html>" == doc.html)
   }
 
-  ignore("testNotPretty") {
+  test("testNotPretty") {
     val doc: Document = Jsoup.parse("<div>   \n<p>Hello\n there\n</p></div>")
     doc.outputSettings.prettyPrint(false)
     assert("<html><head></head><body><div>   \n<p>Hello\n there\n</p></div></body></html>" == doc.html)
@@ -225,24 +225,24 @@ class ElementTest extends FunSuite {
     assert("   \n<p>Hello\n there\n</p>" == div.html)
   }
 
-  ignore("testEmptyElementFormatHtml") {
+  test("testEmptyElementFormatHtml") {
     val doc: Document = Jsoup.parse("<section><div></div></section>")
     assert("<section>\n <div></div>\n</section>" == doc.select("section").first().outerHtml)
   }
 
-  ignore("testNoIndentOnScriptAndStyle") {
+  test("testNoIndentOnScriptAndStyle") {
     val doc: Document = Jsoup.parse("<script>one\ntwo</script>\n<style>three\nfour</style>")
     assert("<script>one\ntwo</script> \n<style>three\nfour</style>" == doc.head.html)
   }
 
-  ignore("testContainerOutput") {
+  test("testContainerOutput") {
     val doc: Document = Jsoup.parse("<title>Hello there</title> <div><p>Hello</p><p>there</p></div> <div>Another</div>")
     assert("<title>Hello there</title>" == doc.select("title").first().outerHtml)
     assert("<div>\n <p>Hello</p>\n <p>there</p>\n</div>" == doc.select("div").first().outerHtml)
     assert("<div>\n <p>Hello</p>\n <p>there</p>\n</div> \n<div>\n Another\n</div>" == doc.select("body").first().html)
   }
 
-  ignore("testSetText") {
+  test("testSetText") {
     val h: String = "<div id=1>Hello <p>there <b>now</b></p></div>"
     val doc: Document = Jsoup.parse(h)
     assert("Hello there now" == doc.text())
@@ -252,7 +252,7 @@ class ElementTest extends FunSuite {
     assert(0 == doc.select("p").size)
   }
 
-  ignore("testAddNewElement") {
+  test("testAddNewElement") {
     val doc: Document = Jsoup.parse("<div id=1><p>Hello</p></div>")
     val div: Element = doc.getElementById("1")
     div.appendElement("p").text("there")
@@ -265,14 +265,14 @@ class ElementTest extends FunSuite {
     }
   }
 
-  ignore("testAppendRowToTable") {
+  test("testAppendRowToTable") {
     val doc: Document = Jsoup.parse("<table><tr><td>1</td></tr></table>")
     val table: Element = doc.select("tbody").first()
     table.append("<tr><td>2</td></tr>")
     assert("<table><tbody><tr><td>1</td></tr><tr><td>2</td></tr></tbody></table>" == TextUtil.stripNewlines(doc.body.html))
   }
 
-  ignore("testPrependRowToTable") {
+  test("testPrependRowToTable") {
     val doc: Document = Jsoup.parse("<table><tr><td>1</td></tr></table>")
     val table: Element = doc.select("tbody").first()
     table.prepend("<tr><td>2</td></tr>")
@@ -284,7 +284,7 @@ class ElementTest extends FunSuite {
     }
   }
 
-  ignore("testPrependElement") {
+  test("testPrependElement") {
     val doc: Document = Jsoup.parse("<div id=1><p>Hello</p></div>")
     val div: Element = doc.getElementById("1")
     div.prependElement("p").text("Before")
@@ -292,14 +292,14 @@ class ElementTest extends FunSuite {
     assert("Hello" == div.child(1).text())
   }
 
-  ignore("testAddNewText") {
+  test("testAddNewText") {
     val doc: Document = Jsoup.parse("<div id=1><p>Hello</p></div>")
     val div: Element = doc.getElementById("1")
     div.appendText(" there & now >")
     assert("<p>Hello</p> there &amp; now &gt;" == TextUtil.stripNewlines(div.html))
   }
 
-  ignore("testPrependText") {
+  test("testPrependText") {
     val doc: Document = Jsoup.parse("<div id=1><p>Hello</p></div>")
     val div: Element = doc.getElementById("1")
     div.prependText("there & now > ")
@@ -307,7 +307,7 @@ class ElementTest extends FunSuite {
     assert("there &amp; now &gt; <p>Hello</p>" == TextUtil.stripNewlines(div.html))
   }
 
-  ignore("testAddNewHtml") {
+  test("testAddNewHtml") {
     val doc: Document = Jsoup.parse("<div id=1><p>Hello</p></div>")
     val div: Element = doc.getElementById("1")
     div.append("<p>there</p><p>now</p>")
@@ -319,7 +319,7 @@ class ElementTest extends FunSuite {
     }
   }
 
-  ignore("testPrependNewHtml") {
+  test("testPrependNewHtml") {
     val doc: Document = Jsoup.parse("<div id=1><p>Hello</p></div>")
     val div: Element = doc.getElementById("1")
     div.prepend("<p>there</p><p>now</p>")
@@ -331,14 +331,14 @@ class ElementTest extends FunSuite {
     }
   }
 
-  ignore("testSetHtml") {
+  test("testSetHtml") {
     val doc: Document = Jsoup.parse("<div id=1><p>Hello</p></div>")
     val div: Element = doc.getElementById("1")
     div.html("<p>there</p><p>now</p>")
     assert("<p>there</p><p>now</p>" == TextUtil.stripNewlines(div.html))
   }
 
-  ignore("testSetHtmlTitle") {
+  test("testSetHtmlTitle") {
     val doc: Document = Jsoup.parse("<html><head id=2><title id=1></title></head></html>")
     val title: Element = doc.getElementById("1")
     title.html("good")
@@ -350,7 +350,7 @@ class ElementTest extends FunSuite {
     assert("<title>&lt;i&gt;bad&lt;/i&gt;</title>" == head.html)
   }
 
-  ignore("testWrap") {
+  test("testWrap") {
     val doc: Document = Jsoup.parse("<div><p>Hello</p><p>There</p></div>")
     val p: Element = doc.select("p").first()
     p.wrap("<div class='head'></div>")
@@ -360,7 +360,7 @@ class ElementTest extends FunSuite {
     assert(ret == p)
   }
 
-  ignore("before") {
+  test("before") {
     val doc: Document = Jsoup.parse("<div><p>Hello</p><p>There</p></div>")
     val p1: Element = doc.select("p").first()
     p1.before("<div>one</div><div>two</div>")
@@ -369,7 +369,7 @@ class ElementTest extends FunSuite {
     assert("<div><div>one</div><div>two</div><p>Hello</p><p>Three</p><!-- four --><p>There</p></div>" == TextUtil.stripNewlines(doc.body.html))
   }
 
-  ignore("after") {
+  test("after") {
     val doc: Document = Jsoup.parse("<div><p>Hello</p><p>There</p></div>")
     val p1: Element = doc.select("p").first()
     p1.after("<div>one</div><div>two</div>")
@@ -378,14 +378,14 @@ class ElementTest extends FunSuite {
     assert("<div><p>Hello</p><div>one</div><div>two</div><p>There</p><p>Three</p><!-- four --></div>" == TextUtil.stripNewlines(doc.body.html))
   }
 
-  ignore("testWrapWithRemainder") {
+  test("testWrapWithRemainder") {
     val doc: Document = Jsoup.parse("<div><p>Hello</p></div>")
     val p: Element = doc.select("p").first()
     p.wrap("<div class='head'></div><p>There!</p>")
     assert("<div><div class=\"head\"><p>Hello</p><p>There!</p></div></div>" == TextUtil.stripNewlines(doc.body.html))
   }
 
-  ignore("testHasText") {
+  test("testHasText") {
     val doc: Document = Jsoup.parse("<div><p>Hello</p><p></p></div>")
     val div: Element = doc.select("div").first()
     val ps: Elements = doc.select("p")
@@ -394,7 +394,7 @@ class ElementTest extends FunSuite {
     assert(!ps.last.hasText)
   }
 
-  ignore("dataset") {
+  test("dataset") {
     val doc: Document = Jsoup.parse("<div id=1 data-name=jsoup class=new data-package=jar>Hello</div><p id=2>Hello</p>")
     val div: Element = doc.select("div").first()
     val dataset: mutable.Map[String, String] = mutable.Map(div.dataset.toSeq: _*)
@@ -420,7 +420,7 @@ class ElementTest extends FunSuite {
     assert(0 == p.dataset.size)
   }
 
-  ignore("parentlessToString") {
+  test("parentlessToString") {
     val doc: Document = Jsoup.parse("<img src='foo'>")
     val img: Element = doc.select("img").first()
     assert("<img src=\"foo\">" == img.toString)
@@ -428,7 +428,7 @@ class ElementTest extends FunSuite {
     assert("<img src=\"foo\">" == img.toString)
   }
 
-  ignore("testClone") {
+  test("testClone") {
     val doc: Document = Jsoup.parse("<div><p>One<p><span>Two</div>")
     val p: Element = doc.select("p").get(1)
     val clone: Element = p.clone()
@@ -444,7 +444,7 @@ class ElementTest extends FunSuite {
     assert("<div><p>One</p><p><span>Two</span></p></div><p><span>Two</span><span>Three</span></p>" == TextUtil.stripNewlines(doc.body.html))
   }
 
-  ignore("testClonesClassnames") {
+  test("testClonesClassnames") {
     val doc: Document = Jsoup.parse("<div class='one two'></div>")
     val div: Element = doc.select("div").first()
     val classes: Set[String] = div.classNames
@@ -467,7 +467,7 @@ class ElementTest extends FunSuite {
     assert("" == copy.html)
   }
 
-  ignore("testTagNameSet") {
+  test("testTagNameSet") {
     val doc: Document = Jsoup.parse("<div><i>Hello</i>")
     doc.select("i").first().tagName("em")
     assert(0 == doc.select("i").size)
@@ -475,14 +475,14 @@ class ElementTest extends FunSuite {
     assert("<em>Hello</em>" == doc.select("div").first().html)
   }
 
-  ignore("testHtmlContainsOuter") {
+  test("testHtmlContainsOuter") {
     val doc: Document = Jsoup.parse("<title>Check</title> <div>Hello there</div>")
     doc.outputSettings.indentAmount(0)
     assert(doc.html.contains(doc.select("title").outerHtml))
     assert(doc.html.contains(doc.select("div").outerHtml))
   }
 
-  ignore("testGetTextNodes") {
+  test("testGetTextNodes") {
     val doc: Document = Jsoup.parse("<p>One <span>Two</span> Three <br> Four</p>")
     val textNodes: Seq[TextNode] = doc.select("p").first().textNodes
     assert(3 == textNodes.size)
@@ -492,7 +492,7 @@ class ElementTest extends FunSuite {
     assert(0 == doc.select("br").first().textNodes.size)
   }
 
-  ignore("testManipulateTextNodes") {
+  test("testManipulateTextNodes") {
     val doc: Document = Jsoup.parse("<p>One <span>Two</span> Three <br> Four</p>")
     val p: Element = doc.select("p").first()
     val textNodes: Seq[TextNode] = p.textNodes
@@ -503,7 +503,7 @@ class ElementTest extends FunSuite {
     assert(4 == p.textNodes.size)
   }
 
-  ignore("testGetDataNodes") {
+  test("testGetDataNodes") {
     val doc: Document = Jsoup.parse("<script>One Two</script> <style>Three Four</style> <p>Fix Six</p>")
     val script: Element = doc.select("script").first()
     val style: Element = doc.select("style").first()
@@ -518,7 +518,7 @@ class ElementTest extends FunSuite {
     assert(0 == pData.size)
   }
 
-  ignore("elementIsNotASiblingOfItself") {
+  test("elementIsNotASiblingOfItself") {
     val doc: Document = Jsoup.parse("<div><p>One<p>Two<p>Three</div>")
     val p2: Element = doc.select("p").get(1)
     assert("Two" == p2.text())
@@ -528,7 +528,7 @@ class ElementTest extends FunSuite {
     assert("<p>Three</p>" == els.get(1).outerHtml)
   }
 
-  ignore("testChildThrowsIndexOutOfBoundsOnMissing") {
+  test("testChildThrowsIndexOutOfBoundsOnMissing") {
     val doc: Document = Jsoup.parse("<div><p>One</p><p>Two</p></div>")
     val div: Element = doc.select("div").first()
     assert(2 == div.children.size)
@@ -542,7 +542,7 @@ class ElementTest extends FunSuite {
     }
   }
 
-  ignore("moveByAppend") {
+  test("moveByAppend") {
     val doc: Document = Jsoup.parse("<div id=1>Text <p>One</p> Text <p>Two</p></div><div id=2></div>")
     val div1: Element = doc.select("div").get(0)
     val div2: Element = doc.select("div").get(1)
@@ -556,7 +556,7 @@ class ElementTest extends FunSuite {
     assert("<div id=\"1\"></div>\n<div id=\"2\">\n Text \n <p>One</p> Text \n <p>Two</p>\n</div>" == doc.body.html)
   }
 
-  ignore("insertChildrenArgumentValidation") {
+  test("insertChildrenArgumentValidation") {
     val doc: Document = Jsoup.parse("<div id=1>Text <p>One</p> Text <p>Two</p></div><div id=2></div>")
     val div1: Element = doc.select("div").get(0)
     val div2: Element = doc.select("div").get(1)
@@ -584,7 +584,7 @@ class ElementTest extends FunSuite {
     }
   }
 
-  ignore("insertChildrenAtPosition") {
+  test("insertChildrenAtPosition") {
     val doc: Document = Jsoup.parse("<div id=1>Text1 <p>One</p> Text2 <p>Two</p></div><div id=2>Text3 <p>Three</p></div>")
     val div1: Element = doc.select("div").get(0)
     val p1s: Elements = div1.select("p")
@@ -610,7 +610,7 @@ class ElementTest extends FunSuite {
     assert(5 == tn1.siblingIndex)
   }
 
-  ignore("insertChildrenAsCopy") {
+  test("insertChildrenAsCopy") {
     val doc: Document = Jsoup.parse("<div id=1>Text <p>One</p> Text <p>Two</p></div><div id=2></div>")
     val div1: Element = doc.select("div").get(0)
     val div2: Element = doc.select("div").get(1)
@@ -622,7 +622,7 @@ class ElementTest extends FunSuite {
     assert("<div id=\"1\">Text <p>One</p> Text <p>Two</p></div><div id=\"2\"><p>One cloned</p><p>Two</p></div>" == TextUtil.stripNewlines(doc.body.html))
   }
 
-  ignore("testCssPath") {
+  test("testCssPath") {
     val doc: Document = Jsoup.parse("<div id=\"id1\">A</div><div>B</div><div class=\"c1 c2\">C</div>")
     val divA: Element = doc.select("div").get(0)
     val divB: Element = doc.select("div").get(1)
@@ -635,7 +635,7 @@ class ElementTest extends FunSuite {
     assert(divC eq doc.select(divC.cssSelector).first())
   }
 
-  ignore("testClassNames") {
+  test("testClassNames") {
     val doc: Document = Jsoup.parse("<div class=\"c1 c2\">C</div>")
     val div: Element = doc.select("div").get(0)
     assert("c1 c2" == div.className)
