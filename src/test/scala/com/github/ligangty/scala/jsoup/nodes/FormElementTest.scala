@@ -23,7 +23,7 @@ class FormElementTest extends FunSuite {
     val form: FormElement = doc.select("form").first().asInstanceOf[FormElement]
     val data: Seq[Connection.KeyVal] = form.formData
     assert(4 == data.size)
-    assert("one=two" == data(0).toString)
+    assert("one=two" == data.head.toString)
     assert("three=four" == data(1).toString)
     assert("three=five" == data(2).toString)
     assert("six=seven" == data(3).toString)
@@ -38,7 +38,7 @@ class FormElementTest extends FunSuite {
     assert(Connection.Method.GET() == con.request.method)
     assert("http://example.com/search" == con.request.url.toExternalForm)
     val dataList: Seq[Connection.KeyVal] = con.request.data.toSeq
-    assert("q=jsoup" == dataList(0).toString)
+    assert("q=jsoup" == dataList.head.toString)
     doc.select("form").attr("method", "post")
     val con2: Connection = form.submit
     assert(Connection.Method.POST() == con2.request.method)
@@ -85,6 +85,6 @@ class FormElementTest extends FunSuite {
     val form: FormElement = formEl.asInstanceOf[FormElement]
     assert(1 == form.elements.size)
     val data: Seq[Connection.KeyVal] = form.formData
-    assert("foo=bar" == data(0).toString)
+    assert("foo=bar" == data.head.toString)
   }
 }

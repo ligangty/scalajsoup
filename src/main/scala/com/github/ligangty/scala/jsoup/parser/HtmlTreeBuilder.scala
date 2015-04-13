@@ -32,6 +32,7 @@ private[parser] class HtmlTreeBuilder extends TreeBuilder {
   }
 
   private[parser] def parseFragment(inputFragment: String, context: Element, baseUri: String, errors: ParseErrorList): Seq[Node] = {
+    // context may be null
     stateVal = HtmlTreeBuilderState.Initial
     initialiseParse(inputFragment, baseUri, errors)
     contextElement = context
@@ -39,8 +40,10 @@ private[parser] class HtmlTreeBuilder extends TreeBuilder {
     var root: Element = null
     if (context != null) {
       if (context.ownerDocument != null) {
+        // quirks setup:
         doc.quirksMode(context.ownerDocument.quirksMode())
       }
+      // initialise the tokeniser state:
       val contextTag: String = context.tagName
       if (Strings.in(contextTag, "title", "textarea")) {
         tokeniser.transition(TokeniserState.Rcdata)
@@ -49,16 +52,20 @@ private[parser] class HtmlTreeBuilder extends TreeBuilder {
       } else if (contextTag == "script") {
         tokeniser.transition(TokeniserState.ScriptData)
       } else if (contextTag == "noscript") {
-        tokeniser.transition(TokeniserState.Data)
+        tokeniser.transition(TokeniserState.Data) // if scripting enabled, rawtext
       } else if (contextTag == "plaintext") {
         tokeniser.transition(TokeniserState.Data)
       } else {
-        tokeniser.transition(TokeniserState.Data)
+        tokeniser.transition(TokeniserState.Data) // default
       }
+
       root = new Element(Tag("html"), baseUri)
       doc.appendChild(root)
       stack.append(root)
       resetInsertionMode()
+
+      // setup form element to nearest form on context (up ancestor chain). ensures form controls are associated
+      // with form correctly
       val contextChain: Elements = context.parents
       contextChain.add(0, context)
       breakable {
@@ -67,6 +74,7 @@ private[parser] class HtmlTreeBuilder extends TreeBuilder {
             case fe: FormElement =>
               formElement = fe
               break()
+            case _ =>
           }
         }
       }
