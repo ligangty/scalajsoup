@@ -284,15 +284,16 @@ final private[parser] class Tokeniser {
   private[parser] def unescapeEntities(inAttribute: Boolean): String = {
     val builder: StringBuilder = new StringBuilder
     while (!reader.isEmpty) {
-      builder.append(reader.consumeTo('&'))
+      val ch = reader.consumeTo('&')
+      builder.append(ch)
       if (reader.matches('&')) {
-        reader.consume
+        val ch1 = reader.consume
         val c: Array[Char] = consumeCharacterReference(None, inAttribute)
         if (c == null || c.length == 0) {
           builder.append('&')
-        }
-        else {
-          builder.append(c)
+        } else {
+          // can not use append as c is an Array
+          builder ++= c
         }
       }
     }

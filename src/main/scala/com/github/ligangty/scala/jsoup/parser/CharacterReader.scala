@@ -28,14 +28,14 @@ final private[parser] class CharacterReader(input: String) {
   private[parser] def current: Char = if (posVal >= length) {
     EOF
   } else {
-    input(posVal)
+    inputArray(posVal)
   }
 
   private[parser] def consume: Char = {
     val value: Char = if (posVal >= length) {
       EOF
     } else {
-      input(posVal)
+      inputArray(posVal)
     }
     posVal += 1
     value
@@ -86,7 +86,7 @@ final private[parser] class CharacterReader(input: String) {
   private[parser] def nextIndexOf(seq: CharSequence): Int = {
     // doesn't handle scanning for surrogates
     val startChar: Char = seq.charAt(0)
-    for (offset <- posVal to (length-1)) {
+    for (offset <- posVal to (length - 1)) {
       var offs = offset
       // scan to first instance of startchar:
       if (startChar != inputArray(offs)) {
@@ -276,8 +276,7 @@ final private[parser] class CharacterReader(input: String) {
         val c: Char = inputArray(posVal)
         if ((c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f')) {
           posVal += 1
-        }
-        else {
+        } else {
           break()
         }
       }
@@ -444,14 +443,13 @@ final private[parser] class CharacterReader(input: String) {
       val one = inputArray
       var i: Int = start
       var j: Int = 0
-      cnt -= 1
       while (cnt != 0) {
+        cnt -= 1
         if (one(i) != cached.charAt(j)) {
           return false
         }
         i += 1
         j += 1
-        cnt -= 1
       }
       return true
     }

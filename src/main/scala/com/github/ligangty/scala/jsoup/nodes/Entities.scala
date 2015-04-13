@@ -134,8 +134,7 @@ object Entities {
    * @return
    */
   private[nodes] def unescape(string: String, strict: Boolean): String = {
-    return Parser.unescapeEntities(string, strict)
-    ""
+    Parser.unescapeEntities(string, strict)
   }
 
   private def loadEntities(filename: String): Map[String, Char] = {
