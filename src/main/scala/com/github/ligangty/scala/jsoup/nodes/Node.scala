@@ -3,6 +3,7 @@ package com.github.ligangty.scala.jsoup.nodes
 import java.net.{MalformedURLException, URL}
 
 import com.github.ligangty.scala.jsoup.helper.Strings
+import com.github.ligangty.scala.jsoup.parser.Parser
 import com.github.ligangty.scala.jsoup.select.{Elements, NodeTraversor, NodeVisitor}
 
 import scala.collection.mutable
@@ -236,13 +237,16 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
    * @return the Document associated with this Node, or null if there is no such Document.
    */
   def ownerDocument: Document = {
-    if (this.isInstanceOf[Document]) {
-      this.asInstanceOf[Document]
-    } else if (parentNodeVal == null) {
-      null
-    } else {
-      parentNodeVal.ownerDocument
+    this match {
+      case d: Document => d
+      case _ =>
+        if (parentNodeVal == null) {
+          null
+        } else {
+          parentNodeVal.ownerDocument
+        }
     }
+
   }
 
   /**
@@ -302,11 +306,14 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
   }
 
   private def addSiblingHtml(index: Int, html: String) {
-    //    notNull(html)
-    //    notNull(parentNodeVal)
-    //    val context: Element = if (parent.isInstanceOf[Element]) parent.asInstanceOf[Element] else null
-    //    val nodes: List[Node] = Parser.parseFragment(html, context, baseUri)
-    //    parentNodeVal.addChildren(index, nodes.toArray(new Array[Node](nodes.size)))
+    notNull(html)
+    notNull(parentNodeVal)
+    val context: Element = parent match {
+      case e: Element => e
+      case _ => null
+    }
+    val nodes: Seq[Node] = Parser.parseFragment(html, context, baseUri)
+    parentNodeVal.addChildren(index, nodes.toArray)
   }
 
   /**
@@ -315,30 +322,27 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
    * @return this node, for chaining.
    */
   def wrap(html: String): Node = {
-    //    notEmpty(html)
-    //    val context: Element = if (parent.isInstanceOf[Element]) parent.asInstanceOf[Element] else null
-    //    val wrapChildren: List[Node] = Parser.parseFragment(html, context, baseUri)
-    //    val wrapNode: Node = wrapChildren.get(0)
-    //    if (wrapNode == null || !(wrapNode.isInstanceOf[Element])) return null
-    //    val wrap: Element = wrapNode.asInstanceOf[Element]
-    //    val deepest: Element = getDeepChild(wrap)
-    //    parentNodeVal.replaceChild(this, wrap)
-    //    deepest.addChildren(this)
-    //    if (wrapChildren.size > 0) {
-    //      {
-    //        var i: Int = 0
-    //        while (i < wrapChildren.size) {
-    //          {
-    //            val remainder: Node = wrapChildren.get(i)
-    //            remainder.parentNodeVal.removeChild(remainder)
-    //            wrap.appendChild(remainder)
-    //          }
-    //          ({
-    //            i += 1; i - 1
-    //          })
-    //        }
-    //      }
-    //    }
+    notEmpty(html)
+    val context: Element =
+      parent match {
+        case e: Element => e
+        case _ => null
+      }
+    val wrapChildren: Seq[Node] = Parser.parseFragment(html, context, baseUri)
+    val wrapNode: Node = wrapChildren.head
+    if (wrapNode == null || !wrapNode.isInstanceOf[Element]) return null // nothing to wrap with; noop
+    val wrap: Element = wrapNode.asInstanceOf[Element]
+    val deepest: Element = getDeepChild(wrap)
+    parentNodeVal.replaceChild(this, wrap)
+    deepest.addChildren(this)
+    // remainder (unbalanced wrap, like <div></div><p></p> -- The <p> is remainder
+    if (wrapChildren.size > 0) {
+      for (i <- 0 to (wrapChildren.size - 1)) {
+        val remainder: Node = wrapChildren(i)
+        remainder.parentNode.removeChild(remainder)
+        wrap.appendChild(remainder)
+      }
+    }
     this
   }
 
@@ -359,7 +363,7 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
     notNull(parentNodeVal)
     val index: Int = siblingIndex
     val firstChild: Node = if (childNodes.size > 0) {
-      childNodes(0)
+      childNodes.head
     } else {
       null
     }

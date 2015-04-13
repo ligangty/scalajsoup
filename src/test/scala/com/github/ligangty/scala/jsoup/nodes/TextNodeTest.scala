@@ -60,7 +60,7 @@ class TextNodeTest extends FunSuite {
 
   test("testWithSupplementaryCharacter") {
     val doc: Document = Jsoup.parse(new String(Character.toChars(135361)))
-    val t: TextNode = doc.body.textNodes(0)
+    val t: TextNode = doc.body.textNodes.head
     assert(new String(Character.toChars(135361)) == t.outerHtml.trim)
   }
 }
