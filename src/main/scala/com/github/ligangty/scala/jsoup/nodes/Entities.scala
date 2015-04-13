@@ -15,20 +15,24 @@ import scala.util.control.Breaks._
 object Entities {
 
   sealed trait EscapeMode {
+
     def getMap: Map[Char, String]
 
     def apply(key: Char) = getMap(key)
   }
 
   case object XHTML extends EscapeMode {
+
     val getMap = xhtmlByVal
   }
 
   case object BASE extends EscapeMode {
+
     val getMap = baseByVal
   }
 
   case object EXTENDED extends EscapeMode {
+
     val getMap = fullByVal
   }
 
@@ -47,7 +51,6 @@ object Entities {
   //    implicit def convert(value: Value) = value.asInstanceOf[EscapeModeVal[Char,String]]
   ////    implicit def convert(escModeVal: EscapeModeVal[Char,String]) = escModeVal.asInstanceOf[Value]
   //  }
-
 
   private val full: Map[String, Char] = loadEntities("entities-full.properties")
   lazy private val xhtmlByVal: Map[Char, String] = Map(0x00022.toChar -> "quot", 0x00026.toChar -> "amp", 0x0003C.toChar -> "lt", 0x0003E.toChar -> "gt")
@@ -83,7 +86,9 @@ object Entities {
       breakable {
         if (normaliseWhite) {
           if (Strings.isWhitespace(codePoint)) {
-            if ((stripLeadingWhite && !reachedNonWhite) || lastWasWhite) break()
+            if ((stripLeadingWhite && !reachedNonWhite) || lastWasWhite) {
+              break()
+            }
             accum.append(' ')
             lastWasWhite = true
             break()
@@ -98,27 +103,53 @@ object Entities {
           c match {
             case '&' => accum.append("&amp;")
             case 0xA0 =>
-              if (escapeMode == XHTML) accum.append("&nbsp;")
-              else accum.append(c)
+              if (escapeMode == XHTML) {
+                accum.append("&nbsp;")
+              }
+              else {
+                accum.append(c)
+              }
             case '<' =>
-              if (!inAttribute) accum.append("&lt;")
-              else accum.append(c)
+              if (!inAttribute) {
+                accum.append("&lt;")
+              }
+              else {
+                accum.append(c)
+              }
             case '>' =>
-              if (!inAttribute) accum.append("&gt;")
-              else accum.append(c)
+              if (!inAttribute) {
+                accum.append("&gt;")
+              }
+              else {
+                accum.append(c)
+              }
             case '"' =>
-              if (inAttribute) accum.append("&quot;")
-              else accum.append(c)
+              if (inAttribute) {
+                accum.append("&quot;")
+              }
+              else {
+                accum.append(c)
+              }
             case _ =>
-              if (encoder.canEncode(c)) accum.append(c)
-              else if (escapeModeMap.containsKey(c)) accum.append('&').append(escapeModeMap(c)).append(';')
-              else accum.append("&#x").append(Integer.toHexString(codePoint)).append(';')
+              if (encoder.canEncode(c)) {
+                accum.append(c)
+              }
+              else if (escapeModeMap.containsKey(c)) {
+                accum.append('&').append(escapeModeMap(c)).append(';')
+              }
+              else {
+                accum.append("&#x").append(Integer.toHexString(codePoint)).append(';')
+              }
           }
         }
         else {
           val c: String = new String(Character.toChars(codePoint))
-          if (encoder.canEncode(c)) accum.append(c)
-          else accum.append("&#x").append(Integer.toHexString(codePoint)).append(';')
+          if (encoder.canEncode(c)) {
+            accum.append(c)
+          }
+          else {
+            accum.append("&#x").append(Integer.toHexString(codePoint)).append(';')
+          }
         }
       }
       offset += Character.charCount(codePoint)
@@ -142,11 +173,10 @@ object Entities {
       case Array(key: String, value: String) => (key, Integer.parseInt(value, 16).toChar)
     }
     Source.fromInputStream(Entities.getClass.getResourceAsStream(filename))
-      .getLines()
-      .map(propsToTuple)
-      .toMap
+            .getLines()
+            .map(propsToTuple)
+            .toMap
   }
-
 
   private def toCharacterKey(inMap: Map[String, Char]): Map[Char, String] = {
     val outMap: mutable.Map[Char, String] = new mutable.HashMap[Char, String]
@@ -154,9 +184,10 @@ object Entities {
       val character: Character = entry.getValue
       val name: String = entry.getKey
       if (outMap.containsKey(character)) {
-        if (name.toLowerCase == name) outMap(character) = name
-      }
-      else {
+        if (name.toLowerCase == name) {
+          outMap(character) = name
+        }
+      } else {
         outMap(character) = name
       }
     }

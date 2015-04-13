@@ -29,12 +29,12 @@ class HttpConnection private(n: Unit) extends Connection {
     res = new HttpConnection.Response
   }
 
-  def url(url: URL): Connection = {
+  override def url(url: URL): Connection = {
     req.url(url)
     this
   }
 
-  def url(url: String): Connection = {
+  override def url(url: String): Connection = {
     Validator.notEmpty(url, "Must supply a valid URL")
     try {
       req.url(new URL(HttpConnection.encodeUrl(url)))
@@ -45,73 +45,70 @@ class HttpConnection private(n: Unit) extends Connection {
     this
   }
 
-  def userAgent(userAgent: String): Connection = {
+  override def userAgent(userAgent: String): Connection = {
     Validator.notNull(userAgent, "User agent must not be null")
     req.header("User-Agent", userAgent)
     this
   }
 
-  def timeout(millis: Int): Connection = {
+  override def timeout(millis: Int): Connection = {
     req.timeout(millis)
     this
   }
 
-  def maxBodySize(bytes: Int): Connection = {
+  override def maxBodySize(bytes: Int): Connection = {
     req.maxBodySize(bytes)
     this
   }
 
-  def followRedirects(followRedirects: Boolean): Connection = {
+  override def followRedirects(followRedirects: Boolean): Connection = {
     req.followRedirects(followRedirects)
     this
   }
 
-  def referrer(referrer: String): Connection = {
+  override def referrer(referrer: String): Connection = {
     Validator.notNull(referrer, "Referrer must not be null")
     req.header("Referer", referrer)
     this
   }
 
-  def method(method: Connection.Method.Method): Connection = {
+  override def method(method: Connection.Method.Method): Connection = {
     req.method(method)
     this
   }
 
-  def ignoreHttpErrors(ignoreHttpErrors: Boolean): Connection = {
+  override def ignoreHttpErrors(ignoreHttpErrors: Boolean): Connection = {
     req.ignoreHttpErrors(ignoreHttpErrors)
     this
   }
 
-  def ignoreContentType(ignoreContentType: Boolean): Connection = {
+  override def ignoreContentType(ignoreContentType: Boolean): Connection = {
     req.ignoreContentType(ignoreContentType)
     this
   }
 
-  def validateTLSCertificates(value: Boolean): Connection = {
+  override def validateTLSCertificates(value: Boolean): Connection = {
     req.validateTLSCertificates(value)
     this
   }
 
-  def data(key: String, value: String): Connection = {
+  override def data(key: String, value: String): Connection = {
     req.data(KeyVal.create(key, value))
     this
   }
 
-  def data(key: String, filename: String, inputStream: InputStream): Connection = {
+  override def data(key: String, filename: String, inputStream: InputStream): Connection = {
     req.data(KeyVal.create(key, filename, inputStream))
     this
   }
 
-  def data(data: Map[String, String]): Connection = {
+  override def data(data: Map[String, String]): Connection = {
     Validator.notNull(data, "Data map must not be null")
-    import scala.collection.JavaConversions._
-    for (entry <- data.entrySet) {
-      req.data(KeyVal.create(entry.getKey, entry.getValue))
-    }
+    data.foreach({ case (key, value) => req.data(KeyVal.create(key, value))})
     this
   }
 
-  def data(keyvals: String*): Connection = {
+  override def data(keyvals: String*): Connection = {
     Validator.notNull(keyvals, "Data key value pairs must not be null")
     Validator.isTrue(keyvals.length % 2 == 0, "Must supply an even number of key value pairs")
     for (i <- 0.to(keyvals.length - 1, 2)) {
@@ -124,71 +121,67 @@ class HttpConnection private(n: Unit) extends Connection {
     this
   }
 
-  def data(data: Traversable[Connection.KeyVal]): Connection = {
+  override def data(data: Traversable[Connection.KeyVal]): Connection = {
     Validator.notNull(data, "Data collection must not be null")
-    for (entry <- data) {
-      req.data(entry)
-    }
+    data.foreach(entry => req.data(entry))
     this
   }
 
-  def header(name: String, value: String): Connection = {
+  override def header(name: String, value: String): Connection = {
     req.header(name, value)
     this
   }
 
-  def cookie(name: String, value: String): Connection = {
+  override def cookie(name: String, value: String): Connection = {
     req.cookie(name, value)
     this
   }
 
-  def cookies(cookies: Map[String, String]): Connection = {
+  override def cookies(cookies: Map[String, String]): Connection = {
     Validator.notNull(cookies, "Cookie map must not be null")
-    for (entry <- cookies) {
-      req.cookie(entry._1, entry._2)
-    }
+    cookies.foreach({ case (key, value) => req.cookie(key, value)})
     this
   }
 
-  def parser(parser: Parser): Connection = {
+  override def parser(parser: Parser): Connection = {
     req.parser(parser)
     this
   }
 
   @throws(classOf[IOException])
-  def get: Document = {
+  override def get: Document = {
     req.method(Connection.Method.GET())
     execute
     res.parse
   }
 
   @throws(classOf[IOException])
-  def post: Document = {
+  override def post: Document = {
     req.method(Connection.Method.POST())
     execute
     res.parse
   }
 
   @throws(classOf[IOException])
-  def execute: Connection.Response = {
+  override def execute: Connection.Response = {
     res = HttpConnection.Response.execute(req)
     res
   }
 
-  def request: Connection.Request = {
+  override def request: Connection.Request = {
     req
   }
 
-  def request(request: Connection.Request): Connection = {
+  override def request(request: Connection.Request): Connection = {
     req = request
     this
   }
 
-  def response: Connection.Response = {
+  override def response: Connection.Response = {
     res
   }
 
-  def response(response: Connection.Response): Connection = {
+  override def response(response: Connection.Response): Connection = {
     res = response
     this
   }
@@ -307,12 +300,10 @@ object HttpConnection {
       null
     }
 
-    private def scanHeaders(name: String): Tuple2[String, String] = {
+    private def scanHeaders(name: String): (String, String) = {
       val lc: String = name.toLowerCase
-      for (entry <- headersMap) {
-        if (entry._1.toLowerCase == lc) {
-          return entry
-        }
+      for (entry <- headersMap if entry._1.toLowerCase == lc) {
+        return entry
       }
       null
     }
@@ -506,9 +497,7 @@ object HttpConnection {
           }
           req.url(new URL(req.url, encodeUrl(location)))
           // add response cookies to request (for e.g. login posts)
-          for (cookie <- res.cookies) {
-            req.cookie(cookie._1, cookie._2)
-          }
+          res.cookies.foreach({ case (key, value) => req.cookie(key, value)})
           return execute(req, res)
         }
         if ((status < 200 || status >= 400) && !req.ignoreHttpErrors) {
@@ -578,9 +567,7 @@ object HttpConnection {
       if (req.cookies.size > 0) {
         conn.addRequestProperty("Cookie", getRequestCookieString(req))
       }
-      for (header <- req.headers) {
-        conn.addRequestProperty(header._1, header._2)
-      }
+      req.headers.foreach({ case (key, value) => conn.addRequestProperty(key, value)})
       conn
     }
 
@@ -642,11 +629,9 @@ object HttpConnection {
       var needsMulti: Boolean = false
       import scala.util.control.Breaks._
       breakable {
-        for (keyVal <- req.data) {
-          if (keyVal.hasInputStream) {
-            needsMulti = true
-            break()
-          }
+        for (keyVal <- req.data if keyVal.hasInputStream) {
+          needsMulti = true
+          break()
         }
       }
       var bound: String = null
@@ -826,11 +811,9 @@ object HttpConnection {
       processResponseHeaders(resHeaders)
       // if from a redirect, map previous response cookies into this response
       if (previousResponse != null) {
-        for (prevCookie <- previousResponse.cookies) {
-          if (!hasCookie(prevCookie._1)) {
-            cookie(prevCookie._1, prevCookie._2)
-          }
-        }
+        previousResponse.cookies
+                .filter(prevCookie => !hasCookie(prevCookie._1))
+                .foreach({ case (key, value) => cookie(key, value)})
       }
     }
 

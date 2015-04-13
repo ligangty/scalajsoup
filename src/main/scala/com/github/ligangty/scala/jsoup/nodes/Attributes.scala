@@ -182,9 +182,7 @@ class Attributes extends Iterable[Attribute] {
         throw new RuntimeException(e)
     }
     clone.attributes = new util.LinkedHashMap[String, Attribute](attributes.size)
-    for (attribute <- this) {
-      clone.attributes.put(attribute.getKey, attribute.clone)
-    }
+    this.foreach(attribute => clone.attributes.put(attribute.getKey, attribute.clone))
     clone
   }
 

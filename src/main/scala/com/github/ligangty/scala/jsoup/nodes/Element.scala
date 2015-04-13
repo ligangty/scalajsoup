@@ -936,10 +936,8 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    */
   def hasClass(className: String): Boolean = {
     val classNms: Set[String] = classNames
-    for (name <- classNms) {
-      if (className.equalsIgnoreCase(name)) {
-        return true
-      }
+    for (name <- classNms if className.equalsIgnoreCase(name)) {
+      return true
     }
     false
   }
@@ -1069,9 +1067,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
   }
 
   private def html(accum: scala.StringBuilder) = {
-    for (node <- childNodes) {
-      node.outerHtml(accum)
-    }
+    childNodes.foreach(_.outerHtml(accum))
   }
 
   /**

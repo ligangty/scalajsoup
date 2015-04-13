@@ -69,10 +69,8 @@ final private[parser] class CharacterReader(input: String) {
    * @return offset between current position and next instance of target. -1 if not found.
    */
   private[parser] def nextIndexOf(c: Char): Int = {
-    for (i <- posVal to (length - 1)) {
-      if (c == inputArray(i)) {
-        return i - pos
-      }
+    for (i <- posVal to (length - 1) if c == inputArray(i)) {
+      return i - pos
     }
     -1
   }
@@ -140,10 +138,8 @@ final private[parser] class CharacterReader(input: String) {
     val remaining: Int = length
     breakable {
       while (posVal < remaining) {
-        for (c <- chars) {
-          if (inputArray(posVal) == c) {
-            break()
-          }
+        for (c <- chars if inputArray(posVal) == c) {
+          break()
         }
         posVal += 1
       }
@@ -307,10 +303,8 @@ final private[parser] class CharacterReader(input: String) {
     if (scanLength > length - posVal) {
       return false
     }
-    for (offset <- 0 to (scanLength - 1)) {
-      if (seq.charAt(offset) != inputArray(posVal + offset)) {
-        return false
-      }
+    for (offset <- 0 to (scanLength - 1) if seq.charAt(offset) != inputArray(posVal + offset)) {
+      return false
     }
     true
   }
@@ -337,10 +331,8 @@ final private[parser] class CharacterReader(input: String) {
       return false
     }
     val c: Char = inputArray(posVal)
-    for (seek <- seq) {
-      if (seek == c) {
-        return true
-      }
+    for (seek <- seq if seek == c) {
+      return true
     }
     false
   }

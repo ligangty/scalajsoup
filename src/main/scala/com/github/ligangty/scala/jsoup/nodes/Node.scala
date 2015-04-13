@@ -330,7 +330,9 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
       }
     val wrapChildren: Seq[Node] = Parser.parseFragment(html, context, baseUri)
     val wrapNode: Node = wrapChildren.head
-    if (wrapNode == null || !wrapNode.isInstanceOf[Element]) return null // nothing to wrap with; noop
+    if (wrapNode == null || !wrapNode.isInstanceOf[Element]) {
+      return null
+    } // nothing to wrap with; noop
     val wrap: Element = wrapNode.asInstanceOf[Element]
     val deepest: Element = getDeepChild(wrap)
     parentNodeVal.replaceChild(this, wrap)
@@ -469,12 +471,8 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
       return List.empty
     }
     val nodes: mutable.Buffer[Node] = parentNodeVal.childNodes
-    val siblings: mutable.Buffer[Node] = new mutable.ArrayBuffer[Node](nodes.size - 1)
-    import scala.collection.JavaConversions._
-    for (node <- nodes) {
-      if (node ne this) {
-        siblings.add(node)
-      }
+    val siblings = for (node <- nodes if node ne this) yield {
+      node
     }
     siblings.toList
   }
@@ -643,10 +641,8 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
       null
     }
     clone.baseUriVal = baseUri
-    clone.childNodes = new mutable.ArrayBuffer[Node](childNodes.size)
-    import scala.collection.JavaConversions._
-    for (child <- this.childNodes) {
-      clone.childNodes.add(child)
+    clone.childNodes = for (child <- this.childNodes) yield {
+      child
     }
     clone
   }

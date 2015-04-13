@@ -94,9 +94,7 @@ class W3CDom {
     }
 
     private def copyAttributes(source: nodes.Node, el: dom.Element) {
-      for (attribute <- source.attributes) {
-        el.setAttribute(attribute.getKey, attribute.getValue)
-      }
+      source.attributes.foreach(attribute => el.setAttribute(attribute.getKey, attribute.getValue))
     }
   }
 

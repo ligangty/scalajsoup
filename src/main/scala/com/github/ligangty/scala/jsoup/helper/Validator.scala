@@ -59,46 +59,23 @@ object Validator {
    * Validates that the array contains no null elements
    * @param objects the array to test
    */
-  def noNullElements(objects: Array[Any]): Unit =
-    noNullElements("Array must not contain any null objects", objects)
-
-  /**
-   * Validates that the array contains no null elements
-   * @param objects the array to test
-   */
-  def noNullElements(objects: Any*): Unit =
-    noNullElements("Array must not contain any null objects", objects)
+  def noNullElements(objects: Array[_ <: Any]): Unit =
+    noNullElements(objects, "Array must not contain any null objects")
 
   /**
    * Validates that the array contains no null elements
    * @param objects the array to test
    * @param msg message to output if validation fails
    */
-  def noNullElements(msg: String, objects: Array[AnyRef]): Unit =
-    for (obj <- objects) {
-      if (obj == null) {
-        throw new IllegalArgumentException(msg)
-      }
-    }
-
-  /**
-   * Validates that the array contains no null elements
-   * @param objects the array to test
-   * @param msg message to output if validation fails
-   */
-  def noNullElements(msg: String, objects: Any*): Unit =
-    for (obj <- objects) {
-      if (obj == null) {
-        throw new IllegalArgumentException(msg)
-      }
-    }
+  def noNullElements(objects: Array[_ <: Any], msg: String): Unit =
+    objects.foreach(obj => require(obj != null, msg))
 
   /**
    * Validates that the string is not empty
    * @param string the string to test
    */
   def notEmpty(string: String) {
-    notEmpty(string,"String must not be empty")
+    notEmpty(string, "String must not be empty")
   }
 
   /**

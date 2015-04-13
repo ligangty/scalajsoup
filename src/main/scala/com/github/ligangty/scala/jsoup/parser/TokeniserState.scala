@@ -15,7 +15,7 @@ private[parser] object TokeniserState {
 
   // in data state, gather characters until a character reference or tag is found
   private[parser] case object Data extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       r.current match {
         case '&' =>
           t.advanceTransition(CharacterReferenceInData)
@@ -35,7 +35,7 @@ private[parser] object TokeniserState {
 
   // from & in data
   private[parser] case object CharacterReferenceInData extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       val c: Array[Char] = t.consumeCharacterReference(None, SHOULD_NOT_IN_ATTR)
       if (c == null) t.emit('&') else t.emit(c)
       t.transition(Data)
@@ -45,7 +45,7 @@ private[parser] object TokeniserState {
 
   /// handles data in title, textarea etc
   private[parser] case object Rcdata extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       r.current match {
         case '&' =>
           t.advanceTransition(CharacterReferenceInRcdata)
@@ -65,7 +65,7 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object CharacterReferenceInRcdata extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       val c: Array[Char] = t.consumeCharacterReference(null, SHOULD_NOT_IN_ATTR)
       if (c == null) t.emit('&') else t.emit(c)
       t.transition(Rcdata)
@@ -73,7 +73,7 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object Rawtext extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       r.current match {
         case '<' =>
           t.advanceTransition(RawtextLessthanSign)
@@ -91,7 +91,7 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object ScriptData extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       r.current match {
         case '<' =>
           t.advanceTransition(ScriptDataLessthanSign)
@@ -109,7 +109,7 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object PLAINTEXT extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       r.current match {
         case TokeniserState.nullChar =>
           t.error(this)
@@ -126,7 +126,7 @@ private[parser] object TokeniserState {
 
   // from < in data
   private[parser] case object TagOpen extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       r.current match {
         case '!' =>
           t.advanceTransition(MarkupDeclarationOpen)
@@ -148,7 +148,7 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object EndTagOpen extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       if (r.isEmpty) {
         t.eofError(this)
         t.emit("</")
@@ -168,7 +168,7 @@ private[parser] object TokeniserState {
 
   // from < or </ in data, will have start or end tag pending
   private[parser] case object TagName extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       // previous TagOpen state did NOT consume, will have a letter char in current
       //String tagName = r.consumeToAnySorted(tagCharsSorted).toLowerCase();
       val tagName: String = r.consumeTagName.toLowerCase
@@ -195,7 +195,7 @@ private[parser] object TokeniserState {
 
   // from < in rcdata
   private[parser] case object RcdataLessthanSign extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       if (r.matches('/')) {
         t.createTempBuffer()
         t.advanceTransition(RCDATAEndTagOpen)
@@ -214,7 +214,7 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object RCDATAEndTagOpen extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       if (r.matchesLetter) {
         t.createTagPending(SHOULD_NOT_START)
         t.tagPending.appendTagName(Character.toLowerCase(r.current))
@@ -228,7 +228,7 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object RCDATAEndTagName extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       if (r.matchesLetter) {
         val name: String = r.consumeLetterSequence
         t.tagPending.appendTagName(name.toLowerCase)
@@ -263,7 +263,7 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object RawtextLessthanSign extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       if (r.matches('/')) {
         t.createTempBuffer()
         t.advanceTransition(RawtextEndTagOpen)
@@ -275,7 +275,7 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object RawtextEndTagOpen extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       if (r.matchesLetter) {
         t.createTagPending(SHOULD_NOT_START)
         t.transition(RawtextEndTagName)
@@ -287,13 +287,13 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object RawtextEndTagName extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       handleDataEndTag(t, r, Rawtext)
     }
   }
 
   private[parser] case object ScriptDataLessthanSign extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       r.consume match {
         case '/' =>
           t.createTempBuffer()
@@ -310,7 +310,7 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object ScriptDataEndTagOpen extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       if (r.matchesLetter) {
         t.createTagPending(SHOULD_NOT_START)
         t.transition(ScriptDataEndTagName)
@@ -322,13 +322,13 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object ScriptDataEndTagName extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       handleDataEndTag(t, r, ScriptData)
     }
   }
 
   private[parser] case object ScriptDataEscapeStart extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       if (r.matches('-')) {
         t.emit('-')
         t.advanceTransition(ScriptDataEscapeStartDash)
@@ -339,7 +339,7 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object ScriptDataEscapeStartDash extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       if (r.matches('-')) {
         t.emit('-')
         t.advanceTransition(ScriptDataEscapedDashDash)
@@ -350,7 +350,7 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object ScriptDataEscaped extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       if (r.isEmpty) {
         t.eofError(this)
         t.transition(Data)
@@ -375,7 +375,7 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object ScriptDataEscapedDash extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       if (r.isEmpty) {
         t.eofError(this)
         t.transition(Data)
@@ -401,7 +401,7 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object ScriptDataEscapedDashDash extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       if (r.isEmpty) {
         t.eofError(this)
         t.transition(Data)
@@ -429,7 +429,7 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object ScriptDataEscapedLessthanSign extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       if (r.matchesLetter) {
         t.createTempBuffer()
         t.dataBuffer.append(Character.toLowerCase(r.current))
@@ -446,7 +446,7 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object ScriptDataEscapedEndTagOpen extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       if (r.matchesLetter) {
         t.createTagPending(SHOULD_NOT_START)
         t.tagPending.appendTagName(Character.toLowerCase(r.current))
@@ -460,19 +460,19 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object ScriptDataEscapedEndTagName extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       handleDataEndTag(t, r, ScriptDataEscaped)
     }
   }
 
   private[parser] case object ScriptDataDoubleEscapeStart extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       handleDataDoubleEscapeTag(t, r, ScriptDataDoubleEscaped, ScriptDataEscaped)
     }
   }
 
   private[parser] case object ScriptDataDoubleEscaped extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       val c: Char = r.current
       c match {
         case '-' =>
@@ -496,7 +496,7 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object ScriptDataDoubleEscapedDash extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       val c: Char = r.consume
       c match {
         case '-' =>
@@ -520,7 +520,7 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object ScriptDataDoubleEscapedDashDash extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       val c: Char = r.consume
       c match {
         case '-' =>
@@ -546,7 +546,7 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object ScriptDataDoubleEscapedLessthanSign extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       if (r.matches('/')) {
         t.emit('/')
         t.createTempBuffer()
@@ -558,14 +558,14 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object ScriptDataDoubleEscapeEnd extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       handleDataDoubleEscapeTag(t, r, ScriptDataEscaped, ScriptDataDoubleEscaped)
     }
   }
 
 
   private[parser] case object BeforeAttributeName extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       val c: Char = r.consume
       c match {
         // ignore whitespace
@@ -599,7 +599,7 @@ private[parser] object TokeniserState {
 
   // from before attribute name
   private[parser] case object AttributeName extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       val name: String = r.consumeToAnySorted(attributeNameCharsSorted)
       t.tagPending.appendAttributeName(name.toLowerCase)
 
@@ -629,7 +629,7 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object AfterAttributeName extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       val c: Char = r.consume
       c match {
         // ignore
@@ -665,7 +665,7 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object BeforeAttributeValue extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       val c: Char = r.consume
       c match {
         // ignore
@@ -702,7 +702,7 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object AttributeValue_doubleQuoted extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       val value: String = r.consumeToAnySorted(attributeDoubleValueCharsSorted)
       if (value.length > 0) t.tagPending.appendAttributeValue(value)
 
@@ -726,7 +726,7 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object AttributeValue_singleQuoted extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       val value: String = r.consumeToAnySorted(attributeSingleValueCharsSorted)
       if (value.length > 0) t.tagPending.appendAttributeValue(value)
 
@@ -750,7 +750,7 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object AttributeValue_unquoted extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       val value: String = r.consumeToAny('\t', '\n', '\r', '\f', ' ', '&', '>', nullChar, '"', '\'', '<', '=', '`')
       if (value.length > 0) t.tagPending.appendAttributeValue(value)
 
@@ -781,7 +781,7 @@ private[parser] object TokeniserState {
 
   // CharacterReferenceInAttributeValue state handled inline
   private[parser] case object AfterAttributeValue_quoted extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       val c: Char = r.consume
       c match {
         case '\t' | '\n' | '\r' | '\f' | ' ' =>
@@ -803,7 +803,7 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object SelfClosingStartTag extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       val c: Char = r.consume
       c match {
         case '>' =>
@@ -821,7 +821,7 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object BogusComment extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       // todo: handle bogus comment starting from eof. when does that trigger?
       // rewind to capture character that lead us here
       r.unconsume()
@@ -835,7 +835,7 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object MarkupDeclarationOpen extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       if (r.matchConsume("--")) {
         t.createCommentPending()
         t.transition(CommentStart)
@@ -855,7 +855,7 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object CommentStart extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       val c: Char = r.consume
       c match {
         case '-' =>
@@ -880,7 +880,7 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object CommentStartDash extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       val c: Char = r.consume
       c match {
         case '-' =>
@@ -905,7 +905,7 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object Comment extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       val c: Char = r.current
       c match {
         case '-' =>
@@ -925,7 +925,7 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object CommentEndDash extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       val c: Char = r.consume
       c match {
         case '-' =>
@@ -946,7 +946,7 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object CommentEnd extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       val c: Char = r.consume
       c match {
         case '>' =>
@@ -975,7 +975,7 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object CommentEndBang extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       val c: Char = r.consume
       c match {
         case '-' =>
@@ -1000,7 +1000,7 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object Doctype extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       val c: Char = r.consume
       c match {
         case '\t' | '\n' | '\r' | '\f' | ' ' =>
@@ -1021,7 +1021,7 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object BeforeDoctypeName extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       if (r.matchesLetter) {
         t.createDoctypePending()
         t.transition(DoctypeName)
@@ -1050,7 +1050,7 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object DoctypeName extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       if (r.matchesLetter) {
         val name: String = r.consumeLetterSequence
         t.doctypePending.name.append(name.toLowerCase)
@@ -1078,7 +1078,7 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object AfterDoctypeName extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       if (r.isEmpty) {
         t.eofError(this)
         t.doctypePending.forceQuirks = true
@@ -1104,7 +1104,7 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object AfterDoctypePublicKeyword extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       val c: Char = r.consume
       c match {
         case '\t' | '\n' | '\r' | '\f' | ' ' =>
@@ -1134,7 +1134,7 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object BeforeDoctypePublicIdentifier extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       val c: Char = r.consume
       c match {
         case '\t' | '\n' | '\r' | '\f' | ' ' => ()
@@ -1163,7 +1163,7 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object DoctypePublicIdentifier_doubleQuoted extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       val c: Char = r.consume
       c match {
         case '"' =>
@@ -1188,7 +1188,7 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object DoctypePublicIdentifier_singleQuoted extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       val c: Char = r.consume
       c match {
         case '\'' =>
@@ -1213,7 +1213,7 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object AfterDoctypePublicIdentifier extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       val c: Char = r.consume
       c match {
         case '\t' | '\n' | '\r' | '\f' | ' ' =>
@@ -1241,7 +1241,7 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object BetweenDoctypePublicAndSystemIdentifiers extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       val c: Char = r.consume
       c match {
         case '\t' | '\n' | '\r' | '\f' | ' ' => ()
@@ -1268,7 +1268,7 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object AfterDoctypeSystemKeyword extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       val c: Char = r.consume
       c match {
         case '\t' | '\n' | '\r' | '\f' | ' ' =>
@@ -1298,7 +1298,7 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object BeforeDoctypeSystemIdentifier extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       val c: Char = r.consume
       c match {
         case '\t' | '\n' | '\r' | '\f' | ' ' => ()
@@ -1327,7 +1327,7 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object DoctypeSystemIdentifier_doubleQuoted extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       val c: Char = r.consume
       c match {
         case '"' =>
@@ -1353,7 +1353,7 @@ private[parser] object TokeniserState {
 
 
   private[parser] case object DoctypeSystemIdentifier_singleQuoted extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       val c: Char = r.consume
       c match {
         case '\'' =>
@@ -1378,7 +1378,7 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object AfterDoctypeSystemIdentifier extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       val c: Char = r.consume
       c match {
         case '\t' | '\n' | '\r' | '\f' | ' ' => ()
@@ -1399,7 +1399,7 @@ private[parser] object TokeniserState {
   }
 
   private[parser] case object BogusDoctype extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       val c: Char = r.consume
       c match {
         case '>' =>
@@ -1408,13 +1408,13 @@ private[parser] object TokeniserState {
         case TokeniserState.eof =>
           t.emitDoctypePending()
           t.transition(Data)
-        case _ => ()
+        case _ =>
       }
     }
   }
 
   private[parser] case object CdataSection extends State {
-    private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
+    override private[parser] def read(t: Tokeniser, r: CharacterReader): Unit = {
       val data: String = r.consumeTo("]]>")
       t.emit(data)
       r.matchConsume("]]>")

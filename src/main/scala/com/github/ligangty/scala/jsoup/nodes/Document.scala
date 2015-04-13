@@ -112,9 +112,8 @@ class Document private(baseUri: String, locationVal: String) extends Element(Tag
     val toMove: mutable.Buffer[Node] = new mutable.ArrayBuffer[Node]
     for (node <- element.childNodes) {
       node match {
-        case tn: TextNode => if (!tn.isBlank) {
+        case tn: TextNode if !tn.isBlank =>
           toMove.append(tn)
-        }
       }
     }
 
@@ -136,15 +135,11 @@ class Document private(baseUri: String, locationVal: String) extends Element(Tag
       val toMove: mutable.Buffer[Node] = new mutable.ArrayBuffer[Node]
       for (i <- 1 to (elements.size - 1)) {
         val dupe: Node = elements.get(i)
-        for (node <- dupe.childNodes) {
-          toMove.append(node)
-        }
+        dupe.childNodes.foreach(node => toMove.append(node))
         dupe.remove()
       }
+      toMove.foreach(dupe => master.appendChild(dupe))
 
-      for (dupe <- toMove) {
-        master.appendChild(dupe)
-      }
     }
     // ensure parented by <html>
     if (!(master.parent == htmlEl)) {
