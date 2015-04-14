@@ -392,9 +392,9 @@ class Elements private(u: Unit = ()) extends mutable.Seq[Element] with Cloneable
 
   // list-like methods
   /**
-  Get the first matched element.
-     @return The first matched element, or <code>null</code> if contents is empty.
-    */
+   * Get the first matched element.
+   * @return The first matched element, or <code>null</code> if contents is empty.
+   */
   def first(): Element = if (contents.isEmpty) {
     null
   } else {
@@ -402,13 +402,13 @@ class Elements private(u: Unit = ()) extends mutable.Seq[Element] with Cloneable
   }
 
   /**
-  Get the last matched element.
-     @return The last matched element, or <code>null</code> if contents is empty.
-    */
+   * Get the last matched element.
+   * @return The last matched element, or <code>null</code> if contents is empty.
+   */
   override def last: Element = if (contents.isEmpty) {
     null
   } else {
-    contents(contents.size - 1)
+    contents.last
   }
 
   /**

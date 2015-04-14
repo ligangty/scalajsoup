@@ -15,7 +15,7 @@ import scala.collection.JavaConversions._
  * lower-case.
  *
  */
-class Attributes extends Iterable[Attribute] {
+class Attributes extends Iterable[Attribute] with Cloneable {
   self =>
 
   // linked hash map to preserve insertion order.

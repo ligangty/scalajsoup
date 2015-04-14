@@ -70,8 +70,7 @@ private[select] object CombiningEvaluator {
       this()
       if (num > 1) {
         this.evaluators.append(new CombiningEvaluator.And(evals))
-      }
-      else {
+      } else {
         this.evaluators ++= evals
       }
       updateNumEvaluators()

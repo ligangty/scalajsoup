@@ -124,7 +124,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * You can find elements that have data attributes using the {{{[^data-]}}} attribute key prefix selector.
    * @return a map of { @code key=value} custom data attributes.
    */
-  def dataset: Map[String, String] = attributes.dataset
+  def dataset: Map[String, String] = attributesVal.dataset
 
   override def parent: Element = parentNode.asInstanceOf[Element]
 
@@ -925,7 +925,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
     */
   def classNames(classNames: Set[String]): Element = {
     notNull(classNames)
-    attributes.put("class", Strings.join(classNames, " "))
+    attributesVal.put("class", Strings.join(classNames, " "))
     this
   }
 
@@ -1010,14 +1010,14 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
     this
   }
 
-  private[nodes] def outerHtmlHead(accum: StringBuilder, depth: Int, out: Document.OutputSettings) {
+  override private[nodes] def outerHtmlHead(accum: StringBuilder, depth: Int, out: Document.OutputSettings) {
     if (accum.length > 0 &&
             out.prettyPrint &&
             (tagVal.isFormatAsBlock || (parent != null && parent.tagVal.isFormatAsBlock) || out.outline)) {
       indent(accum, depth, out)
     }
     accum.append("<").append(tagName)
-    attributes.html(accum, out)
+    attributesVal.html(accum, out)
     if (childNodes.isEmpty && tagVal.isSelfClosing) {
       if ((out.syntax eq Document.OutputSettings.Syntax.html) && tagVal.isEmpty) {
         accum.append('>')
