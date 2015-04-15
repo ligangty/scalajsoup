@@ -168,7 +168,8 @@ private[parser] object Token {
 
     private[parser] final def appendAttributeValue(append: Array[Char]) {
       ensureAttributeValue()
-      pendingAttributeValue.append(append)
+      // append is a array, strinbuilder cannot append it directly, so use ++=
+      pendingAttributeValue ++= append
     }
 
     private def ensureAttributeValue(): Unit = {

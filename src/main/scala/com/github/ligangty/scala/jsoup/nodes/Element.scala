@@ -943,13 +943,13 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
   }
 
   /**
-  Add a class name to this element's <code>class</code> attribute.
-     @param className class name to add
-  @return this element
-    */
+   * Add a class name to this element's <code>class</code> attribute.
+   * @param className class name to add
+   * @return this element
+   */
   def addClass(className: String): Element = {
     notNull(className)
-    val classes: mutable.Set[String] = mutable.Set(classNames.toArray: _*)
+    val classes: mutable.Set[String] = mutable.LinkedHashSet(classNames.toArray: _*)
     classes.add(className)
     classNames(classes.toSet)
     this
@@ -1012,8 +1012,8 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
 
   override private[nodes] def outerHtmlHead(accum: StringBuilder, depth: Int, out: Document.OutputSettings) {
     if (accum.length > 0 &&
-            out.prettyPrint &&
-            (tagVal.isFormatAsBlock || (parent != null && parent.tagVal.isFormatAsBlock) || out.outline)) {
+      out.prettyPrint &&
+      (tagVal.isFormatAsBlock || (parent != null && parent.tagVal.isFormatAsBlock) || out.outline)) {
       indent(accum, depth, out)
     }
     accum.append("<").append(tagName)
@@ -1034,14 +1034,14 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
   private[nodes] def outerHtmlTail(accum: StringBuilder, depth: Int, out: Document.OutputSettings) {
     if (!(childNodes.isEmpty && tagVal.isSelfClosing)) {
       if (out.prettyPrint && (childNodes.nonEmpty &&
-              (tagVal.isFormatAsBlock ||
-                      (out.outline &&
-                              (childNodes.size > 1 ||
-                                      (childNodes.size == 1 && !childNodes.head.isInstanceOf[TextNode])
-                                      )
-                              )
-                      )
+        (tagVal.isFormatAsBlock ||
+          (out.outline &&
+            (childNodes.size > 1 ||
+              (childNodes.size == 1 && !childNodes.head.isInstanceOf[TextNode])
               )
+            )
+          )
+        )
       ) {
         indent(accum, depth, out)
       }
