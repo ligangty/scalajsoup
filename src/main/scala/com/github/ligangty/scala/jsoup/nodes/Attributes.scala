@@ -5,6 +5,7 @@ import java.util
 import com.github.ligangty.scala.jsoup.helper.Validator._
 
 import scala.collection.JavaConversions._
+import scala.collection.mutable
 
 /**
  * The attributes of an Element.
@@ -20,7 +21,7 @@ class Attributes extends Iterable[Attribute] with Cloneable {
 
   // linked hash map to preserve insertion order.
   // null be default as so many elements have no attributes -- saves a good chunk of memory
-  private var attributes: util.LinkedHashMap[String, Attribute] = null
+  private var attributes: mutable.LinkedHashMap[String, Attribute] = null
 
   /**
    * Get an attribute value by key.
@@ -33,10 +34,9 @@ class Attributes extends Iterable[Attribute] with Cloneable {
     attributes match {
       case attrs if attrs != null =>
         val attr = attrs.get(key.toLowerCase)
-        if (attr != null) {
-          attr.getValue
-        } else {
-          ""
+        attr match {
+          case None => ""
+          case Some(a) => a.getValue
         }
       case null => ""
     }
@@ -59,7 +59,7 @@ class Attributes extends Iterable[Attribute] with Cloneable {
   def put(attribute: Attribute) {
     notNull(attribute)
     if (attributes == null) {
-      attributes = new util.LinkedHashMap[String, Attribute](2)
+      attributes = mutable.LinkedHashMap[String, Attribute]()
     }
     attributes.put(attribute.getKey, attribute)
   }
@@ -102,7 +102,7 @@ class Attributes extends Iterable[Attribute] with Cloneable {
       return
     }
     if (attributes == null) {
-      attributes = new util.LinkedHashMap[String, Attribute](incoming.size)
+      attributes = mutable.LinkedHashMap[String, Attribute]()
     }
     attributes.putAll(incoming.attributes)
   }
@@ -115,12 +115,11 @@ class Attributes extends Iterable[Attribute] with Cloneable {
    * @return an view of the attributes as a List.
    */
   def asList: List[Attribute] = {
-    import scala.collection.JavaConversions._
     if (attributes == null) {
       List.empty
-    }
-    else {
-      attributes.entrySet().map(entry => entry.getValue).toList
+    } else {
+      val a = attributes.map(e => e._2)
+      a.toList
     }
   }
 
@@ -129,12 +128,12 @@ class Attributes extends Iterable[Attribute] with Cloneable {
    * starting with <code>data-</code>.
    * @return map of custom data attributes.
    */
-  def dataset: Map[String, String] = new self.Dataset().toMap
+  def dataset: mutable.Map[String, String] = new self.Dataset()
 
   /**
-  Get the HTML representation of these attributes.
-     @return HTML
-    */
+   * Get the HTML representation of these attributes.
+   * @return HTML
+   */
   def html: String = {
     val accum: StringBuilder = new StringBuilder
     html(accum, new Document("").outputSettings)
@@ -165,7 +164,7 @@ class Attributes extends Iterable[Attribute] with Cloneable {
   }
 
   override def hashCode: Int = if (attributes != null) {
-    attributes.hashCode
+    attributes.hashCode()
   } else {
     0
   }
@@ -181,38 +180,38 @@ class Attributes extends Iterable[Attribute] with Cloneable {
       case e: CloneNotSupportedException =>
         throw new RuntimeException(e)
     }
-    clone.attributes = new util.LinkedHashMap[String, Attribute](attributes.size)
+    clone.attributes = mutable.LinkedHashMap[String, Attribute]()
     this.foreach(attribute => clone.attributes.put(attribute.getKey, attribute.clone))
     clone
   }
 
-  private[Attributes] class Dataset(u: Unit = ()) extends util.AbstractMap[String, String] {
+  private[Attributes] class Dataset(u: Unit = ()) extends mutable.HashMap[String, String] {
     self =>
 
     private def this() {
       this(())
       if (attributes == null) {
-        attributes = new util.LinkedHashMap[String, Attribute](2)
+        attributes = mutable.LinkedHashMap[String, Attribute]()
       }
     }
 
-    override def entrySet: util.Set[util.Map.Entry[String, String]] = new self.EntrySet()
+    def entrySet: mutable.Set[(String, String)] = new self.EntrySet
 
-    override def put(key: String, value: String): String = {
-      val datKey: String = Attributes.dataKey(key)
+    override def put(key: String, value: String): Option[String] = {
+      val datKey: String = Attributes.dataKey(key.toString)
       val oldValue: String = if (hasKey(datKey)) {
-        attributes.get(datKey).getValue
+        attributes.get(datKey).get.getValue
       } else {
         null
       }
-      val attr: Attribute = new Attribute(datKey, value)
+      val attr: Attribute = new Attribute(datKey, value.toString)
       attributes.put(datKey, attr)
-      oldValue
+      Some(oldValue)
     }
 
-    private[Dataset] class EntrySet extends util.AbstractSet[util.Map.Entry[String, String]] {
+    private[Dataset] class EntrySet extends mutable.HashSet[(String, String)] {
 
-      override def iterator: util.Iterator[util.Map.Entry[String, String]] = new self.DatasetIterator
+      def iterator: Iterator[Product2[String, String]] = new self.DatasetIterator
 
       override def size: Int = {
         var count: Int = 0
@@ -224,7 +223,7 @@ class Attributes extends Iterable[Attribute] with Cloneable {
       }
     }
 
-    private[Dataset] class DatasetIterator extends util.Iterator[util.Map.Entry[String, String]] {
+    private[Dataset] class DatasetIterator extends Iterator[Product2[String, String]] {
 
       private var attrIter: Iterator[Attribute] = attributes.values.iterator
       private var attr: Attribute = null
@@ -239,7 +238,7 @@ class Attributes extends Iterable[Attribute] with Cloneable {
         false
       }
 
-      def next: util.Map.Entry[String, String] = new Attribute(attr.getKey.substring(Attributes.dataPrefix.length), attr.getValue)
+      def next(): Product2[String, String] = new Attribute(attr.getKey.substring(Attributes.dataPrefix.length), attr.getValue)
 
       def remove() = attributes.remove(attr.getKey)
     }

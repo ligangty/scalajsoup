@@ -7,32 +7,27 @@ import com.github.ligangty.scala.jsoup.helper.Validator._
 /**
  *
  */
-class Attribute private[Attribute]() extends java.util.Map.Entry[String, String] with Cloneable {
+class Attribute(var key: String, var value: String) extends Product2[String,String] with Cloneable {
+  notEmpty(key)
+  notNull(value)
+  key = key.toLowerCase.trim
 
-  private[Attribute] var key: String = null
-  private[Attribute] var value: String = null
-
-  def this(key: String, value: String) = {
-    this()
-    notEmpty(key)
-    notNull(value)
-    this.key = key.toLowerCase.trim
-    this.value = value
-  }
+  override def _1 = key
+  override def _2 = value
 
   /**
    * Get the attribute key.
    * @return the attribute key
    */
-  override def getKey: String = key
+  def getKey: String = key
 
   /**
    * Get the attribute value.
    * @return the attribute value
    */
-  override def getValue: String = value
+  def getValue: String = value
 
-  override def setValue(value: String): String = {
+  def setValue(value: String): String = {
     notNull(value)
     val old: String = this.value
     this.value = value
@@ -85,8 +80,8 @@ class Attribute private[Attribute]() extends java.util.Map.Entry[String, String]
    */
   private[nodes] def shouldCollapseAttribute(out: Document.OutputSettings): Boolean = {
     (("" == value) || value.equalsIgnoreCase(key)) &&
-            (out.syntax == Document.OutputSettings.Syntax.html) &&
-            (util.Arrays.binarySearch(Attribute.booleanAttributes.asInstanceOf[Array[AnyRef]], key) >= 0)
+      (out.syntax == Document.OutputSettings.Syntax.html) &&
+      (util.Arrays.binarySearch(Attribute.booleanAttributes.asInstanceOf[Array[AnyRef]], key) >= 0)
   }
 
   override def equals(o: Any): Boolean = o match {
@@ -118,6 +113,7 @@ class Attribute private[Attribute]() extends java.util.Map.Entry[String, String]
     }
   }
 
+  override def canEqual(that: Any): Boolean = true
 }
 
 object Attribute {
