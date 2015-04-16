@@ -7,12 +7,13 @@ import com.github.ligangty.scala.jsoup.helper.Validator._
 /**
  *
  */
-class Attribute(var key: String, var value: String) extends Product2[String,String] with Cloneable {
+class Attribute(var key: String, var value: String) extends Product2[String, String] with Cloneable {
   notEmpty(key)
   notNull(value)
   key = key.toLowerCase.trim
 
   override def _1 = key
+
   override def _2 = value
 
   /**
@@ -86,7 +87,14 @@ class Attribute(var key: String, var value: String) extends Product2[String,Stri
 
   override def equals(o: Any): Boolean = o match {
     case that: Attribute =>
-      this.key == that.key && this.value == that.value
+      if (this eq that) {
+        true
+      } else {
+        (that.## == this.##) &&
+          that.canEqual(this) &&
+          (that.key == this.key) &&
+          (that.value == this.value)
+      }
     case _ => false
   }
 
@@ -113,7 +121,7 @@ class Attribute(var key: String, var value: String) extends Product2[String,Stri
     }
   }
 
-  override def canEqual(that: Any): Boolean = true
+  override def canEqual(that: Any): Boolean = that.isInstanceOf[Attribute]
 }
 
 object Attribute {

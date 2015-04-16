@@ -212,9 +212,6 @@ class Document private(baseUri: String, locationVal: String) extends Element(Tag
     this
   }
 
-  override def equals(o: Any): Boolean = {
-    super.equals(o)
-  }
 }
 
 object Document {

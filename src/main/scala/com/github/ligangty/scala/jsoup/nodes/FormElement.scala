@@ -79,6 +79,4 @@ class FormElement(tag: Tag, baseUri: String, attributes: Attributes) extends Ele
     data.toSeq
   }
 
-  override def equals(o: Any): Boolean = super.equals(o)
-
 }

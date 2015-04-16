@@ -15,7 +15,7 @@ import scala.collection.mutable.ArrayBuffer
 /**
  * The base, abstract Node model. Elements, Documents, Comments etc are all Node instances.
  */
-abstract class Node private(u: Unit = ()) extends scala.Cloneable {
+abstract class Node private(u: Unit = ()) extends scala.Cloneable with Equals {
 
   private[nodes] var parentNodeVal: Node = null
   private[nodes] var childNodes: mutable.Buffer[Node] = null
@@ -594,6 +594,9 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable {
     })
     result
   }
+
+  override def canEqual(that: Any): Boolean = that.isInstanceOf[Node]
+
 
   /**
    * Create a stand-alone, deep copy of this node, and all of its children. The cloned node will have no siblings or

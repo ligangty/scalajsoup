@@ -1096,6 +1096,8 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
     0
   })
 
+  override def canEqual(that: Any): Boolean = that.isInstanceOf[Element]
+
   override def clone(): Element = super.clone().asInstanceOf[Element]
 }
 
