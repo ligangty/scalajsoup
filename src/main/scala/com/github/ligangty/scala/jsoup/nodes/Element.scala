@@ -124,7 +124,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * You can find elements that have data attributes using the {{{[^data-]}}} attribute key prefix selector.
    * @return a map of { @code key=value} custom data attributes.
    */
-  def dataset: Map[String, String] = attributesVal.dataset
+  def dataset: mutable.Map[String, String] = attributesVal.dataset
 
   override def parent: Element = parentNode.asInstanceOf[Element]
 

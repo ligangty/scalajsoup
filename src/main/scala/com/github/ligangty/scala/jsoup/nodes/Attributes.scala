@@ -185,50 +185,74 @@ class Attributes extends Iterable[Attribute] with Cloneable {
     clone
   }
 
-  private[Attributes] class Dataset(u: Unit = ()) extends mutable.HashMap[String, String] {
+  private[Attributes] class Dataset private[Attributes]() extends mutable.Map[String, String] {
     self =>
+    if (attributes == null) attributes = mutable.LinkedHashMap[String, Attribute]()
 
-    private def this() {
-      this(())
-      if (attributes == null) {
-        attributes = mutable.LinkedHashMap[String, Attribute]()
-      }
+    override def +=(kv: (String, String)): this.type = {
+      val datKey: String = Attributes.dataKey(kv._1)
+      val attr: Attribute = new Attribute(datKey, kv._2.toString)
+      attributes.put(datKey, attr)
+      this
     }
 
-    def entrySet: mutable.Set[(String, String)] = new self.EntrySet
+    override def -=(key: String): this.type = {
+      remove(key)
+      this
+    }
 
     override def put(key: String, value: String): Option[String] = {
+      val oldValue = get(key)
       val datKey: String = Attributes.dataKey(key.toString)
-      val oldValue: String = if (hasKey(datKey)) {
-        attributes.get(datKey).get.getValue
-      } else {
-        null
-      }
       val attr: Attribute = new Attribute(datKey, value.toString)
       attributes.put(datKey, attr)
-      Some(oldValue)
+      oldValue
     }
 
-    private[Dataset] class EntrySet extends mutable.HashSet[(String, String)] {
-
-      def iterator: Iterator[Product2[String, String]] = new self.DatasetIterator
-
-      override def size: Int = {
-        var count: Int = 0
-        val iter: Iterator[_] = new DatasetIterator
-        while (iter.hasNext) {
-          count += 1
+    override def get(key: String): Option[String] = {
+      val datKey: String = Attributes.dataKey(key.toString)
+      if (hasKey(datKey)) {
+        val attr = attributes(datKey)
+        if(attr.isDataAttribute){
+          Some(attr.getValue)
+        }else {
+          None
         }
-        count
+      } else {
+        None
       }
     }
 
-    private[Dataset] class DatasetIterator extends Iterator[Product2[String, String]] {
+    override def remove(key: String): Option[String] = {
+      val datKey: String = Attributes.dataKey(key)
+      if (hasKey(datKey)) {
+        val attr = attributes(datKey)
+        if(attr.isDataAttribute){
+          Some(attributes.remove(datKey).get.getValue)
+        }else {
+          None
+        }
+      } else {
+        None
+      }
+    }
 
+    override def size: Int = {
+      var count: Int = 0
+      val iter: Iterator[_] = this.iterator
+      while (iter.hasNext) {
+        count += 1
+      }
+      count
+    }
+
+    override def iterator: Iterator[(String, String)] = new Iterator[(String, String)] {
       private var attrIter: Iterator[Attribute] = attributes.values.iterator
       private var attr: Attribute = null
 
-      def hasNext: Boolean = {
+      override def next(): (String, String) = new Attribute(attr.getKey.substring(Attributes.dataPrefix.length), attr.getValue)
+
+      override def hasNext: Boolean = {
         while (attrIter.hasNext) {
           attr = attrIter.next()
           if (attr.isDataAttribute) {
@@ -237,13 +261,62 @@ class Attributes extends Iterable[Attribute] with Cloneable {
         }
         false
       }
-
-      def next(): Product2[String, String] = new Attribute(attr.getKey.substring(Attributes.dataPrefix.length), attr.getValue)
-
-      def remove() = attributes.remove(attr.getKey)
     }
-
   }
+
+  //  private[Attributes] class Dataset private[Attributes]() extends mutable.HashMap[String, String] {
+  //    self =>
+  //    if(attributes==null) attributes = mutable.LinkedHashMap[String, Attribute]()
+  //
+  //    def entrySet: mutable.Set[Product2[String, String]] = new self.EntrySet
+  //
+  //    override def put(key: String, value: String): Option[String] = {
+  //      val datKey: String = Attributes.dataKey(key.toString)
+  //      val oldValue: String = if (hasKey(datKey)) {
+  //        attributes.get(datKey).get.getValue
+  //      } else {
+  //        null
+  //      }
+  //      val attr: Attribute = new Attribute(datKey, value.toString)
+  //      attributes.put(datKey, attr)
+  //      Some(oldValue)
+  //    }
+  //
+  //    private[Dataset] class EntrySet extends mutable.HashSet[Product2[String,String]] {
+  //
+  //      override def iterator: Iterator[Product2[String, String]] = new self.DatasetIterator
+  //
+  //      override def size: Int = {
+  //        var count: Int = 0
+  //        val iter: Iterator[_] = new DatasetIterator
+  //        while (iter.hasNext) {
+  //          count += 1
+  //        }
+  //        count
+  //      }
+  //    }
+  //
+  //    private[Dataset] class DatasetIterator extends Iterator[Product2[String, String]] {
+  //
+  //      private var attrIter: Iterator[Attribute] = attributes.values.iterator
+  //      private var attr: Attribute = null
+  //
+  //      override def hasNext: Boolean = {
+  //        while (attrIter.hasNext) {
+  //          attr = attrIter.next()
+  //          if (attr.isDataAttribute) {
+  //            return true
+  //          }
+  //        }
+  //        false
+  //      }
+  //
+  //      override def next(): Product2[String, String] = new Attribute(attr.getKey.substring(Attributes.dataPrefix.length), attr.getValue)
+  //
+  //      def remove() = attributes.remove(attr.getKey)
+  //    }
+  //
+  //  }
 
 }
 

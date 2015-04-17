@@ -16,6 +16,8 @@ class Attribute(var key: String, var value: String) extends Product2[String, Str
 
   override def _2 = value
 
+
+
   /**
    * Get the attribute key.
    * @return the attribute key
@@ -60,18 +62,18 @@ class Attribute(var key: String, var value: String) extends Product2[String, Str
    */
   override def toString: String = html
 
-  //
-  //  /**
-  //   * Create a new Attribute from an unencoded key and a HTML attribute encoded value.
-  //   * @param unencodedKey assumes the key is not encoded, as can be only run of simple \w chars.
-  //   * @param encodedValue HTML attribute encoded value
-  //   * @return attribute
-  //   */
-  //  def createFromEncoded(unencodedKey: String, encodedValue: String): Attribute = {
-  //    val value: String = Entities.unescape(encodedValue, true)
-  //    return new Attribute(unencodedKey, value)
-  //  }
-  //
+
+  /**
+   * Create a new Attribute from an unencoded key and a HTML attribute encoded value.
+   * @param unencodedKey assumes the key is not encoded, as can be only run of simple \w chars.
+   * @param encodedValue HTML attribute encoded value
+   * @return attribute
+   */
+  def createFromEncoded(unencodedKey: String, encodedValue: String): Attribute = {
+    val value: String = Entities.unescape(encodedValue, true)
+    new Attribute(unencodedKey, value)
+  }
+
 
   private[nodes] def isDataAttribute: Boolean =
     key.startsWith(Attributes.dataPrefix) && key.length > Attributes.dataPrefix.length
@@ -129,4 +131,6 @@ object Attribute {
   private val booleanAttributes: Array[String] = Array("allowfullscreen", "async", "autofocus", "checked", "compact", "declare", "default", "defer", "disabled", "formnovalidate", "hidden", "inert", "ismap", "itemscope", "multiple", "muted", "nohref", "noresize", "noshade", "novalidate", "nowrap", "open", "readonly", "required", "reversed", "seamless", "selected", "sortable", "truespeed", "typemustmatch")
 
   def apply(key: String, value: String): Attribute = new Attribute(key.trim.toLowerCase, value)
+
+  implicit def attributeToTuple2(attr: Attribute): (String, String) = (attr._1, attr._2)
 }

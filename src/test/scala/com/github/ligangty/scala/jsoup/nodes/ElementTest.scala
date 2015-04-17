@@ -17,16 +17,16 @@ class ElementTest extends FunSuite {
     val doc: Document = Jsoup.parse(reference)
     val divs: mutable.Seq[Element] = doc.getElementsByTag("div")
     assert(2 == divs.size)
-    assert("div1" == divs(0).id)
+    assert("div1" == divs.head.id)
     assert("div2" == divs(1).id)
     val ps: mutable.Seq[Element] = doc.getElementsByTag("p")
     assert(2 == ps.size)
-    assert("Hello" == ps(0).getChildNode(0).asInstanceOf[TextNode].getWholeText)
+    assert("Hello" == ps.head.getChildNode(0).asInstanceOf[TextNode].getWholeText)
     assert("Another " == ps(1).getChildNode(0).asInstanceOf[TextNode].getWholeText)
     val ps2: mutable.Seq[Element] = doc.getElementsByTag("P")
     assert(ps == ps2)
     val imgs: mutable.Seq[Element] = doc.getElementsByTag("img")
-    assert("foo.png" == imgs(0).attr("src"))
+    assert("foo.png" == imgs.head.attr("src"))
     val empty: mutable.Seq[Element] = doc.getElementsByTag("wtf")
     assert(0 == empty.size)
   }
@@ -125,7 +125,7 @@ class ElementTest extends FunSuite {
     val doc: Document = Jsoup.parse("<div class='mellow yellow'><span class=mellow>Hello <b class='yellow'>Yellow!</b></span><p>Empty</p></div>")
     val els: mutable.Seq[Element] = doc.getElementsByClass("mellow")
     assert(2 == els.size)
-    assert("div" == els(0).tagName)
+    assert("div" == els.head.tagName)
     assert("span" == els(1).tagName)
     val els2: mutable.Seq[Element] = doc.getElementsByClass("yellow")
     assert(2 == els2.size)
@@ -139,7 +139,7 @@ class ElementTest extends FunSuite {
     val doc: Document = Jsoup.parse("<div style='bold'><p title=qux><p><b style></b></p></div>")
     val els: mutable.Seq[Element] = doc.getElementsByAttribute("style")
     assert(2 == els.size)
-    assert("div" == els(0).tagName)
+    assert("div" == els.head.tagName)
     assert("b" == els(1).tagName)
     val none: mutable.Seq[Element] = doc.getElementsByAttribute("class")
     assert(0 == none.size)
@@ -156,7 +156,7 @@ class ElementTest extends FunSuite {
     val doc: Document = Jsoup.parse("<div style='bold'><p><p><b style></b></p></div>")
     val els: mutable.Seq[Element] = doc.getElementsByAttributeValue("style", "bold")
     assert(1 == els.size)
-    assert("div" == els(0).tagName)
+    assert("div" == els.head.tagName)
     val none: mutable.Seq[Element] = doc.getElementsByAttributeValue("style", "none")
     assert(0 == none.size)
   }
@@ -164,7 +164,7 @@ class ElementTest extends FunSuite {
   test("testClassDomMethods") {
     val doc: Document = Jsoup.parse("<div><span class=' mellow yellow '>Hello <b>Yellow</b></span></div>")
     val els: mutable.Seq[Element] = doc.getElementsByAttribute("class")
-    val span: Element = els(0)
+    val span: Element = els.head
     assert("mellow yellow" == span.className)
     assert(span.hasClass("mellow"))
     assert(span.hasClass("yellow"))
@@ -397,7 +397,7 @@ class ElementTest extends FunSuite {
   test("dataset") {
     val doc: Document = Jsoup.parse("<div id=1 data-name=jsoup class=new data-package=jar>Hello</div><p id=2>Hello</p>")
     val div: Element = doc.select("div").first()
-    val dataset: mutable.Map[String, String] = mutable.Map(div.dataset.toSeq: _*)
+    val dataset: mutable.Map[String, String] = div.dataset
     val attributes: Attributes = div.attributes
     assert(2 == dataset.size)
     assert("jsoup" == dataset("name"))
@@ -415,7 +415,7 @@ class ElementTest extends FunSuite {
     assert(3 == dataset.size)
     assert("bacon" == dataset("food"))
     attributes.put("data-", "empty")
-    assert(null == dataset(""))
+    assert(None == dataset.get("123"))
     val p: Element = doc.select("p").first()
     assert(0 == p.dataset.size)
   }
@@ -486,7 +486,7 @@ class ElementTest extends FunSuite {
     val doc: Document = Jsoup.parse("<p>One <span>Two</span> Three <br> Four</p>")
     val textNodes: Seq[TextNode] = doc.select("p").first().textNodes
     assert(3 == textNodes.size)
-    assert("One " == textNodes(0).text())
+    assert("One " == textNodes.head.text())
     assert(" Three " == textNodes(1).text())
     assert(" Four" == textNodes(2).text())
     assert(0 == doc.select("br").first().textNodes.size)
@@ -510,10 +510,10 @@ class ElementTest extends FunSuite {
     val p: Element = doc.select("p").first()
     val scriptData: Seq[DataNode] = script.dataNodes
     assert(1 == scriptData.size)
-    assert("One Two" == scriptData(0).getWholeData)
+    assert("One Two" == scriptData.head.getWholeData)
     val styleData: Seq[DataNode] = style.dataNodes
     assert(1 == styleData.size)
-    assert("Three Four" == styleData(0).getWholeData)
+    assert("Three Four" == styleData.head.getWholeData)
     val pData: Seq[DataNode] = p.dataNodes
     assert(0 == pData.size)
   }
