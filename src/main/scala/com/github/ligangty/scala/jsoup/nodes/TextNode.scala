@@ -123,6 +123,21 @@ class TextNode extends Node {
     ensureAttributes()
     super.absUrl(attributeKey)
   }
+
+  override def equals(o: Any): Boolean = o match {
+    case t: TextNode if this eq t => true
+    case t: TextNode if !super.equals(t) => false
+    case t: TextNode if this.textVal != null && this.textVal != t.textVal => false
+    case t: TextNode if this.textVal == null && t.textVal != null => false
+    case t: TextNode => true
+    case _ => false
+  }
+
+  override def hashCode: Int = 31 * super.hashCode + (if (textVal != null) {
+    textVal.##
+  } else {
+    0
+  })
 }
 
 object TextNode {

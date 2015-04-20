@@ -576,22 +576,33 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable with Equals {
     accum.append("\n").append(Strings.padding(depth * out.indentAmount))
   }
 
-  override def equals(o: Any): Boolean = o match {
-    case node: Node => this eq node
-    case _ => false
-  }
-
-  override def hashCode: Int = {
-    var result: Int = if (parentNodeVal != null) {
-      parentNodeVal.hashCode
-    } else {
-      0
+  /**
+   * Check if this node is equal to another node. A node is considered equal if its attributes and content equal the
+   * other node; particularly its position in the tree does not influence its equality.
+   * @param o other object to compare to
+   * @return true if the content of this node is the same as the other
+   */
+  override def equals(o: Any): Boolean =
+    o match {
+      case node: Node if node eq this => true
+      case node: Node if this.childNodes != null && this.childNodes != node.childNodes => false
+      case node: Node if this.childNodes == null && node.childNodes != null => false
+      case node: Node if this.attributesVal != null && this.attributesVal != node.attributesVal => false
+      case node: Node if this.attributesVal == null && node.attributesVal != null => false
+      case node: Node => true
+      case _ => false
     }
-    result = 31 * result + (if (attributesVal != null) {
-      attributesVal.hashCode
-    } else {
-      0
-    })
+
+  /**
+   * Calculates a hash code for this node, which includes iterating all its attributes, and recursing into any child
+   * nodes. This means that a node's hashcode is based on it and its child content, and not its parent or place in the
+   * tree. So two nodes with the same content, regardless of their position in the tree, will have the same hashcode.
+   * @return the calculated hashcode
+   * @see Node#equals(Object)
+   */
+  override def hashCode: Int = {
+    var result: Int = if (childNodes != null) childNodes.## else 0
+    result = 31 * result + (if (attributes != null) attributes.## else 0)
     result
   }
 
@@ -607,17 +618,16 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable with Equals {
    * @return stand-alone cloned node
    */
   override def clone(): Node = {
-    val thisClone: Node = doClone(null)
+    val thisClone: Node = doClone(null) // splits for orphan
+    // Queue up nodes that need their children cloned (BFS).
     val nodesToProcess: mutable.Queue[Node] = mutable.Queue[Node](thisClone)
     while (nodesToProcess.nonEmpty) {
       val currParent: Node = nodesToProcess.dequeue()
-      var i: Int = 0
-      val length = currParent.childNodes.size
-      while (i < length) {
+      val size = currParent.childNodes.size - 1
+      for (i <- 0 to size) {
         val childClone: Node = currParent.childNodes(i).doClone(currParent)
-        currParent.childNodes(i) = childClone
+        currParent.childNodes.update(i, childClone)
         nodesToProcess.enqueue(childClone)
-        i += 1
       }
     }
     thisClone

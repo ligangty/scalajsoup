@@ -660,4 +660,51 @@ class ElementTest extends FunSuite {
     assert("c2" == arr2(1))
     assert("c3" == arr2(2))
   }
+
+  test("HashAndEquals") {
+    val doc1: String = "<div id=1><p class=one>One</p><p class=one>One</p><p class=one>Two</p><p class=two>One</p></div>" + "<div id=2><p class=one>One</p><p class=one>One</p><p class=one>Two</p><p class=two>One</p></div>"
+
+    val doc: Document = Jsoup.parse(doc1)
+    val els: Elements = doc.select("p")
+
+    /*
+    for (Element el : els) {
+        System.out.println(el.##() + " - " + el.outerHtml());
+    }
+
+    0 1534787905 - <p class="one">One</p>
+    1 1534787905 - <p class="one">One</p>
+    2 1539683239 - <p class="one">Two</p>
+    3 1535455211 - <p class="two">One</p>
+    4 1534787905 - <p class="one">One</p>
+    5 1534787905 - <p class="one">One</p>
+    6 1539683239 - <p class="one">Two</p>
+    7 1535455211 - <p class="two">One</p>
+    */
+    assert(8 == els.size)
+    val e0: Element = els.get(0)
+    val e1: Element = els.get(1)
+    val e2: Element = els.get(2)
+    val e3: Element = els.get(3)
+    val e4: Element = els.get(4)
+    val e5: Element = els.get(5)
+    val e6: Element = els.get(6)
+    val e7: Element = els.get(7)
+
+    assert(e0 == e1)
+    assert(e0 == e4)
+    assert(e0 == e5)
+    assert(e0 != e2)
+    assert(e0 != e3)
+    assert(e0 != e6)
+    assert(e0 != e7)
+
+    assert(e0.## == e1.##)
+    assert(e0.## == e4.##)
+    assert(e0.## == e5.##)
+    assert(e0.## != e2.##)
+    assert(e0.## != e3.##)
+    assert(e0.## != e6.##)
+    assert(e0.## != e7.##)
+  }
 }

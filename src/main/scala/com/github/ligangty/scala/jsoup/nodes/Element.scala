@@ -913,7 +913,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    */
   def classNames: Set[String] = {
     val names: Array[String] = className.split("\\s+")
-    val classNames: mutable.Set[String] = mutable.Set(names: _*)
+    val classNames: mutable.Set[String] = mutable.LinkedHashSet(names: _*)
     classNames.remove("")
     classNames.toSet
   }
@@ -1085,13 +1085,14 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
   override def toString: String = outerHtml
 
   override def equals(o: Any): Boolean = o match {
-    // todo: have nodes hold a child index, compare against that and parent (not children)
-    case v: Element => this eq v
+    case e: Element if this eq e => true
+    case e: Element if !super.equals(e) => false
+    case e: Element => this.tagVal == e.tagVal
     case _ => false
   }
 
-  override def hashCode: Int = 31 * super.hashCode + (if (tag != null) {
-    tag.hashCode
+  override def hashCode: Int = 31 * super.hashCode + (if (tagVal != null) {
+    tagVal.##
   } else {
     0
   })

@@ -17,7 +17,6 @@ class Attribute(var key: String, var value: String) extends Product2[String, Str
   override def _2 = value
 
 
-
   /**
    * Get the attribute key.
    * @return the attribute key
@@ -88,26 +87,23 @@ class Attribute(var key: String, var value: String) extends Product2[String, Str
   }
 
   override def equals(o: Any): Boolean = o match {
-    case that: Attribute =>
-      if (this eq that) {
-        true
-      } else {
-        (that.## == this.##) &&
-          that.canEqual(this) &&
-          (that.key == this.key) &&
-          (that.value == this.value)
-      }
+    case that: Attribute if this eq that => true
+    case that: Attribute if this.key != null && this.key != that.key => false
+    case that: Attribute if this.key == null && that.key != null => false
+    case that: Attribute if this.value != null && this.value != that.value => false
+    case that: Attribute if this.value == null && that.value != null => false
+    case that: Attribute => true
     case _ => false
   }
 
   override def hashCode: Int = {
     var result: Int = if (key != null) {
-      key.hashCode
+      key.##
     } else {
       0
     }
     result = 31 * result + (if (value != null) {
-      value.hashCode
+      value.##
     } else {
       0
     })
@@ -116,7 +112,7 @@ class Attribute(var key: String, var value: String) extends Product2[String, Str
 
   override def clone: Attribute = {
     try {
-      super.clone.asInstanceOf[Attribute]
+      super.clone.asInstanceOf[Attribute] // only fields are immutable strings key and value, so no more deep copy required
     }
     catch {
       case e: CloneNotSupportedException => throw new RuntimeException(e)
