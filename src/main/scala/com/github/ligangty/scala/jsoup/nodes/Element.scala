@@ -960,7 +960,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    */
   def removeClass(className: String): Element = {
     notNull(className)
-    val classes: mutable.Set[String] = mutable.Set(classNames.toArray: _*)
+    val classes: mutable.Set[String] = mutable.LinkedHashSet(classNames.toArray: _*)
     classes.remove(className)
     classNames(classes.toSet)
     this
@@ -973,7 +973,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
     */
   def toggleClass(className: String): Element = {
     notNull(className)
-    val classes: mutable.Set[String] = mutable.Set(classNames.toArray: _*)
+    val classes: mutable.Set[String] = mutable.LinkedHashSet(classNames.toArray: _*)
     if (classes.contains(className)) {
       classes.remove(className)
     } else {
