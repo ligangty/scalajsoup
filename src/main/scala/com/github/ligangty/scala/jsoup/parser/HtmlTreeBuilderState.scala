@@ -470,8 +470,7 @@ private[parser] object HtmlTreeBuilderState {
             // change <image> to <img>, unless in svg
             if (tb.getFromStack("svg") == null) {
               return tb.process(startTag.name("img"))
-            }
-            else {
+            } else {
               tb.insert(startTag)
             }
           } else if (name == "isindex") {
@@ -492,8 +491,7 @@ private[parser] object HtmlTreeBuilderState {
             val prompt: String = {
               if (startTag.attributes.hasKey("prompt")) {
                 startTag.attributes.get("prompt")
-              }
-              else {
+              } else {
                 "This is a searchable index. Enter search keywords: "
               }
             }
@@ -535,8 +533,7 @@ private[parser] object HtmlTreeBuilderState {
             val state: HtmlTreeBuilderState.BuilderState = tb.state
             if ((state == InTable) || (state == InCaption) || (state == InTableBody) || (state == InRow) || (state == InCell)) {
               tb.transition(InSelectInTable)
-            }
-            else {
+            } else {
               tb.transition(InSelect)
             }
           } else if (Strings.in(name, Constants.InBodyStartOptions: _*)) {
@@ -667,8 +664,7 @@ private[parser] object HtmlTreeBuilderState {
               val formatEl: Element = tb.getActiveFormattingElement(name)
               if (formatEl == null) {
                 return anyOtherEndTag(t, tb)
-              }
-              else if (!tb.onStack(formatEl)) {
+              } else if (!tb.onStack(formatEl)) {
                 tb.error(this)
                 tb.removeFromActiveFormattingElements(formatEl)
                 return true
@@ -900,8 +896,7 @@ private[parser] object HtmlTreeBuilderState {
           tb.error(this)
           if (tb.getFormElement != null) {
             return false
-          }
-          else {
+          } else {
             tb.insertForm(startTag, false)
           }
         } else {
@@ -1038,11 +1033,9 @@ private[parser] object HtmlTreeBuilderState {
           var name: String = startTag.name
           if (name == "html") {
             return tb.process(t, InBody)
-          }
-          else if (name == "col") {
+          } else if (name == "col") {
             tb.insertEmpty(startTag)
-          }
-          else {
+          } else {
             return anythingElse(t, tb)
           }
         case EndTag =>
@@ -1198,8 +1191,7 @@ private[parser] object HtmlTreeBuilderState {
       val processed: Boolean = tb.processEndTag("tr")
       if (processed) {
         tb.process(t)
-      }
-      else {
+      } else {
         false
       }
     }
@@ -1257,8 +1249,7 @@ private[parser] object HtmlTreeBuilderState {
     private def closeCell(tb: HtmlTreeBuilder) {
       if (tb.inTableScope("td")) {
         tb.processEndTag("td")
-      }
-      else {
+      } else {
         tb.processEndTag("th")
       }
     }
@@ -1286,15 +1277,13 @@ private[parser] object HtmlTreeBuilderState {
           var name: String = start.name
           if (name == "html") {
             return tb.process(start, InBody)
-          }
-          else if (name == "option") {
+          } else if (name == "option") {
             tb.processEndTag("option")
             tb.insert(start)
           } else if (name == "optgroup") {
             if (tb.currentElement.nodeName == "option") {
               tb.processEndTag("option")
-            }
-            else if (tb.currentElement.nodeName == "optgroup") {
+            } else if (tb.currentElement.nodeName == "optgroup") {
               tb.processEndTag("optgroup")
             }
             tb.insert(start)
@@ -1322,15 +1311,13 @@ private[parser] object HtmlTreeBuilderState {
             }
             if (tb.currentElement.nodeName == "optgroup") {
               tb.pop
-            }
-            else {
+            } else {
               tb.error(this)
             }
           } else if (name == "option") {
             if (tb.currentElement.nodeName == "option") {
               tb.pop
-            }
-            else {
+            } else {
               tb.error(this)
             }
           } else if (name == "select") {

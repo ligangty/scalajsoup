@@ -70,8 +70,7 @@ class Elements private(u: Unit = ()) extends mutable.Seq[Element] with Cloneable
     val founded = contents.filter(_.hasAttr(attributeKey))
     if (founded.nonEmpty) {
       founded.head.attr(attributeKey)
-    }
-    else {
+    } else {
       ""
     }
   }
@@ -321,7 +320,7 @@ class Elements private(u: Unit = ()) extends mutable.Seq[Element] with Cloneable
    * <code>doc.select("p").remove();</code><br>
    * HTML = {{{<div> <img /></div>}}}
    * <p>
-   * Note that this method should not be used to clean user-submitted HTML; rather, use [[org.jsoup.safety.Cleaner]] to clean HTML.
+   * Note that this method should not be used to clean user-submitted HTML; rather, use [[com.github.ligangty.scala.safety.Cleaner]] to clean HTML.
    * @return this, for chaining
    * @see Element#empty()
    * @see #empty()

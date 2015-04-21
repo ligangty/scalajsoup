@@ -459,8 +459,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
     notNull(index)
     if (siblings.size > index + 1) {
       siblings.get(index + 1)
-    }
-    else {
+    } else {
       null
     }
   }
@@ -479,8 +478,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
     notNull(index)
     if (index > 0) {
       siblings.get(index - 1)
-    }
-    else {
+    } else {
       null
     }
   }
@@ -978,8 +976,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
     val classes: mutable.Set[String] = mutable.Set(classNames.toArray: _*)
     if (classes.contains(className)) {
       classes.remove(className)
-    }
-    else {
+    } else {
       classes.add(className)
     }
     classNames(classes.toSet)
@@ -1112,8 +1109,7 @@ private[nodes] object Element {
     val text: String = textNode.getWholeText
     if (preserveWhitespace(textNode.parentNode)) {
       accum.append(text)
-    }
-    else {
+    } else {
       Strings.appendNormalisedWhitespace(accum, text, TextNode.lastCharIsWhitespace(accum))
     }
   }

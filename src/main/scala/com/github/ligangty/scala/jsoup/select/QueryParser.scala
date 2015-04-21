@@ -53,8 +53,8 @@ private[select] class QueryParser private(query: String) {
     val newEval: Evaluator = QueryParser.parse(subQuery)
     var replaceRightMost: Boolean = false
     if (evals.size == 1) {
-      rootEval = evals(0)
-      currentEval = evals(0)
+      rootEval = evals.head
+      currentEval = evals.head
       // make sure OR (,) has precedence:
       if (rootEval.isInstanceOf[CombiningEvaluator.Or] && combinator != ',') {
         currentEval = currentEval.asInstanceOf[CombiningEvaluator.Or].rightMostEvaluator.orNull
@@ -90,8 +90,7 @@ private[select] class QueryParser private(query: String) {
     }
     if (replaceRightMost) {
       rootEval.asInstanceOf[CombiningEvaluator.Or].replaceRightMostEvaluator(currentEval)
-    }
-    else {
+    } else {
       rootEval = currentEval
     }
     evals.append(rootEval)
@@ -315,8 +314,7 @@ private[select] class QueryParser private(query: String) {
     notEmpty(searchText, ":contains(text) query must not be empty")
     if (own) {
       evals.append(new Evaluator.ContainsOwnText(searchText))
-    }
-    else {
+    } else {
       evals.append(new Evaluator.ContainsText(searchText))
     }
   }

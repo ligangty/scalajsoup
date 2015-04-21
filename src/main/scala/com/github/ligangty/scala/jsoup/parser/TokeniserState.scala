@@ -248,8 +248,7 @@ private[parser] object TokeniserState {
           if (t.isAppropriateEndTagToken) {
             t.emitTagPending()
             t.transition(Data)
-          }
-          else anythingElse(t, r)
+          } else anythingElse(t, r)
         case _ =>
           anythingElse(t, r)
       }

@@ -228,8 +228,7 @@ final private[parser] class CharacterReader(input: String) {
         val c: Char = inputArray(posVal)
         if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')) {
           posVal += 1
-        }
-        else {
+        } else {
           break()
         }
       }
@@ -244,8 +243,7 @@ final private[parser] class CharacterReader(input: String) {
         val c: Char = inputArray(posVal)
         if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')) {
           posVal += 1
-        }
-        else {
+        } else {
           break()
         }
       }
@@ -255,9 +253,7 @@ final private[parser] class CharacterReader(input: String) {
         val c: Char = inputArray(posVal)
         if (c >= '0' && c <= '9') {
           posVal += 1
-        }
-
-        else {
+        } else {
           break()
         }
       }
@@ -287,8 +283,7 @@ final private[parser] class CharacterReader(input: String) {
         val c: Char = inputArray(posVal)
         if (c >= '0' && c <= '9') {
           posVal += 1
-        }
-        else {
+        } else {
           break()
         }
       }

@@ -92,8 +92,7 @@ object Strings {
           accum.append(' ')
           lastWasWhite = true
         }
-      }
-      else {
+      } else {
         accum.appendCodePoint(c)
         lastWasWhite = false
         reachedNonWhite = true

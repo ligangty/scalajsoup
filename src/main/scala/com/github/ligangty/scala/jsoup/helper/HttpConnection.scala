@@ -104,7 +104,7 @@ class HttpConnection private(n: Unit) extends Connection {
 
   override def data(data: Map[String, String]): Connection = {
     Validator.notNull(data, "Data map must not be null")
-    data.foreach({ case (key, value) => req.data(KeyVal.create(key, value))})
+    data.foreach({ case (key, value) => req.data(KeyVal.create(key, value)) })
     this
   }
 
@@ -139,7 +139,7 @@ class HttpConnection private(n: Unit) extends Connection {
 
   override def cookies(cookies: Map[String, String]): Connection = {
     Validator.notNull(cookies, "Cookie map must not be null")
-    cookies.foreach({ case (key, value) => req.cookie(key, value)})
+    cookies.foreach({ case (key, value) => req.cookie(key, value) })
     this
   }
 
@@ -428,9 +428,8 @@ object HttpConnection {
       this
     }
 
-    override def data: mutable.Buffer[Connection.KeyVal] = {
-      dataVal.toBuffer
-    }
+    override def data: mutable.Buffer[Connection.KeyVal] = dataVal
+
 
     def parser(parser: Parser): HttpConnection.Request = {
       this.parserVal = parser
@@ -470,8 +469,7 @@ object HttpConnection {
       var mimeBoundary: String = null
       if (!req.method.hasBody && req.data.size > 0) {
         serialiseRequestUrl(req) // appends query string
-      }
-      else if (req.method.hasBody) {
+      } else if (req.method.hasBody) {
         mimeBoundary = setOutputContentType(req)
       }
       val conn: HttpURLConnection = createConnection(req)
@@ -497,7 +495,7 @@ object HttpConnection {
           }
           req.url(new URL(req.url, encodeUrl(location)))
           // add response cookies to request (for e.g. login posts)
-          res.cookies.foreach({ case (key, value) => req.cookie(key, value)})
+          res.cookies.foreach({ case (key, value) => req.cookie(key, value) })
           return execute(req, res)
         }
         if ((status < 200 || status >= 400) && !req.ignoreHttpErrors) {
@@ -506,10 +504,10 @@ object HttpConnection {
         // check that we can handle the returned content type; if not, abort before fetching it
         val contentType: String = res.contentTypeVal
         if (contentType != null &&
-                !req.ignoreContentType &&
-                !contentType.startsWith("text/") &&
-                !contentType.startsWith("application/xml") &&
-                xmlContentTypeRxp.findFirstIn(contentType).isEmpty) {
+          !req.ignoreContentType &&
+          !contentType.startsWith("text/") &&
+          !contentType.startsWith("application/xml") &&
+          xmlContentTypeRxp.findFirstIn(contentType).isEmpty) {
           throw new UnsupportedMimeTypeException("Unhandled content type. Must be text/*, application/xml, or application/xhtml+xml", contentType, req.url.toString)
         }
         var bodyStream: InputStream = null
@@ -567,7 +565,7 @@ object HttpConnection {
       if (req.cookies.size > 0) {
         conn.addRequestProperty("Cookie", getRequestCookieString(req))
       }
-      req.headers.foreach({ case (key, value) => conn.addRequestProperty(key, value)})
+      req.headers.foreach({ case (key, value) => conn.addRequestProperty(key, value) })
       conn
     }
 
@@ -592,7 +590,7 @@ object HttpConnection {
      * please not that this method will only perform action if sslSocketFactory is not yet
      * instantiated.
      *
-     * @throws IOException
+     * @throws IOException io exception
      */
     @throws(classOf[IOException])
     private[Response] def initUnSecureTSL(): Unit = {
@@ -786,8 +784,7 @@ object HttpConnection {
       var body: String = null
       if (charsetVal == null) {
         body = Charset.forName(DataUtil.defaultCharset).decode(byteData).toString
-      }
-      else {
+      } else {
         body = Charset.forName(charset).decode(byteData).toString
       }
       byteData.rewind
@@ -812,8 +809,8 @@ object HttpConnection {
       // if from a redirect, map previous response cookies into this response
       if (previousResponse != null) {
         previousResponse.cookies
-                .filter(prevCookie => !hasCookie(prevCookie._1))
-                .foreach({ case (key, value) => cookie(key, value)})
+          .filter(prevCookie => !hasCookie(prevCookie._1))
+          .foreach({ case (key, value) => cookie(key, value) })
       }
     }
 

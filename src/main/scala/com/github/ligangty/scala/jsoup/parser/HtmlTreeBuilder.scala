@@ -682,16 +682,14 @@ private[parser] class HtmlTreeBuilder extends TreeBuilder {
       if (lastTable.parent != null) {
         fosterParent = lastTable.parent
         isLastTableParent = true
-      }
-      else fosterParent = aboveOnStack(lastTable)
+      } else fosterParent = aboveOnStack(lastTable)
     } else {
       fosterParent = stack.head
     }
     if (isLastTableParent) {
       Validator.notNull(lastTable)
       lastTable.before(in)
-    }
-    else fosterParent.appendChild(in)
+    } else fosterParent.appendChild(in)
   }
 
   override def toString: String = {

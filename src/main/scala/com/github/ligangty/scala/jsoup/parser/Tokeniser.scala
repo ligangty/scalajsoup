@@ -65,8 +65,7 @@ final private[parser] class Tokeniser {
       if (startTag.selfClosing) {
         selfClosingFlagAcknowledged = false
       }
-    }
-    else if (token.tokType == Token.TokenType.EndTag) {
+    }    else if (token.tokType == Token.TokenType.EndTag) {
       val endTag: Token.EndTag = token.asInstanceOf[Token.EndTag]
       if (endTag.attributes != null) {
         error("Attributes incorrectly present on end tag")
