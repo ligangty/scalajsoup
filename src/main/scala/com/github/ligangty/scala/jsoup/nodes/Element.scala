@@ -1021,12 +1021,10 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
     if (childNodes.isEmpty && tagVal.isSelfClosing) {
       if ((out.syntax eq Document.OutputSettings.Syntax.html) && tagVal.isEmpty) {
         accum.append('>')
-      }
-      else {
+      } else {
         accum.append(" />")
       }
-    }
-    else {
+    } else {
       accum.append(">")
     }
   }
@@ -1082,8 +1080,6 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
     this
   }
 
-  override def toString: String = outerHtml
-
   override def equals(o: Any): Boolean = o match {
     case e: Element if this eq e => true
     case e: Element if !super.equals(e) => false
@@ -1091,13 +1087,11 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
     case _ => false
   }
 
-  override def hashCode: Int =
-    31 * super.hashCode +
-      (if (tagVal != null) {
-        tagVal.##
-      } else {
-        0
-      })
+  override def hashCode: Int = {
+    var hash: Int = 31 * super.hashCode
+    hash += (if (tagVal != null) tagVal.## else 0)
+    hash
+  }
 
   override def canEqual(that: Any): Boolean = that.isInstanceOf[Element]
 

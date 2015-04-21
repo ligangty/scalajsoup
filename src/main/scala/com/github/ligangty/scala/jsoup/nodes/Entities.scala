@@ -92,8 +92,7 @@ object Entities {
             accum.append(' ')
             lastWasWhite = true
             break()
-          }
-          else {
+          } else {
             lastWasWhite = false
             reachedNonWhite = true
           }
@@ -105,49 +104,41 @@ object Entities {
             case 0xA0 =>
               if (escapeMode == XHTML) {
                 accum.append("&nbsp;")
-              }
-              else {
+              } else {
                 accum.append(c)
               }
             case '<' =>
               if (!inAttribute) {
                 accum.append("&lt;")
-              }
-              else {
+              } else {
                 accum.append(c)
               }
             case '>' =>
               if (!inAttribute) {
                 accum.append("&gt;")
-              }
-              else {
+              } else {
                 accum.append(c)
               }
             case '"' =>
               if (inAttribute) {
                 accum.append("&quot;")
-              }
-              else {
+              } else {
                 accum.append(c)
               }
             case _ =>
               if (encoder.canEncode(c)) {
                 accum.append(c)
-              }
-              else if (escapeModeMap.containsKey(c)) {
+              } else if (escapeModeMap.containsKey(c)) {
                 accum.append('&').append(escapeModeMap(c)).append(';')
-              }
-              else {
+              } else {
                 accum.append("&#x").append(Integer.toHexString(codePoint)).append(';')
               }
           }
-        }
-        else {
+        } else {
           val c: String = new String(Character.toChars(codePoint))
           if (encoder.canEncode(c)) {
             accum.append(c)
-          }
-          else {
+          } else {
             accum.append("&#x").append(Integer.toHexString(codePoint)).append(';')
           }
         }
@@ -173,9 +164,9 @@ object Entities {
       case Array(key: String, value: String) => (key, Integer.parseInt(value, 16).toChar)
     }
     Source.fromInputStream(Entities.getClass.getResourceAsStream(filename))
-            .getLines()
-            .map(propsToTuple)
-            .toMap
+      .getLines()
+      .map(propsToTuple)
+      .toMap
   }
 
   private def toCharacterKey(inMap: Map[String, Char]): Map[Char, String] = {

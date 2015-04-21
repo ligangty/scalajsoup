@@ -3,13 +3,11 @@ package com.github.ligangty.scala.jsoup.nodes
 import java.net.{MalformedURLException, URL}
 
 import com.github.ligangty.scala.jsoup.helper.Strings
+import com.github.ligangty.scala.jsoup.helper.Validator._
 import com.github.ligangty.scala.jsoup.parser.Parser
 import com.github.ligangty.scala.jsoup.select.{Elements, NodeTraversor, NodeVisitor}
 
 import scala.collection.mutable
-
-import com.github.ligangty.scala.jsoup.helper.Validator._
-
 import scala.collection.mutable.ArrayBuffer
 
 /**
@@ -568,9 +566,8 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable with Equals {
 
   private[nodes] def outerHtmlTail(accum: StringBuilder, depth: Int, out: Document.OutputSettings)
 
-  override def toString: String = {
-    outerHtml
-  }
+  override def toString: String = outerHtml
+
 
   protected def indent(accum: StringBuilder, depth: Int, out: Document.OutputSettings) {
     accum.append("\n").append(Strings.padding(depth * out.indentAmount))
@@ -637,8 +634,7 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable with Equals {
     var clone: Node = null
     try {
       clone = super.clone.asInstanceOf[Node]
-    }
-    catch {
+    } catch {
       case e: CloneNotSupportedException =>
         throw new RuntimeException(e)
     }
