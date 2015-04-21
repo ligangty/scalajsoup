@@ -612,8 +612,7 @@ object HttpConnection {
           sslContext.init(null, trustAllCerts, new SecureRandom())
           // Create an ssl socket factory with our all-trusting manager
           sslSocketFactory = sslContext.getSocketFactory
-        }
-        catch {
+        } catch {
           case e: NoSuchAlgorithmException =>
             throw new IOException("Can't create unsecure trust manager")
           case e: KeyManagementException =>

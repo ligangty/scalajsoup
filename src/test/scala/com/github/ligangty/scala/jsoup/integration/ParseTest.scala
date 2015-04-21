@@ -40,8 +40,7 @@ object ParseTest {
   def inputStreamFrom(s: String): InputStream = {
     try {
       new ByteArrayInputStream(s.getBytes("UTF-8"))
-    }
-    catch {
+    } catch {
       case e: UnsupportedEncodingException =>
         throw new RuntimeException(e)
     }

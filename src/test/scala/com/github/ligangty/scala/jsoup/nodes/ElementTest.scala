@@ -129,7 +129,7 @@ class ElementTest extends FunSuite {
     assert("span" == els(1).tagName)
     val els2: mutable.Seq[Element] = doc.getElementsByClass("yellow")
     assert(2 == els2.size)
-    assert("div" == els2(0).tagName)
+    assert("div" == els2.head.tagName)
     assert("b" == els2(1).tagName)
     val none: mutable.Seq[Element] = doc.getElementsByClass("solo")
     assert(0 == none.size)
@@ -536,8 +536,7 @@ class ElementTest extends FunSuite {
     try {
       div.child(3)
       fail("Should throw index out of bounds")
-    }
-    catch {
+    } catch {
       case e: IndexOutOfBoundsException =>
     }
   }
@@ -564,22 +563,19 @@ class ElementTest extends FunSuite {
     try {
       div2.insertChildren(6, children)
       fail()
-    }
-    catch {
+    } catch {
       case e: IllegalArgumentException =>
     }
     try {
       div2.insertChildren(-5, children)
       fail()
-    }
-    catch {
+    } catch {
       case e: IllegalArgumentException =>
     }
     try {
       div2.insertChildren(0, null)
       fail()
-    }
-    catch {
+    } catch {
       case e: IllegalArgumentException =>
     }
   }

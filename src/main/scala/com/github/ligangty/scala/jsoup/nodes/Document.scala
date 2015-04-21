@@ -378,8 +378,7 @@ object Document {
       var clone: Document.OutputSettings = null
       try {
         clone = super.clone.asInstanceOf[Document.OutputSettings]
-      }
-      catch {
+      } catch {
         case e: CloneNotSupportedException =>
           throw new RuntimeException(e)
       }

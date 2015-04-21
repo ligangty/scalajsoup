@@ -172,8 +172,7 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable with Equals {
       try {
         try {
           base = new URL(baseUriVal)
-        }
-        catch {
+        } catch {
           case e: MalformedURLException =>
             val abs: URL = new URL(relUrl)
             return abs.toExternalForm

@@ -113,8 +113,7 @@ class Attribute(var key: String, var value: String) extends Product2[String, Str
   override def clone: Attribute = {
     try {
       super.clone.asInstanceOf[Attribute] // only fields are immutable strings key and value, so no more deep copy required
-    }
-    catch {
+    } catch {
       case e: CloneNotSupportedException => throw new RuntimeException(e)
     }
   }
