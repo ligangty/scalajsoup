@@ -87,9 +87,8 @@ class TokenQueue private() {
    * @param seq list of strings to case insensitively check for
    * @return true of any matched, false if none did
    */
-  def matchesAnyString(seq: String*): Boolean = {
-    seq.exists(s => matches(s))
-  }
+  def matchesAnyString(seq: String*): Boolean = seq.exists(s => matches(s))
+
 
   def matchesAnyChar(seq: Char*): Boolean = {
     if (isEmpty) {
@@ -101,8 +100,8 @@ class TokenQueue private() {
   def matchesStartTag: Boolean = {
     // micro opt for matching "<x"
     remainingLength >= 2 &&
-            queue.charAt(pos) == '<' &&
-            Character.isLetter(queue.charAt(pos + 1))
+      queue.charAt(pos) == '<' &&
+      Character.isLetter(queue.charAt(pos + 1))
   }
 
   /**

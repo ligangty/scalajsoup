@@ -639,7 +639,7 @@ class ElementTest extends FunSuite {
     val doc: Document = Jsoup.parse("<div class=\"c1 c2\">C</div>")
     val div: Element = doc.select("div").get(0)
     assert("c1 c2" == div.className)
-    val set1: mutable.Set[String] = new mutable.HashSet[String]()
+    val set1: mutable.Set[String] = new mutable.LinkedHashSet[String]()
     set1 ++= div.classNames
     val arr1: Array[AnyRef] = set1.toArray
     assert(arr1.length == 2)

@@ -24,10 +24,7 @@ object Collector {
 
     def head(node: Node, depth: Int) {
       node match {
-        case el: Element =>
-          if (eval.matches(root, el)) {
-            elements.add(el)
-          }
+        case el: Element if eval.matches(root, el) => elements.add(el)
         case _ =>
       }
     }

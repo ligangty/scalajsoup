@@ -9,10 +9,12 @@ import org.scalatest.FunSuite
  */
 class ElementsTest extends FunSuite {
 
+
   test("filter") {
     val h: String = "<p>Excl</p><div class=headline><p>Hello</p><p>There</p></div><div class=headline><h1>Headline</h1></div>"
     val doc: Document = Jsoup.parse(h)
-    val els: Elements = doc.select(".headline").select("p")
+    val headlineEls = doc.select(".headline")
+    val els: Elements = headlineEls.select("p")
     assert(2 == els.size)
     assert("Hello" == els.get(0).text)
     assert("There" == els.get(1).text)

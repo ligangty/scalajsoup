@@ -352,10 +352,8 @@ class Elements private(u: Unit = ()) extends mutable.Seq[Element] with Cloneable
    * @return a new elements list that contains only the filtered results
    */
   def not(query: String): Elements = {
-    //@todo Selector not implemented yet
-    //    val out: Elements = Selector.select(query, this)
-    //    return Selector.filterOut(this, out)
-    null
+    val out: Elements = Selector.select(query, this)
+    Selector.filterOut(this, out)
   }
 
   /**

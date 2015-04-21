@@ -914,7 +914,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
   def classNames: Set[String] = {
     val names: Array[String] = className.split("\\s+")
     val classNames: mutable.Set[String] = mutable.LinkedHashSet(names: _*)
-    classNames.remove("")
+    classNames.remove("") // if classNames() was empty, would include an empty class
     classNames.toSet
   }
 
@@ -1091,11 +1091,13 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
     case _ => false
   }
 
-  override def hashCode: Int = 31 * super.hashCode + (if (tagVal != null) {
-    tagVal.##
-  } else {
-    0
-  })
+  override def hashCode: Int =
+    31 * super.hashCode +
+      (if (tagVal != null) {
+        tagVal.##
+      } else {
+        0
+      })
 
   override def canEqual(that: Any): Boolean = that.isInstanceOf[Element]
 

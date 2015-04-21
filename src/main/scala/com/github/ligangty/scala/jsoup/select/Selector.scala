@@ -67,12 +67,14 @@ import scala.collection.mutable
  * @see [[com.github.ligangty.scala.jsoup.nodes.Element.select(String)]]
  */
 
-class Selector private[Selector](query: String, root: Element) {
-  notNull(query)
-  notEmpty(query)
+class Selector private[Selector](evaluator: Evaluator, root: Element) {
+  notNull(evaluator)
   notNull(root)
 
-  private val evaluator: Evaluator = QueryParser.parse(query.trim())
+  private[Selector] def this(query:String, root:Element){
+    this(QueryParser.parse(query), root)
+  }
+
 
   private[Selector] def select: Elements = {
     Collector.collect(evaluator, root)
@@ -95,6 +97,17 @@ object Selector {
   /**
    * Find elements matching selector.
    *
+   * @param evaluator CSS selector
+   * @param root root element to descend into
+   * @return matching elements, empty if none
+   */
+  def select(evaluator: Evaluator, root: Element): Elements = {
+    new Selector(evaluator, root).select
+  }
+
+  /**
+   * Find elements matching selector.
+   *
    * @param query CSS selector
    * @param roots root elements to descend into
    * @return matching elements, empty if not
@@ -102,9 +115,10 @@ object Selector {
   def select(query: String, roots: Iterable[Element]): Elements = {
     notEmpty(query)
     notNull(roots)
+    val evaluator: Evaluator = QueryParser.parse(query)
     val elements: mutable.LinkedHashSet[Element] = new mutable.LinkedHashSet[Element]
     for (root <- roots) {
-      elements ++= select(query, root)
+      elements ++= select(evaluator, root)
     }
     new Elements(elements)
   }

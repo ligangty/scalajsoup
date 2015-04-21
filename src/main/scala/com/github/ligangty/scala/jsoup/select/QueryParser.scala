@@ -26,19 +26,16 @@ private[select] class QueryParser private(query: String) {
     if (tq.matchesAnyString(combinators: _*)) {
       evals.append(new StructuralEvaluator.Root)
       combinator(tq.consume)
-    }
-    else {
+    } else {
       findElements()
     }
     while (!tq.isEmpty) {
       val seenWhite: Boolean = tq.consumeWhitespace
       if (tq.matchesAnyString(combinators: _*)) {
         combinator(tq.consume)
-      }
-      else if (seenWhite) {
+      } else if (seenWhite) {
         combinator(' ')
-      }
-      else {
+      } else {
         findElements()
       }
     }
@@ -109,7 +106,7 @@ private[select] class QueryParser private(query: String) {
           sq.append("(").append(tq.chompBalanced('(', ')')).append(")")
         } else if (tq.matches("[")) {
           sq.append("[").append(tq.chompBalanced('[', ']')).append("]")
-        } else if (tq.matchesAnyString(QueryParser.combinators:_*)) {
+        } else if (tq.matchesAnyString(QueryParser.combinators: _*)) {
           break()
         } else {
           sq.append(tq.consume)
