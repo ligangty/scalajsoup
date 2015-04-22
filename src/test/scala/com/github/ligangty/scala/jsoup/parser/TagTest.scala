@@ -3,7 +3,7 @@ package com.github.ligangty.scala.jsoup.parser
 import org.scalatest.FunSuite
 
 /**
- * Created by gli on 3/9/15.
+ * Tests for Tag
  */
 class TagTest extends FunSuite {
   test("case sensitive") {

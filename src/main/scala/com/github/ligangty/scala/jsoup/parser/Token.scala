@@ -8,6 +8,7 @@ import Token._
  * Parse tokens for the Tokeniser.
  */
 abstract private[parser] class Token private() {
+
   private[parser] var tokType: TokenType.Value = null
 
   private[parser] def tokenType: String = this.getClass.getSimpleName
@@ -25,7 +26,6 @@ abstract private[parser] class Token private() {
   }
 
   private[parser] def isStartTag: Boolean = tokType == TokenType.StartTag
-
 
   private[parser] def asStartTag: Token.StartTag = this.asInstanceOf[Token.StartTag]
 
@@ -46,22 +46,23 @@ abstract private[parser] class Token private() {
 }
 
 private[parser] object Token {
-  private[parser] def reset(sb: StringBuilder): Unit = if (sb != null) sb.delete(0, sb.length)
+
+  private[parser] def reset(sb: StringBuilder): Unit = if (sb != null) {
+    sb.delete(0, sb.length)
+  }
 
   private[parser] object TokenType extends Enumeration {
+
     val Doctype, StartTag, EndTag, Comment, Character, EOF = Value
   }
 
-  private[parser] final class Doctype private(n: Unit = ()) extends Token {
+  private[parser] final class Doctype private[parser]() extends Token {
+
+    tokType = TokenType.Doctype
     private[parser] val name: StringBuilder = new StringBuilder
     private[parser] val publicIdentifier: StringBuilder = new StringBuilder
     private[parser] val systemIdentifier: StringBuilder = new StringBuilder
     private[parser] var forceQuirks: Boolean = false
-
-    private[parser] def this() {
-      this(())
-      tokType = TokenType.Doctype
-    }
 
     private[parser] def reset: Token = {
       Token.reset(name)
@@ -73,17 +74,15 @@ private[parser] object Token {
 
     private[parser] def getName: String = name.toString()
 
-
     private[parser] def getPublicIdentifier: String = publicIdentifier.toString()
 
-
     def getSystemIdentifier: String = systemIdentifier.toString()
-
 
     def isForceQuirks: Boolean = forceQuirks
   }
 
   private[parser] abstract class Tag extends Token {
+
     protected[parser] var tagName: String = null
     // attribute names are generally caught in one hop, not accumulated
     private var pendingAttributeName: String = null
@@ -105,11 +104,17 @@ private[parser] object Token {
     }
 
     private[parser] final def newAttribute(): Unit = {
-      if (attributes == null) attributes = new Attributes
+      if (attributes == null) {
+        attributes = new Attributes
+      }
       if (pendingAttributeName != null) {
         var attribute: Attribute = null
-        if (!hasPendingAttributeValue) attribute = new Attribute(pendingAttributeName, "")
-        else attribute = new Attribute(pendingAttributeName, pendingAttributeValue.toString())
+        if (!hasPendingAttributeValue) {
+          attribute = new Attribute(pendingAttributeName, "")
+        }
+        else {
+          attribute = new Attribute(pendingAttributeName, pendingAttributeValue.toString())
+        }
         attributes.put(attribute)
       }
       pendingAttributeName = null
@@ -136,12 +141,15 @@ private[parser] object Token {
 
     private[parser] final def isSelfClosing: Boolean = selfClosing
 
-
     private[parser] final def getAttributes: Attributes = attributes
 
     // these appenders are rarely hit in not null state-- caused by null chars.
     private[parser] final def appendTagName(append: String): Unit = {
-      tagName = if (tagName == null) append else tagName.concat(append)
+      tagName = if (tagName == null) {
+        append
+      } else {
+        tagName.concat(append)
+      }
     }
 
     private[parser] final def appendTagName(append: Char): Unit = {
@@ -149,7 +157,11 @@ private[parser] object Token {
     }
 
     private[parser] final def appendAttributeName(append: String) {
-      pendingAttributeName = if (pendingAttributeName == null) append else pendingAttributeName.concat(append)
+      pendingAttributeName = if (pendingAttributeName == null) {
+        append
+      } else {
+        pendingAttributeName.concat(append)
+      }
     }
 
     private[parser] final def appendAttributeName(append: Char) {
@@ -177,12 +189,9 @@ private[parser] object Token {
     }
   }
 
-  private[parser] final class StartTag(n: Unit = ()) extends Tag {
-    private[parser] def this() {
-      this(())
-      attributes = new Attributes
-      tokType = TokenType.StartTag
-    }
+  private[parser] final class StartTag private[parser]() extends Tag {
+    attributes = new Attributes
+    tokType = TokenType.StartTag
 
     private[parser] override def reset: Token.Tag = {
       super.reset
@@ -198,21 +207,26 @@ private[parser] object Token {
     }
 
     override def toString: String = {
-      if (attributes != null && attributes.size > 0) "<" + name + " " + attributes.toString() + ">"
-      else "<" + name + ">"
+      if (attributes != null && attributes.size > 0) {
+        "<" + name + " " + attributes.toString() + ">"
+      }
+      else {
+        "<" + name + ">"
+      }
     }
   }
 
-  private[parser] final class EndTag private(n: Unit = ()) extends Tag {
-    private[parser] def this() {
-      this(())
-      tokType = TokenType.EndTag
-    }
+  private[parser] final class EndTag private[parser]() extends Tag {
+
+    tokType = TokenType.EndTag
 
     override def toString: String = "</" + name + ">"
   }
 
-  private[parser] final class Comment private(n: Unit = ()) extends Token {
+  private[parser] final class Comment private[parser]() extends Token {
+
+    tokType = TokenType.Comment
+
     private[parser] val data: StringBuilder = new StringBuilder
     private[parser] var bogus: Boolean = false
 
@@ -222,23 +236,16 @@ private[parser] object Token {
       this
     }
 
-    private[parser] def this() {
-      this(())
-      tokType = TokenType.Comment
-    }
-
     private[parser] def getData: String = data.toString()
 
     override def toString: String = "<!--" + getData + "-->"
   }
 
-  private[parser] final class Character private(n: Unit = ()) extends Token {
-    private var data: String = null
+  private[parser] final class Character private[parser]() extends Token {
 
-    private[parser] def this() {
-      this(())
-      tokType = TokenType.Character
-    }
+    tokType = TokenType.Character
+
+    private var data: String = null
 
     override private[parser] def reset: Token = {
       data = null
@@ -255,11 +262,9 @@ private[parser] object Token {
     override def toString: String = getData
   }
 
-  private[parser] final class EOF private(n: Unit = ()) extends Token {
-    private[parser] def this() {
-      this(())
-      tokType = TokenType.EOF
-    }
+  private[parser] final class EOF private[parser]() extends Token {
+
+    tokType = TokenType.EOF
 
     override private[parser] def reset: Token = this
   }

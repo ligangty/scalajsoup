@@ -5,21 +5,14 @@ import com.github.ligangty.scala.jsoup.nodes.{Node, Element, Document}
 /**
  * Parses HTML into a [[com.github.ligangty.scala.jsoup.nodes.Document]]. Generally best to use one of the  more convenient parse methods
  * in [[com.github.ligangty.scala.jsoup.Jsoup]].
+ *
+ * @constructor Create a new Parser, using the specified TreeBuilder
+ * @param treeBuilder TreeBuilder to use to parse input into Documents.
  */
-class Parser private() {
+class Parser(var treeBuilder: TreeBuilder) {
 
-  private var treeBuilder: TreeBuilder = null
   private var maxErrors: Int = Parser.DEFAULT_MAX_ERRORS
   private var errors: ParseErrorList = null
-
-  /**
-   * Create a new Parser, using the specified TreeBuilder
-   * @param treeBuilder TreeBuilder to use to parse input into Documents.
-   */
-  def this(treeBuilder: TreeBuilder) {
-    this()
-    this.treeBuilder = treeBuilder
-  }
 
   def parseInput(html: String, baseUri: String): Document = {
     errors = if (isTrackErrors) {

@@ -6,15 +6,13 @@ import com.github.ligangty.scala.jsoup.nodes.Entities
 /**
  * Readers the input stream into tokens.
  */
-final private[parser] class Tokeniser {
+final private[parser] class Tokeniser private[parser](var reader: CharacterReader, var errors: ParseErrorList) {
 
-  private var reader: CharacterReader = null
-  private var errors: ParseErrorList = null
   private var state: TokeniserState.State = TokeniserState.Data
   private var emitPending: Token = null
   private var isEmitPending: Boolean = false
   private var charsString: String = null
-  private var charsBuilder: StringBuilder = new StringBuilder(1024)
+  private val charsBuilder: StringBuilder = new StringBuilder(1024)
   private[parser] var dataBuffer: StringBuilder = new StringBuilder(1024)
   private[parser] var tagPending: Token.Tag = null
   private[parser] var startPending: Token.StartTag = new Token.StartTag()
@@ -24,12 +22,6 @@ final private[parser] class Tokeniser {
   private[parser] var commentPending: Token.Comment = new Token.Comment
   private var lastStartTag: String = null
   private var selfClosingFlagAcknowledged: Boolean = true
-
-  private[parser] def this(reader: CharacterReader, errors: ParseErrorList) {
-    this()
-    this.reader = reader
-    this.errors = errors
-  }
 
   private[parser] def read: Token = {
     if (!selfClosingFlagAcknowledged) {
@@ -65,7 +57,7 @@ final private[parser] class Tokeniser {
       if (startTag.selfClosing) {
         selfClosingFlagAcknowledged = false
       }
-    }    else if (token.tokType == Token.TokenType.EndTag) {
+    } else if (token.tokType == Token.TokenType.EndTag) {
       val endTag: Token.EndTag = token.asInstanceOf[Token.EndTag]
       if (endTag.attributes != null) {
         error("Attributes incorrectly present on end tag")
@@ -286,7 +278,7 @@ final private[parser] class Tokeniser {
       val ch = reader.consumeTo('&')
       builder.append(ch)
       if (reader.matches('&')) {
-        val ch1 = reader.consume
+        reader.consume
         val c: Array[Char] = consumeCharacterReference(None, inAttribute)
         if (c == null || c.length == 0) {
           builder.append('&')

@@ -6,21 +6,15 @@ import scala.util.control.Breaks._
 /**
  * A character queue with parsing helpers.
  *
+ * @constructor Create a new TokenQueue.
+ * @param data string of data to back queue.
  */
-class TokenQueue private() {
+class TokenQueue(private val data: String) {
 
-  private var queue: String = null
+  Validator.notNull(data)
+
+  private var queue: String = data
   private var pos: Int = 0
-
-  /**
-  Create a new TokenQueue.
-     @param data string of data to back queue.
-    */
-  def this(data: String) {
-    this()
-    Validator.notNull(data)
-    queue = data
-  }
 
   /**
    * Is the queue empty?
@@ -89,7 +83,6 @@ class TokenQueue private() {
    */
   def matchesAnyString(seq: String*): Boolean = seq.exists(s => matches(s))
 
-
   def matchesAnyChar(seq: Char*): Boolean = {
     if (isEmpty) {
       return false
@@ -100,8 +93,8 @@ class TokenQueue private() {
   def matchesStartTag: Boolean = {
     // micro opt for matching "<x"
     remainingLength >= 2 &&
-      queue.charAt(pos) == '<' &&
-      Character.isLetter(queue.charAt(pos + 1))
+            queue.charAt(pos) == '<' &&
+            Character.isLetter(queue.charAt(pos + 1))
   }
 
   /**

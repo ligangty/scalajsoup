@@ -5,35 +5,35 @@ import com.github.ligangty.scala.jsoup.helper.Validator._
 /**
  * HTML Tag capabilities.
  *
+ * @constructor default constructor
+ * @param tagName tag name
+ * @param block block or inline
+ * @param containBlock Can this tag hold block level tags?
+ * @param formatAsBlock should be formatted as a block
+ *
  */
-class Tag private() {
+class Tag private(private var tagName: String, private var block: Boolean, private var containBlock: Boolean, private var formatAsBlock: Boolean) {
 
-  private[Tag] var tagName: String = null
-
-  private[Tag] var block: Boolean = true
-  private[Tag] var formatAsBlock: Boolean = true
-  private[Tag] var containBlock: Boolean = true
-  private[Tag] var canContainInline: Boolean = true
-  private[Tag] var empty: Boolean = false
-  private[Tag] var selfClosing: Boolean = false
-  private[Tag] var preserveWhitespace: Boolean = false
-  private[Tag] var formList: Boolean = false
-  private[Tag] var formSubmit: Boolean = false
+  tagName = tagName.toLowerCase
+  // only pcdata if not
+  private var canContainInline: Boolean = true
+  // can hold nothing; e.g. img
+  private var empty: Boolean = false
+  // can self close (<foo />). used for unknown tags that self close, without forcing them as empty.
+  private var selfClosing: Boolean = false
+  // for pre, textarea, script etc
+  private var preserveWhitespace: Boolean = false
+  // a control that appears in forms: input, textarea, output etc
+  private var formList: Boolean = false
+  // a control that can be submitted in a form: input etc
+  private var formSubmit: Boolean = false
 
   private def this(tagName: String) {
-    this()
-    this.tagName = tagName.toLowerCase
+    this(tagName, true, true, true)
   }
 
   private def this(tagName: String, block: Boolean, containBlock: Boolean) {
-    this(tagName)
-    this.block = block
-    this.containBlock = containBlock
-  }
-
-  private def this(tagName: String, block: Boolean, containBlock: Boolean, formatAsBlock: Boolean) {
-    this(tagName, block, containBlock)
-    this.formatAsBlock = formatAsBlock
+    this(tagName, block, containBlock, true)
   }
 
   /**
@@ -148,75 +148,55 @@ class Tag private() {
     case _ => false
   }
 
+  import scala.language.implicitConversions
+
+  implicit private def booleanToInt(boolVal: Boolean): Int = if (boolVal) {
+    1
+  } else {
+    0
+  }
+
   override def hashCode: Int = {
     var result: Int = tagName.hashCode
-    result = 31 * result + (if (isBlock) {
-      1
-    } else {
-      0
-    })
-    result = 31 * result + (if (isFormatAsBlock) {
-      1
-    } else {
-      0
-    })
-    result = 31 * result + (if (canContainBlock) {
-      1
-    } else {
-      0
-    })
-    result = 31 * result + (if (canContainInline) {
-      1
-    } else {
-      0
-    })
-    result = 31 * result + (if (isEmpty) {
-      1
-    } else {
-      0
-    })
-    result = 31 * result + (if (selfClosing) {
-      1
-    } else {
-      0
-    })
-    result = 31 * result + (if (preserveWhitespace) {
-      1
-    } else {
-      0
-    })
-    result = 31 * result + (if (formList) {
-      1
-    } else {
-      0
-    })
-    result = 31 * result + (if (formSubmit) {
-      1
-    } else {
-      0
-    })
+    result = 31 * result + block
+    result = 31 * result + formatAsBlock
+    result = 31 * result + containBlock
+    result = 31 * result + canContainInline
+    result = 31 * result + empty
+    result = 31 * result + selfClosing
+    result = 31 * result + preserveWhitespace
+    result = 31 * result + formList
+    result = 31 * result + formSubmit
     result
   }
 
   override def toString: String = {
     tagName
   }
-
 }
 
 object Tag {
 
-  private[this] val blockTags: Array[String] = Array("html", "head", "body", "frameset", "script", "noscript", "style", "meta", "link", "title", "frame", "noframes", "section", "nav", "aside", "hgroup", "header", "footer", "p", "h1", "h2", "h3", "h4", "h5", "h6", "ul", "ol", "pre", "div", "blockquote", "hr", "address", "figure", "figcaption", "form", "fieldset", "ins", "del", "s", "dl", "dt", "dd", "li", "table", "caption", "thead", "tfoot", "tbody", "colgroup", "col", "tr", "th", "td", "video", "audio", "canvas", "details", "menu", "plaintext", "template", "article", "main", "svg", "math")
-  private[this] val inlineTags: Array[String] = Array("object", "base", "font", "tt", "i", "b", "u", "big", "small", "em", "strong", "dfn", "code", "samp", "kbd", "var", "cite", "abbr", "time", "acronym", "mark", "ruby", "rt", "rp", "a", "img", "br", "wbr", "map", "q", "sub", "sup", "bdo", "iframe", "embed", "span", "input", "select", "textarea", "label", "button", "optgroup", "option", "legend", "datalist", "keygen", "output", "progress", "meter", "area", "param", "source", "track", "summary", "command", "device", "area", "basefont", "bgsound", "menuitem", "param", "source", "track", "data", "bdi")
-  private[this] val emptyTags: Array[String] = Array("meta", "link", "base", "frame", "img", "br", "wbr", "embed", "hr", "input", "keygen", "col", "command", "device", "area", "basefont", "bgsound", "menuitem", "param", "source", "track")
-  private[this] val formatAsInlineTags: Array[String] = Array("title", "a", "p", "h1", "h2", "h3", "h4", "h5", "h6", "pre", "address", "li", "th", "td", "script", "style", "ins", "del", "s")
-  private[this] val preserveWhitespaceTags: Array[String] = Array("pre", "plaintext", "title", "textarea")
-  private[this] val formListedTags: Array[String] = Array("button", "fieldset", "input", "keygen", "object", "output", "select", "textarea")
-  private[this] val formSubmitTags: Array[String] = Array("input", "keygen", "object", "select", "textarea")
+  private val blockTags: Array[String] = Array("html", "head", "body", "frameset", "script", "noscript", "style", "meta", "link", "title", "frame", "noframes", "section", "nav", "aside", "hgroup", "header", "footer", "p", "h1", "h2", "h3", "h4", "h5", "h6", "ul", "ol", "pre", "div", "blockquote", "hr", "address", "figure", "figcaption", "form", "fieldset", "ins", "del", "s", "dl", "dt", "dd", "li", "table", "caption", "thead", "tfoot", "tbody", "colgroup", "col", "tr", "th", "td", "video", "audio", "canvas", "details", "menu", "plaintext", "template", "article", "main", "svg", "math")
+  private val inlineTags: Array[String] = Array("object", "base", "font", "tt", "i", "b", "u", "big", "small", "em", "strong", "dfn", "code", "samp", "kbd", "var", "cite", "abbr", "time", "acronym", "mark", "ruby", "rt", "rp", "a", "img", "br", "wbr", "map", "q", "sub", "sup", "bdo", "iframe", "embed", "span", "input", "select", "textarea", "label", "button", "optgroup", "option", "legend", "datalist", "keygen", "output", "progress", "meter", "area", "param", "source", "track", "summary", "command", "device", "area", "basefont", "bgsound", "menuitem", "param", "source", "track", "data", "bdi")
+  private val emptyTags: Array[String] = Array("meta", "link", "base", "frame", "img", "br", "wbr", "embed", "hr", "input", "keygen", "col", "command", "device", "area", "basefont", "bgsound", "menuitem", "param", "source", "track")
+  private val formatAsInlineTags: Array[String] = Array("title", "a", "p", "h1", "h2", "h3", "h4", "h5", "h6", "pre", "address", "li", "th", "td", "script", "style", "ins", "del", "s")
+  private val preserveWhitespaceTags: Array[String] = Array("pre", "plaintext", "title", "textarea")
+  private val formListedTags: Array[String] = Array("button", "fieldset", "input", "keygen", "object", "output", "select", "textarea")
+  private val formSubmitTags: Array[String] = Array("input", "keygen", "object", "select", "textarea")
 
   // creates
-  lazy private[Tag] val tags: Map[String, Tag] = initTags()
+  private val tags: Map[String, Tag] = initTags()
 
+  /**
+   * Get a Tag by name. If not previously defined (unknown), returns a new generic tag, that can do anything.
+   * <p>
+   * Pre-defined tags (P, DIV etc) will be ==, but unknown tags are not registered and will only .equals().
+   * </p>
+   *
+   * @param tagName Name of tag, e.g. "p". Case insensitive.
+   * @return The tag, either defined or new generic.
+   */
   def apply(tagName: String): Tag = {
     notNull(tagName)
     tags.get(tagName) match {
@@ -230,7 +210,7 @@ object Tag {
     }
   }
 
-  private[this] def initTags(): Map[String, Tag] = {
+  private def initTags(): Map[String, Tag] = {
     import scala.collection.mutable
     val tagsV: mutable.Map[String, Tag] = new mutable.HashMap()
     for (tagName <- blockTags) {

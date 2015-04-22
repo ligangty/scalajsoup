@@ -9,14 +9,11 @@ import scala.util.control.Breaks._
  */
 final private[parser] class CharacterReader(input: String) {
 
-  private val inputArray: Array[Char] = {
-    notNull(input)
-    input.toCharArray
-  }
-  private val length: Int = {
-    notNull(input)
-    inputArray.length
-  }
+  notNull(input)
+
+  private val inputArray: Array[Char] = input.toCharArray
+  private val length: Int = inputArray.length
+
   private var posVal: Int = 0
   private var markVal: Int = 0
   private val stringCache: Array[String] = new Array[String](512)
