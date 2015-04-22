@@ -13,7 +13,7 @@ class Comment(baseUri: String) extends Node(baseUri) {
    */
   def this(data: String, baseUri: String) {
     this(baseUri)
-    attributes.put(COMMENT_KEY, data)
+    attributesVal.put(COMMENT_KEY, data)
   }
 
   def nodeName(): String = "#comment"

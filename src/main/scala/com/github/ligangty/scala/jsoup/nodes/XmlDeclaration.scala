@@ -15,7 +15,7 @@ class XmlDeclaration(baseUri: String, isProcessingInstruction: Boolean) extends 
    */
   def this(data: String, baseUri: String, isProcessingInstruction: Boolean) {
     this(baseUri, isProcessingInstruction)
-    attributes.put(DECL_KEY, data)
+    attributesVal.put(DECL_KEY, data)
   }
 
   override def nodeName(): String = "#declaration"
@@ -24,7 +24,7 @@ class XmlDeclaration(baseUri: String, isProcessingInstruction: Boolean) extends 
    * Get the unencoded XML declaration.
    * @return XML declaration
    */
-  def getWholeDeclaration: String = attributes.get(DECL_KEY)
+  def getWholeDeclaration: String = attributesVal.get(DECL_KEY)
 
   private[nodes] def outerHtmlHead(accum: StringBuilder, depth: Int, out: Document.OutputSettings) {
     accum.append("<").append(if (isProcessingInstruction) {

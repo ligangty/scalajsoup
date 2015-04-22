@@ -1,12 +1,10 @@
 package com.github.ligangty.scala.jsoup.nodes
 
-import java.util
-
 import com.github.ligangty.scala.jsoup.helper.Strings
 import com.github.ligangty.scala.jsoup.helper.Validator._
+import com.github.ligangty.scala.jsoup.nodes.Element._
 import com.github.ligangty.scala.jsoup.parser.{Parser, Tag}
 import com.github.ligangty.scala.jsoup.select._
-import Element._
 
 import scala.collection.mutable
 import scala.util.matching.Regex
@@ -84,7 +82,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    *
    * @return true if block, false if not (and thus inline)
    */
-  def isBlock: Boolean = tag.isBlock
+  def isBlock: Boolean = tagVal.isBlock
 
   /**
    * Get the <code>id</code> attribute of this element.
@@ -126,7 +124,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    */
   def dataset: mutable.Map[String, String] = attributesVal.dataset
 
-  override def parent: Element = parentNode.asInstanceOf[Element]
+  override def parent: Element = parentNodeVal.asInstanceOf[Element]
 
   /**
    * Get this element's parent and ancestors, up to the document root.
@@ -431,7 +429,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * @return sibling elements
    */
   def siblingElements: Elements = {
-    if (parentNode == null) {
+    if (parentNodeVal == null) {
       return new Elements(0)
     }
     val elements: Elements = parent.children
@@ -451,7 +449,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * @see #previousElementSibling()
    */
   def nextElementSibling: Element = {
-    if (parentNode == null) {
+    if (parentNodeVal == null) {
       return null
     }
     val siblings: Elements = parent.children
@@ -470,7 +468,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * @see #nextElementSibling()
    */
   def previousElementSibling: Element = {
-    if (parentNode == null) {
+    if (parentNodeVal == null) {
       return null
     }
     val siblings: Elements = parent.children
@@ -797,7 +795,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
             appendNormalisedText(accum, textNode)
           case e: Element =>
             val element: Element = e.asInstanceOf[Element]
-            if (accum.length > 0 && (element.isBlock || (element.tag.getName == "br")) && !TextNode.lastCharIsWhitespace(accum)) {
+            if (accum.length > 0 && (element.isBlock || (element.tagVal.getName == "br")) && !TextNode.lastCharIsWhitespace(accum)) {
               accum.append(" ")
             }
 
@@ -1107,7 +1105,7 @@ private[nodes] object Element {
 
   private def appendNormalisedText(accum: java.lang.StringBuilder, textNode: TextNode) {
     val text: String = textNode.getWholeText
-    if (preserveWhitespace(textNode.parentNode)) {
+    if (preserveWhitespace(textNode.parentNodeVal)) {
       accum.append(text)
     } else {
       Strings.appendNormalisedWhitespace(accum, text, TextNode.lastCharIsWhitespace(accum))
@@ -1115,7 +1113,7 @@ private[nodes] object Element {
   }
 
   private def appendWhitespaceIfBr(element: Element, accum: java.lang.StringBuilder) {
-    if ((element.tag.getName == "br") && !TextNode.lastCharIsWhitespace(accum)) {
+    if ((element.tagVal.getName == "br") && !TextNode.lastCharIsWhitespace(accum)) {
       accum.append(" ")
     }
   }

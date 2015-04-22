@@ -261,7 +261,7 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable with Equals {
    * @see #after(String)
    */
   def before(html: String): Node = {
-    addSiblingHtml(siblingIndex, html)
+    addSiblingHtml(siblingIndexVal, html)
     this
   }
 
@@ -274,7 +274,7 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable with Equals {
   def before(node: Node): Node = {
     notNull(node)
     notNull(parentNodeVal)
-    parentNodeVal.addChildren(siblingIndex, node)
+    parentNodeVal.addChildren(siblingIndexVal, node)
     this
   }
 
@@ -285,7 +285,7 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable with Equals {
    * @see #before(String)
    */
   def after(html: String): Node = {
-    addSiblingHtml(siblingIndex + 1, html)
+    addSiblingHtml(siblingIndexVal + 1, html)
     this
   }
 
@@ -298,7 +298,7 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable with Equals {
   def after(node: Node): Node = {
     notNull(node)
     notNull(parentNodeVal)
-    parentNodeVal.addChildren(siblingIndex + 1, node)
+    parentNodeVal.addChildren(siblingIndexVal + 1, node)
     this
   }
 
@@ -338,7 +338,7 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable with Equals {
     if (wrapChildren.size > 0) {
       for (i <- 0 to (wrapChildren.size - 1)) {
         val remainder: Node = wrapChildren(i)
-        remainder.parentNode.removeChild(remainder)
+        remainder.parentNodeVal.removeChild(remainder)
         wrap.appendChild(remainder)
       }
     }
@@ -360,7 +360,7 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable with Equals {
    */
   def unwrap: Node = {
     notNull(parentNodeVal)
-    val index: Int = siblingIndex
+    val index: Int = siblingIndexVal
     val firstChild: Node = if (childNodes.size > 0) {
       childNodes.head
     } else {
@@ -403,7 +403,7 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable with Equals {
     if (in.parentNodeVal != null) {
       in.parentNodeVal.removeChild(in)
     }
-    val index: Integer = out.siblingIndex
+    val index: Integer = out.siblingIndexVal
     childNodes(index) = in
     in.parentNodeVal = this
     in.setSiblingIndex(index)
@@ -412,7 +412,7 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable with Equals {
 
   protected[nodes] def removeChild(out: Node) {
     isTrue(out.parentNodeVal eq this)
-    val index: Int = out.siblingIndex
+    val index: Int = out.siblingIndexVal
     childNodes.remove(index)
     reindexChildren()
     out.parentNodeVal = null
@@ -483,7 +483,7 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable with Equals {
       return null
     }
     val siblings: mutable.Buffer[Node] = parentNodeVal.childNodes
-    val index: Integer = siblingIndex
+    val index: Integer = siblingIndexVal
     notNull(index)
     if (siblings.size > index + 1) {
       siblings(index + 1)
@@ -501,7 +501,7 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable with Equals {
       return null
     }
     val siblings: mutable.Buffer[Node] = parentNodeVal.childNodes
-    val index: Integer = siblingIndex
+    val index: Integer = siblingIndexVal
     notNull(index)
     if (index > 0) {
       siblings(index - 1)
@@ -598,7 +598,7 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable with Equals {
    */
   override def hashCode: Int = {
     var result: Int = if (childNodes != null) childNodes.## else 0
-    result = 31 * result + (if (attributes != null) attributes.## else 0)
+    result = 31 * result + (if (attributesVal != null) attributesVal.## else 0)
     result
   }
 

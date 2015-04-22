@@ -261,7 +261,7 @@ class ElementTest extends FunSuite {
     // check sibling index (with short circuit on reindexChildren):
     val ps: Elements = doc.select("p")
     for (i <- 0 to (ps.size - 1)) {
-      assert(i == ps.get(i).siblingIndex)
+      assert(i == ps.get(i).siblingIndexVal)
     }
   }
 
@@ -280,7 +280,7 @@ class ElementTest extends FunSuite {
     // check sibling index (reindexChildren):
     val ps: Elements = doc.select("tr")
     for (i <- 0 to (ps.size - 1)) {
-      assert(i == ps.get(i).siblingIndex)
+      assert(i == ps.get(i).siblingIndexVal)
     }
   }
 
@@ -315,7 +315,7 @@ class ElementTest extends FunSuite {
     // check sibling index (no reindexChildren):
     val ps: Elements = doc.select("p")
     for (i <- 0 to (ps.size - 1)) {
-      assert(i == ps.get(i).siblingIndex)
+      assert(i == ps.get(i).siblingIndexVal)
     }
   }
 
@@ -327,7 +327,7 @@ class ElementTest extends FunSuite {
     // check sibling index (reindexChildren):
     val ps: Elements = doc.select("p")
     for (i <- 0 to (ps.size - 1)) {
-      assert(i == ps.get(i).siblingIndex)
+      assert(i == ps.get(i).siblingIndexVal)
     }
   }
 
@@ -433,8 +433,8 @@ class ElementTest extends FunSuite {
     val p: Element = doc.select("p").get(1)
     val clone: Element = p.clone()
     assert(clone.parent == null)
-    assert(0 == clone.siblingIndex)
-    assert(1 == p.siblingIndex)
+    assert(0 == clone.siblingIndexVal)
+    assert(1 == p.siblingIndexVal)
     assert(p.parent != null)
     clone.append("<span>Three")
     assert("<p><span>Two</span><span>Three</span></p>" == TextUtil.stripNewlines(clone.outerHtml))
@@ -589,7 +589,7 @@ class ElementTest extends FunSuite {
     div2.insertChildren(-1, p1s)
     assert(2 == div1.childNodeSize)
     assert(4 == div2.childNodeSize)
-    assert(3 == p1s.get(1).siblingIndex)
+    assert(3 == p1s.get(1).siblingIndexVal)
     val els: mutable.Buffer[Node] = new mutable.ArrayBuffer[Node]
     val el1: Element = new Element(Tag("span"), "").text("Span1")
     val el2: Element = new Element(Tag("span"), "").text("Span2")
@@ -601,9 +601,9 @@ class ElementTest extends FunSuite {
     div2.insertChildren(-2, els)
     assert(div2 == el1.parent)
     assert(7 == div2.childNodeSize)
-    assert(3 == el1.siblingIndex)
-    assert(4 == el2.siblingIndex)
-    assert(5 == tn1.siblingIndex)
+    assert(3 == el1.siblingIndexVal)
+    assert(4 == el2.siblingIndexVal)
+    assert(5 == tn1.siblingIndexVal)
   }
 
   test("insertChildrenAsCopy") {

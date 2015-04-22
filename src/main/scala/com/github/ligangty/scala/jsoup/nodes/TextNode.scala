@@ -75,15 +75,13 @@ class TextNode extends Node {
   }
 
   private[nodes] def outerHtmlHead(accum: StringBuilder, depth: Int, out: Document.OutputSettings) {
-    if (out.prettyPrint && ((siblingIndex == 0 && parentNode.isInstanceOf[Element] && parentNode.asInstanceOf[Element].tag.isFormatAsBlock && !isBlank) || (out.outline && siblingNodes.size > 0 && !isBlank))) indent(accum, depth, out)
+    if (out.prettyPrint && ((siblingIndex == 0 && parentNodeVal.isInstanceOf[Element] && parentNodeVal.asInstanceOf[Element].tag.isFormatAsBlock && !isBlank) || (out.outline && siblingNodes.size > 0 && !isBlank))) indent(accum, depth, out)
     val normaliseWhite: Boolean = out.prettyPrint && parent.isInstanceOf[Element] && !Element.preserveWhitespace(parent.asInstanceOf[Element])
     Entities.escape(accum, getWholeText, out, false, normaliseWhite, false)
   }
 
   private[nodes] def outerHtmlTail(accum: StringBuilder, depth: Int, out: Document.OutputSettings) {
   }
-
-  override def toString: String = outerHtml
 
   // attribute fiddling. create on first access.
   private def ensureAttributes(): Unit = {
@@ -139,7 +137,6 @@ class TextNode extends Node {
       0
     })
   }
-
 }
 
 object TextNode {

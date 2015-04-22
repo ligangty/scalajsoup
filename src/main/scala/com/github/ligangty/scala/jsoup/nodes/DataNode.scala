@@ -13,7 +13,7 @@ class DataNode(baseUri: String) extends Node(baseUri) {
    */
   def this(data: String, baseUri: String) {
     this(baseUri)
-    attributes.put(DATA_KEY, data)
+    attributesVal.put(DATA_KEY, data)
   }
 
   override def nodeName(): String = "#data"
@@ -22,7 +22,7 @@ class DataNode(baseUri: String) extends Node(baseUri) {
    * Get the data contents of this node. Will be unescaped and with original new lines, space etc.
    * @return data
    */
-  def getWholeData: String = attributes.get(DATA_KEY)
+  def getWholeData: String = attributesVal.get(DATA_KEY)
 
   /**
    * Set the data contents of this node.
@@ -30,7 +30,7 @@ class DataNode(baseUri: String) extends Node(baseUri) {
    * @return this node, for chaining
    */
   def setWholeData(data: String): DataNode = {
-    attributes.put(DATA_KEY, data)
+    attributesVal.put(DATA_KEY, data)
     this
   }
 

@@ -1,8 +1,11 @@
 package com.github.ligangty.scala.jsoup.select
 
+import com.github.ligangty.scala.jsoup.parser.Tag
 import com.github.ligangty.scala.jsoup.{TextUtil, Jsoup}
-import com.github.ligangty.scala.jsoup.nodes.{Node, FormElement, Document}
+import com.github.ligangty.scala.jsoup.nodes._
 import org.scalatest.FunSuite
+
+import scala.collection.mutable
 
 /**
  * Tests for ElementList.
@@ -243,9 +246,9 @@ class ElementsTest extends FunSuite {
     assert(9 == els.size)
     val forms: Seq[FormElement] = els.forms
     assert(2 == forms.size)
-    assert(forms(0) != null)
+    assert(forms.head != null)
     assert(forms(1) != null)
-    assert("1" == forms(0).id)
+    assert("1" == forms.head.id)
     assert("2" == forms(1).id)
   }
 
