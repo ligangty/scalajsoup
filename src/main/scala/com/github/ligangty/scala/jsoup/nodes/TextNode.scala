@@ -1,7 +1,6 @@
 package com.github.ligangty.scala.jsoup.nodes
 
 import com.github.ligangty.scala.jsoup.helper.Strings
-import com.github.ligangty.scala.jsoup.helper.Strings._
 import TextNode._
 import com.github.ligangty.scala.jsoup.helper.Validator._
 
@@ -66,7 +65,7 @@ class TextNode extends Node {
    */
   def splitText(offset: Int): TextNode = {
     isTrue(offset >= 0, "Split offset must be not be negative")
-    isTrue(offset < text.length, "Split offset must not be greater than current text length")
+    isTrue(offset < textVal.length, "Split offset must not be greater than current text length")
     val head: String = getWholeText.substring(0, offset)
     val tail: String = getWholeText.substring(offset)
     text(head)
@@ -90,7 +89,7 @@ class TextNode extends Node {
   private def ensureAttributes(): Unit = {
     if (attributesVal == null) {
       attributesVal = new Attributes
-      attributesVal.put(TEXT_KEY, text)
+      attributesVal.put(TEXT_KEY, textVal)
     }
   }
 
@@ -133,11 +132,14 @@ class TextNode extends Node {
     case _ => false
   }
 
-  override def hashCode: Int = 31 * super.hashCode + (if (textVal != null) {
-    textVal.##
-  } else {
-    0
-  })
+  override def hashCode: Int ={
+    31 * super.hashCode + (if (textVal != null) {
+      textVal.##
+    } else {
+      0
+    })
+  }
+
 }
 
 object TextNode {
