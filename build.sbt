@@ -6,6 +6,8 @@ scalaVersion := "2.10.4"
 
 name := "scalalearn"
 
+scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
+
 //resolvers ++= Seq(
 //  "repo.codahale.com" at "http://repo.codahale.com",
 //  "akka" at "http://repo.akka.io/snapshots"

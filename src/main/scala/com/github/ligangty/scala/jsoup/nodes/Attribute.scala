@@ -4,10 +4,13 @@ import java.util
 
 import com.github.ligangty.scala.jsoup.helper.Validator._
 
+import scala.language.implicitConversions
+
 /**
  *
  */
 class Attribute(var key: String, var value: String) extends Product2[String, String] with Cloneable {
+
   notEmpty(key)
   notNull(value)
   key = key.toLowerCase.trim
@@ -15,7 +18,6 @@ class Attribute(var key: String, var value: String) extends Product2[String, Str
   override def _1 = key
 
   override def _2 = value
-
 
   /**
    * Get the attribute key.
@@ -61,7 +63,6 @@ class Attribute(var key: String, var value: String) extends Product2[String, Str
    */
   override def toString: String = html
 
-
   /**
    * Create a new Attribute from an unencoded key and a HTML attribute encoded value.
    * @param unencodedKey assumes the key is not encoded, as can be only run of simple \w chars.
@@ -73,7 +74,6 @@ class Attribute(var key: String, var value: String) extends Product2[String, Str
     new Attribute(unencodedKey, value)
   }
 
-
   private[nodes] def isDataAttribute: Boolean =
     key.startsWith(Attributes.dataPrefix) && key.length > Attributes.dataPrefix.length
 
@@ -82,8 +82,8 @@ class Attribute(var key: String, var value: String) extends Product2[String, Str
    */
   private[nodes] def shouldCollapseAttribute(out: Document.OutputSettings): Boolean = {
     (("" == value) || value.equalsIgnoreCase(key)) &&
-      (out.syntax == Document.OutputSettings.Syntax.html) &&
-      (util.Arrays.binarySearch(Attribute.booleanAttributes.asInstanceOf[Array[AnyRef]], key) >= 0)
+            (out.syntax == Document.OutputSettings.Syntax.html) &&
+            (util.Arrays.binarySearch(Attribute.booleanAttributes.asInstanceOf[Array[AnyRef]], key) >= 0)
   }
 
   override def equals(o: Any): Boolean = o match {
@@ -128,4 +128,6 @@ object Attribute {
   def apply(key: String, value: String): Attribute = new Attribute(key.trim.toLowerCase, value)
 
   implicit def attributeToTuple2(attr: Attribute): (String, String) = (attr._1, attr._2)
+
+  implicit def tuple2ToAttribute(attr: (String, String)): Attribute = new Attribute(attr._1.trim.toLowerCase, attr._2)
 }
