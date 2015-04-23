@@ -11,7 +11,7 @@ import org.scalatest.{FunSuite, Ignore}
 /**
  * Tests the URL connection. Not enabled by default, so tests don't require network connection.
  */
-//@Ignore // ignored by default so tests don't require network access. comment out to enable.
+@Ignore // ignored by default so tests don't require network access. comment out to enable.
 class UrlConnectTest extends FunSuite {
 
   private val WEBSITE_WITH_INVALID_CERTIFICATE: String = "https://certs.cac.washington.edu/CAtest/"
