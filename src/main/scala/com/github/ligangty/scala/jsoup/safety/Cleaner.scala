@@ -37,6 +37,7 @@ class Cleaner(private var whitelist: Whitelist) {
     notNull(dirtyDocument)
     val clean: Document = Document.createShell(dirtyDocument.baseUri)
     if (dirtyDocument.body != null) {
+      // frameset documents won't have a body. the clean doc will have empty body.
       copySafeNodes(dirtyDocument.body, clean.body)
     }
     clean
@@ -47,7 +48,7 @@ class Cleaner(private var whitelist: Whitelist) {
    * in the input HTML are allowed by the whitelist.
    * <p>
    * This method can be used as a validator for user input forms. An invalid document will still be cleaned successfully
-   * using the {@link #clean(Document)} document. If using as a validator, it is recommended to still clean the document
+   * using the [[clean]] document. If using as a validator, it is recommended to still clean the document
    * to ensure enforced attributes are set correctly, and that the output is tidied.
    * </p>
    * @param dirtyDocument document to test
@@ -62,6 +63,7 @@ class Cleaner(private var whitelist: Whitelist) {
 
   /**
    * Iterates the input and copies trusted nodes (tags, attributes, text) into the destination.
+   * @param destination current element to append nodes to
    */
   private class CleaningVisitor private[Cleaner](private val root: Element, private var destination: Element) extends NodeVisitor {
 
@@ -84,7 +86,7 @@ class Cleaner(private var whitelist: Whitelist) {
         case sourceText: TextNode =>
           val destText: TextNode = new TextNode(sourceText.getWholeText, source.baseUri)
           destination.appendChild(destText)
-        case sourceData: DataNode if whitelist.isSafeTag(source.parent.nodeName()) =>
+        case sourceData: DataNode if whitelist.isSafeTag(sourceData.parent.nodeName()) =>
           val destData: DataNode = new DataNode(sourceData.getWholeData, source.baseUri)
           destination.appendChild(destData)
         case _ => numDiscarded += 1 // else, we don't care about comments, xml proc instructions, etc
@@ -100,7 +102,7 @@ class Cleaner(private var whitelist: Whitelist) {
   }
 
   private def copySafeNodes(source: Element, dest: Element): Int = {
-    val cleaningVisitor: Cleaner#CleaningVisitor = new this.CleaningVisitor(source, dest)
+    val cleaningVisitor: CleaningVisitor = new CleaningVisitor(source, dest)
     val traversor: NodeTraversor = new NodeTraversor(cleaningVisitor)
     traversor.traverse(source)
     cleaningVisitor.numDiscarded

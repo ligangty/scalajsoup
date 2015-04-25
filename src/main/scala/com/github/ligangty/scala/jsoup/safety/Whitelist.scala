@@ -13,29 +13,29 @@ import Whitelist._
  * Start with one of the defaults:
  * </p>
  * <ul>
- * <li>{@link#none}</li>
- * <li>{@link#simpleText}</li>
- * <li>{@link#basic}</li>
- * <li>{@link#basicWithImages}</li>
- * <li>{@link#relaxed}</li>
+ * <li>[[none]]</li>
+ * <li>[[simpleText]]</li>
+ * <li>[[basic]]</li>
+ * <li>[[basicWithImages]]</li>
+ * <li>[[relaxed]]</li>
  * </ul>
  * <p>
  * If you need to allow more through (please be careful!), tweak a base whitelist with:
  * </p>
  * <ul>
- * <li>{@link#addTags}</li>
- * <li>{@link#addAttributes}</li>
- * <li>{@link#addEnforcedAttribute}</li>
- * <li>{@link#addProtocols}</li>
+ * <li>[[addTags]]</li>
+ * <li>[[addAttributes]]</li>
+ * <li>[[addEnforcedAttribute]]</li>
+ * <li>[[addProtocols]]</li>
  * </ul>
  * <p>
  * You can remove any setting from an existing whitelist ith:
  * </p>
  * <ul>
- * <li>{@link#removeTags}</li>
- * <li>{@link#removeAttributes}</li>
- * <li>{@link#removeEnforcedAttribute}</li>
- * <li>{@link#removeProtocols}</li>
+ * <li>[[removeTags]]</li>
+ * <li>[[removeAttributes]]</li>
+ * <li>[[removeEnforcedAttribute]]</li>
+ * <li>[[removeProtocols]]</li>
  * </ul>
  *
  * <p>
@@ -64,18 +64,23 @@ import Whitelist._
  */
 class Whitelist {
 
-  private var tagNames = new mutable.HashSet[Whitelist.TagName]
-  private var attributes = new mutable.HashMap[Whitelist.TagName, mutable.Set[Whitelist.AttributeKey]]
-  private var enforcedAttributes = new mutable.HashMap[Whitelist.TagName, mutable.Map[Whitelist.AttributeKey, Whitelist.AttributeValue]]
-  private var protocols = new mutable.HashMap[Whitelist.TagName, mutable.Map[Whitelist.AttributeKey, mutable.Set[Whitelist.Protocol]]]
+  // tags allowed, lower case. e.g. [p, br, span]
+  private val tagNames = new mutable.HashSet[Whitelist.TagName]
+  // tag -> attribute[]. allowed attributes [href] for a tag.
+  private val attributes = new mutable.HashMap[Whitelist.TagName, mutable.Set[Whitelist.AttributeKey]]
+  // always set these attribute values
+  private val enforcedAttributes = new mutable.HashMap[Whitelist.TagName, mutable.Map[Whitelist.AttributeKey, Whitelist.AttributeValue]]
+  // allowed URL protocols for attributes
+  private val protocols = new mutable.HashMap[Whitelist.TagName, mutable.Map[Whitelist.AttributeKey, mutable.Set[Whitelist.Protocol]]]
+  // option to preserve relative links
   private var preserveRelativeLinks = false
 
   /**
-  Add a list of allowed elements to a whitelist. (If a tag is not allowed, it will be removed from the HTML.)
-
-     @param tags tag names to allow
-  @return this (for chaining)
-    */
+   * Add a list of allowed elements to a whitelist. (If a tag is not allowed, it will be removed from the HTML.)
+   *
+   * @param tags tag names to allow
+   * @return this (for chaining)
+   */
   def addTags(tags: String*): Whitelist = {
     notNull(tags)
     for (tagName <- tags) {
@@ -171,14 +176,17 @@ class Whitelist {
       val currentSet: mutable.Set[Whitelist.AttributeKey] = attributes(tagName)
       currentSet --= attributeSet
       if (currentSet.isEmpty) {
+        // Remove tag from attribute map if no attributes are allowed for tag
         attributes.remove(tagName)
       }
     }
     if (tag == ":all") {
+      // Attribute needs to be removed from all individually set tags
       for (name <- attributes.keySet) {
         val currentSet: mutable.Set[Whitelist.AttributeKey] = attributes(name)
         currentSet --= attributeSet
         if (currentSet.isEmpty) {
+          // Remove tag from attribute map if no attributes are allowed for tag
           attributes.remove(name)
         }
       }
@@ -235,6 +243,7 @@ class Whitelist {
       val attrMap: mutable.Map[Whitelist.AttributeKey, Whitelist.AttributeValue] = enforcedAttributes(tagName)
       attrMap.remove(attrKey)
       if (attrMap.isEmpty) {
+        // Remove tag from enforced attribute map if no enforced attributes are present
         enforcedAttributes.remove(tagName)
       }
     }
@@ -244,17 +253,17 @@ class Whitelist {
   /**
    * Configure this Whitelist to preserve relative links in an element's URL attribute, or convert them to absolute
    * links. By default, this is <b>false</b>: URLs will be  made absolute (e.g. start with an allowed protocol, like
-   * e.g. {@code http://}.
+   * e.g. <code>http://</code>.
    * <p>
-   * Note that when handling relative links, the input document must have an appropriate {@code base URI} set when
-   * parsing, so that the link's protocol can be confirmed. Regardless of the setting of the {@code preserve relative
-     * links} option, the link must be resolvable against the base URI to an allowed protocol; otherwise the attribute
+   * Note that when handling relative links, the input document must have an appropriate <code>base URI</code> set when
+   * parsing, so that the link's protocol can be confirmed. Regardless of the setting of the <code>preserve relative
+   * links</code> option, the link must be resolvable against the base URI to an allowed protocol; otherwise the attribute
    * will be removed.
    * </p>
    *
-   * @param preserve { @code true} to allow relative links, { @code false} (default) to deny
+   * @param preserve <strong>true</strong> to allow relative links, <strong>false</strong> (default) to deny
    * @return this Whitelist, for chaining.
-   * @see #addProtocols
+   * @see [[addProtocols]]
    */
   def preserveRelativeLinks(preserve: Boolean): Whitelist = {
     preserveRelativeLinks = preserve
@@ -332,8 +341,10 @@ class Whitelist {
           protSet.remove(prot)
         }
         if (protSet.isEmpty) {
+          // Remove protocol set if empty
           attrMap.remove(attrKey)
           if (attrMap.isEmpty) {
+            // Remove entry for tag if empty
             this.protocols.remove(tagName)
           }
         }
@@ -365,18 +376,24 @@ class Whitelist {
       if (attributes(tag).contains(key)) {
         if (protocols.contains(tag)) {
           val attrProts = protocols(tag)
+          // ok if not defined protocol; otherwise test
           return !attrProts.contains(key) || testValidProtocol(el, attr, attrProts(key))
         } else {
+          // attribute found, no protocols defined, so OK
           return true
         }
       }
     }
+    // no attributes defined for tag, try :all tag
     !(tagName == ":all") && isSafeAttribute(":all", el, attr)
   }
 
   private def testValidProtocol(el: Element, attr: Attribute, protocols: mutable.Set[Whitelist.Protocol]): Boolean = {
+    // try to resolve relative urls to abs, and optionally update the attribute so output html has abs.
+    // rels without a baseuri get removed
     var value: String = el.absUrl(attr.getKey)
     if (value.length == 0) {
+      // if it could not be made abs, run as-is to allow custom unknown protocols
       value = attr.getValue
     }
     if (!preserveRelativeLinks) {
@@ -469,7 +486,7 @@ object Whitelist {
   }
 
   /**
-   * This whitelist allows the same text tags as {@link #basic}, and also allows <code>img</code> tags, with appropriate
+   * This whitelist allows the same text tags as [[basic]], and also allows <code>img</code> tags, with appropriate
    * attributes, with <code>src</code> pointing to <code>http</code> or <code>https</code>.
    *
    * @return whitelist

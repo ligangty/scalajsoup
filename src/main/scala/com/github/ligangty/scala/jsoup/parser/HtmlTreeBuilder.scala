@@ -11,18 +11,28 @@ import scala.util.control.Breaks._
  * HTML Tree Builder; creates a DOM from Tokens.
  */
 private[parser] class HtmlTreeBuilder extends TreeBuilder {
-
+  // the current state
   private var stateVal: HtmlTreeBuilderState.BuilderState = null
+  // original / marked state
   private var originalStateVal: HtmlTreeBuilderState.BuilderState = null
   private var baseUriSetFromDoc: Boolean = false
+  // the current head element
   private var headElement: Element = null
+  // the current form element
   private var formElement: FormElement = null
+  // fragment parse context -- could be null even if fragment parsing
   private var contextElement: Element = null
+  // active (open) formatting elements
   private var formattingElements: mutable.ArrayBuffer[Element] = new mutable.ArrayBuffer[Element]
+  // chars in table to be shifted out
   private var pendingTableCharacters: mutable.Buffer[String] = new mutable.ArrayBuffer[String]
+  // reused empty end tag
   private var emptyEnd: Token.EndTag = new Token.EndTag
+  // if ok to go into frameset
   private var framesetOkVal: Boolean = true
+  // if next inserts should be fostered
   private var fosterInserts: Boolean = false
+  // if parsing a fragment of html
   private var fragmentParsing: Boolean = false
 
   private[parser] override def parse(input: String, baseUri: String, errors: ParseErrorList): Document = {
