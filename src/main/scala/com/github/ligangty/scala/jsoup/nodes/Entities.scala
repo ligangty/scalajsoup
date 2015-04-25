@@ -11,7 +11,10 @@ import scala.io.Source
 import scala.util.control.Breaks._
 
 /**
-  */
+ * HTML entities, and escape routines.
+ * Source: <a href="http://www.w3.org/TR/html5/named-character-references.html#named-character-references">W3C HTML
+ * named character references</a>.
+ */
 object Entities {
 
   sealed trait EscapeMode {
@@ -21,16 +24,19 @@ object Entities {
     def apply(key: Char) = getMap(key)
   }
 
+  /** Restricted entities suitable for XHTML output: lt, gt, amp, and quot only. */
   case object XHTML extends EscapeMode {
 
     val getMap = xhtmlByVal
   }
 
+  /** Default HTML output entities. */
   case object BASE extends EscapeMode {
 
     val getMap = baseByVal
   }
 
+  /** Complete HTML entities. */
   case object EXTENDED extends EscapeMode {
 
     val getMap = fullByVal
@@ -38,30 +44,34 @@ object Entities {
 
   case class UnknownMode(getMap: Map[Char, String]) extends EscapeMode
 
-  //  object EscapeMode extends Enumeration {
-  //    val xhtml = EscapeModeVal[Char,String](xhtmlByVal)
-  //    val base = EscapeModeVal[Char,String](baseByVal)
-  //    val extended = EscapeModeVal[Char,String](fullByVal)
-  //
-  //    import scala.language.implicitConversions
-  //    private[EscapeMode] case class EscapeModeVal[Char, String](val map: Map[Char, String]) {
-  //      def apply(charVal:Char) = map(charVal)
-  //    }
-  //
-  //    implicit def convert(value: Value) = value.asInstanceOf[EscapeModeVal[Char,String]]
-  ////    implicit def convert(escModeVal: EscapeModeVal[Char,String]) = escModeVal.asInstanceOf[Value]
-  //  }
-
+  // extended and overblown.
   private val full: Map[String, Char] = loadEntities("entities-full.properties")
-  lazy private val xhtmlByVal: Map[Char, String] = Map(0x00022.toChar -> "quot", 0x00026.toChar -> "amp", 0x0003C.toChar -> "lt", 0x0003E.toChar -> "gt")
+  private val xhtmlByVal: Map[Char, String] = Map(0x00022.toChar -> "quot", 0x00026.toChar -> "amp", 0x0003C.toChar -> "lt", 0x0003E.toChar -> "gt")
+  // most common / default
   private val base: Map[String, Char] = loadEntities("entities-base.properties")
-  lazy private val baseByVal: Map[Char, String] = toCharacterKey(base)
-  lazy private val fullByVal: Map[Char, String] = toCharacterKey(full)
+  private val baseByVal: Map[Char, String] = toCharacterKey(base)
+  private val fullByVal: Map[Char, String] = toCharacterKey(full)
 
+  /**
+   * Check if the input is a known named entity
+   * @param name the possible entity name (e.g. "lt" or "amp")
+   * @return true if a known named entity
+   */
   def isNamedEntity(name: String) = full.contains(name)
 
+  /**
+   * Check if the input is a known named entity in the base entity set.
+   * @param name the possible entity name (e.g. "lt" or "amp")
+   * @return true if a known named entity in the base set
+   * @see [[isNamedEntity(String)]]
+   */
   def isBaseNamedEntity(name: String): Boolean = base.contains(name)
 
+  /**
+   * Get the Character value of the named entity
+   * @param name named entity (e.g. "lt" or "amp")
+   * @return the Character value of the named entity (e.g. '{ @literal <}' or '{ @literal &}')
+   */
   def getCharacterByName(name: String): Char = {
     val result = full(name)
     result
@@ -73,6 +83,7 @@ object Entities {
     accum.toString()
   }
 
+  // this method is ugly, and does a lot. but other breakups cause rescanning and stringbuilder generations
   private[nodes] def escape(accum: StringBuilder, string: String, out: Document.OutputSettings, inAttribute: Boolean, normaliseWhite: Boolean, stripLeadingWhite: Boolean): Unit = {
     var lastWasWhite: Boolean = false
     var reachedNonWhite: Boolean = false
@@ -97,8 +108,10 @@ object Entities {
             reachedNonWhite = true
           }
         }
+        // surrogate pairs, split implementation for efficiency on single char common case (saves creating strings, char[]):
         if (codePoint < Character.MIN_SUPPLEMENTARY_CODE_POINT) {
           val c: Char = codePoint.toChar
+          // html specific and required escapes:
           c match {
             case '&' => accum.append("&amp;")
             case 0xA0 =>
@@ -147,6 +160,11 @@ object Entities {
     }
   }
 
+  /**
+   * Unescape the input string.
+   * @param string input
+   * @return
+   */
   private[nodes] def unescape(string: String): String = unescape(string, false)
 
   /**
@@ -164,17 +182,18 @@ object Entities {
       case Array(key: String, value: String) => (key, Integer.parseInt(value, 16).toChar)
     }
     Source.fromInputStream(Entities.getClass.getResourceAsStream(filename))
-      .getLines()
-      .map(propsToTuple)
-      .toMap
+            .getLines()
+            .map(propsToTuple)
+            .toMap
   }
 
   private def toCharacterKey(inMap: Map[String, Char]): Map[Char, String] = {
     val outMap: mutable.Map[Char, String] = new mutable.HashMap[Char, String]
-    for (entry <- inMap.entrySet) {
-      val character: Character = entry.getValue
-      val name: String = entry.getKey
-      if (outMap.containsKey(character)) {
+    for (entry <- inMap) {
+      val character: Char = entry._2
+      val name: String = entry._1
+      if (outMap.contains(character)) {
+        // dupe, prefer the lower case version
         if (name.toLowerCase == name) {
           outMap(character) = name
         }

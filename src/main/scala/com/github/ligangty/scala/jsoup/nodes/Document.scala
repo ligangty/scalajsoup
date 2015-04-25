@@ -199,7 +199,7 @@ class Document private(baseUri: String, locationVal: String) extends Element(Tag
    */
   def outputSettings(outputSettings: Document.OutputSettings): Document = {
     notNull(outputSettings)
-    this.outputSettingsVal = outputSettingsVal
+    this.outputSettingsVal = outputSettings
     this
   }
 
@@ -232,6 +232,9 @@ object Document {
 
   object OutputSettings {
 
+    /**
+     * The output serialization syntax.
+     */
     object Syntax extends Enumeration {
 
       val html, xml = Value
@@ -240,6 +243,9 @@ object Document {
     type Syntax = Syntax.Value
   }
 
+  /**
+   * A Document's output settings control the form of the text() and html() methods.
+   */
   class OutputSettings extends Cloneable {
 
     import Entities._

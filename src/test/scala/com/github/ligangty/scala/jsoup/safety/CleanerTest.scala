@@ -96,13 +96,16 @@ class CleanerTest extends FunSuite {
   test("testCleanAnchorProtocol") {
     val validAnchor: String = "<a href=\"#valid\">Valid anchor</a>"
     val invalidAnchor: String = "<a href=\"#anchor with spaces\">Invalid anchor</a>"
+    // A Whitelist that does not allow anchors will strip them out.
     var cleanHtml: String = Jsoup.clean(validAnchor, Whitelist.relaxed)
     assert("<a>Valid anchor</a>" == cleanHtml)
     cleanHtml = Jsoup.clean(invalidAnchor, Whitelist.relaxed)
     assert("<a>Invalid anchor</a>" == cleanHtml)
+    // A Whitelist that allows them will keep them.
     val relaxedWithAnchor: Whitelist = Whitelist.relaxed.addProtocols("a", "href", "#")
     cleanHtml = Jsoup.clean(validAnchor, relaxedWithAnchor)
     assert(validAnchor == cleanHtml)
+    // An invalid anchor is never valid.
     cleanHtml = Jsoup.clean(invalidAnchor, relaxedWithAnchor)
     assert("<a>Invalid anchor</a>" == cleanHtml)
   }
@@ -166,11 +169,13 @@ class CleanerTest extends FunSuite {
   test("addsTagOnAttributesIfNotSet") {
     val html: String = "<p class='foo' src='bar'>One</p>"
     val whitelist: Whitelist = new Whitelist().addAttributes("p", "class")
+    // ^^ whitelist does not have explicit tag add for p, inferred from add attributes.
     val clean: String = Jsoup.clean(html, whitelist)
     assert("<p class=\"foo\">One</p>" == clean)
   }
 
   test("supplyOutputSettings") {
+    // test that one can override the default document output settings
     val os: Document.OutputSettings = new Document.OutputSettings
     os.prettyPrint(false)
     os.escapeMode(Entities.EXTENDED)
@@ -190,7 +195,7 @@ class CleanerTest extends FunSuite {
   test("handlesFramesets") {
     val dirty: String = "<html><head><script></script><noscript></noscript></head><frameset><frame src=\"foo\" /><frame src=\"foo\" /></frameset></html>"
     val clean: String = Jsoup.clean(dirty, Whitelist.basic)
-    assert("" == clean)
+    assert("" == clean) // nothing good can come out of that
     val dirtyDoc: Document = Jsoup.parse(dirty)
     val cleanDoc: Document = new Cleaner(Whitelist.basic).clean(dirtyDoc)
     assert(cleanDoc != null)
