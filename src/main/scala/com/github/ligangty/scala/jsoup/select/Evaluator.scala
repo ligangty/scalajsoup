@@ -315,7 +315,7 @@ object Evaluator {
    *
    * @see IndexEquals
    */
-  final class IsNthChild(a: Int, b: Int) extends CssNthEvaluator(a, b) {
+  final class IsNthChild(private val thisA: Int, thisB: Int) extends CssNthEvaluator(thisA, thisB) {
 
     override protected[select] def calculatePosition(root: Element, element: Element): Int = {
       element.elementSiblingIndex + 1
@@ -370,7 +370,7 @@ object Evaluator {
     }
   }
 
-  class IsNthLastOfType(a: Int, b: Int) extends CssNthEvaluator(a, b) {
+  class IsNthLastOfType(private val thisA: Int, private val thisB: Int) extends CssNthEvaluator(thisA, thisB) {
 
     protected[select] def calculatePosition(root: Element, element: Element): Int = {
       var pos: Int = 0
@@ -486,7 +486,8 @@ object Evaluator {
   /**
    * Evaluator for matching Element (and its descendants) text
    */
-  final class ContainsText(searchText: String) extends Evaluator {
+  final class ContainsText(private var searchText: String) extends Evaluator {
+    searchText = searchText.toLowerCase
 
     override def matches(root: Element, element: Element): Boolean = {
       element.text().toLowerCase.contains(searchText)
@@ -500,7 +501,8 @@ object Evaluator {
   /**
    * Evaluator for matching Element's own text
    */
-  final class ContainsOwnText(searchText: String) extends Evaluator {
+  final class ContainsOwnText(private var searchText: String) extends Evaluator {
+    searchText = searchText.toLowerCase
 
     override def matches(root: Element, element: Element): Boolean = {
       element.ownText.toLowerCase.contains(searchText)

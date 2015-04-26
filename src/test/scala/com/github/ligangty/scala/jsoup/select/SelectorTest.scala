@@ -145,7 +145,7 @@ class SelectorTest extends FunSuite {
   test("testAllWithClass") {
     val h: String = "<p class=first>One<p class=first>Two<p>Three"
     val doc: Document = Jsoup.parse(h)
-    val ps: Elements = doc.select("*.first()")
+    val ps: Elements = doc.select("*.first")
     assert(2 == ps.size)
   }
 
@@ -181,10 +181,10 @@ class SelectorTest extends FunSuite {
     assert(2 == els.size)
     assert("Hello" == els.get(0).text)
     assert("There" == els.get(1).text)
-    val p: Elements = doc.select("p.first()")
+    val p: Elements = doc.select("p.first")
     assert(1 == p.size)
     assert("Hello" == p.get(0).text)
-    val empty: Elements = doc.select("p .first()")
+    val empty: Elements = doc.select("p .first")
     assert(0 == empty.size)
   }
 
@@ -207,7 +207,7 @@ class SelectorTest extends FunSuite {
 
   test("deeperDescendant") {
     val h: String = "<div class=head><p><span class=first>Hello</div><div class=head><p class=first><span>Another</span><p>Again</div>"
-    val els: Elements = Jsoup.parse(h).select("div p .first()")
+    val els: Elements = Jsoup.parse(h).select("div p .first")
     assert(1 == els.size)
     assert("Hello" == els.first().text)
     assert("span" == els.first().tagName)
