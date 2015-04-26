@@ -42,7 +42,7 @@ private[select] object StructuralEvaluator {
 
     def matches(root: Element, element: Element): Boolean = {
       if (root eq element) {
-        false
+        return false
       }
       var parent: Element = element.parent
       while (parent ne root) {

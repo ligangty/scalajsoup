@@ -171,7 +171,7 @@ private[parser] class HtmlTreeBuilder extends TreeBuilder {
       tokeniser.transition(TokeniserState.Data)
       // ensure we get out of whatever state we are in. emitted for yielded processing
       tokeniser.emit(emptyEnd.reset.name(el.tagName))
-      el
+      return el
     }
     val el: Element = new Element(Tag(startTag.name), baseUri, startTag.attributes)
     insert(el)

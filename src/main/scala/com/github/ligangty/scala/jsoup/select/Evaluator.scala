@@ -96,10 +96,10 @@ object Evaluator {
   /**
    * Evaluator for attribute name/value matching
    */
-  final class AttributeWithValue(key: String, value: String) extends AttributeKeyPair(key, value) {
+  final class AttributeWithValue(private val keySub: String, private val valueSub: String) extends AttributeKeyPair(keySub, valueSub) {
 
     def matches(root: Element, element: Element): Boolean = {
-      element.hasAttr(key) && value.equalsIgnoreCase(element.attr(key))
+      element.hasAttr(key) && value.equalsIgnoreCase(element.attr(key).trim)
     }
 
     override def toString: String = {
@@ -110,7 +110,7 @@ object Evaluator {
   /**
    * Evaluator for attribute name != value matching
    */
-  final class AttributeWithValueNot(key: String, value: String) extends AttributeKeyPair(key, value) {
+  final class AttributeWithValueNot(private val keySub: String, private val valueSub: String) extends AttributeKeyPair(keySub, valueSub){
 
     def matches(root: Element, element: Element): Boolean = {
       !value.equalsIgnoreCase(element.attr(key))
@@ -124,7 +124,7 @@ object Evaluator {
   /**
    * Evaluator for attribute name/value matching (value prefix)
    */
-  final class AttributeWithValueStarting(key: String, value: String) extends AttributeKeyPair(key, value) {
+  final class AttributeWithValueStarting(private val keySub: String, private val valueSub: String) extends AttributeKeyPair(keySub, valueSub) {
 
     def matches(root: Element, element: Element): Boolean = {
       element.hasAttr(key) && element.attr(key).toLowerCase.startsWith(value)
@@ -138,7 +138,7 @@ object Evaluator {
   /**
    * Evaluator for attribute name/value matching (value ending)
    */
-  final class AttributeWithValueEnding(key: String, value: String) extends AttributeKeyPair(key, value) {
+  final class AttributeWithValueEnding(private val keySub: String, private val valueSub: String) extends AttributeKeyPair(keySub, valueSub){
 
     def matches(root: Element, element: Element): Boolean = {
       element.hasAttr(key) && element.attr(key).toLowerCase.endsWith(value)
@@ -152,7 +152,7 @@ object Evaluator {
   /**
    * Evaluator for attribute name/value matching (value containing)
    */
-  final class AttributeWithValueContaining(key: String, value: String) extends AttributeKeyPair(key, value) {
+  final class AttributeWithValueContaining(private val keySub: String, private val valueSub: String) extends AttributeKeyPair(keySub, valueSub) {
 
     def matches(root: Element, element: Element): Boolean = {
       element.hasAttr(key) && element.attr(key).toLowerCase.contains(value)
@@ -180,22 +180,16 @@ object Evaluator {
   /**
    * Abstract evaluator for attribute name/value matching
    */
-  abstract class AttributeKeyPair extends Evaluator {
+  abstract class AttributeKeyPair(private[select] var key: String, private[select] var value: String) extends Evaluator {
 
-    private[select] var key: String = null
-    private[select] var value: String = null
-
-    def this(key: String, value: String) {
-      this()
-      Validator.notEmpty(key)
-      Validator.notEmpty(value)
-      var valueVar = value
-      this.key = key.trim.toLowerCase
-      if (valueVar.startsWith("\"") && valueVar.endsWith("\"")) {
-        valueVar = valueVar.substring(1, valueVar.length - 1)
-      }
-      this.value = valueVar.trim.toLowerCase
+    Validator.notEmpty(key)
+    Validator.notEmpty(value)
+    var valueVar = value
+    this.key = key.trim.toLowerCase
+    if (valueVar.startsWith("\"") && valueVar.endsWith("\"")) {
+      valueVar = valueVar.substring(1, valueVar.length - 1)
     }
+    this.value = valueVar.trim.toLowerCase
   }
 
   /**

@@ -62,7 +62,7 @@ class FormElementTest extends FunSuite {
     } catch {
       case e: IllegalArgumentException =>
         threw = true
-        assert("Could not determine a form action URL for submit. Ensure you set a base URI when parsing." == e.getMessage)
+        assert("requirement failed: Could not determine a form action URL for submit. Ensure you set a base URI when parsing." == e.getMessage)
     }
     assert(threw)
   }

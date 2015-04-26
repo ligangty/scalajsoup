@@ -91,7 +91,8 @@ object Selector {
    * @return matching elements, empty if not
    */
   def select(query: String, root: Element): Elements = {
-    new Selector(query, root).select
+    val sel = new Selector(query, root)
+    sel.select
   }
 
   /**
@@ -144,6 +145,6 @@ object Selector {
     output
   }
 
-  class SelectorParseException(msg: String, params: AnyRef*) extends IllegalStateException(msg.format(params))
+  class SelectorParseException(msg: String, params: Any*) extends IllegalStateException(msg.format(params:_*)){}
 
 }

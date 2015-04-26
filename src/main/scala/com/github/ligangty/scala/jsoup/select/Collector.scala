@@ -16,7 +16,8 @@ object Collector {
    */
   def collect(eval: Evaluator, root: Element): Elements = {
     val elements: Elements = new Elements
-    new NodeTraversor(new Collector.Accumulator(root, elements, eval)).traverse(root)
+    val tra = new NodeTraversor(new Collector.Accumulator(root, elements, eval))
+    tra.traverse(root)
     elements
   }
 
