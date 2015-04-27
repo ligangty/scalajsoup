@@ -196,8 +196,8 @@ private[parser] object HtmlTreeBuilderState {
 
     private def anythingElse(t: Token, tb: HtmlTreeBuilder): Boolean = {
       tb.error(this)
-      tb.processEndTag("noscript")
-      tb.process(t)
+      tb.insert(new Token.Character().data(t.toString))
+      true
     }
   }
 
@@ -1030,7 +1030,7 @@ private[parser] object HtmlTreeBuilderState {
           tb.error(this)
         case StartTag =>
           val startTag: Token.StartTag = t.asStartTag
-          var name: String = startTag.name
+          val name: String = startTag.name
           if (name == "html") {
             return tb.process(t, InBody)
           } else if (name == "col") {
@@ -1080,7 +1080,7 @@ private[parser] object HtmlTreeBuilderState {
       t.tokType match {
         case StartTag =>
           val startTag: Token.StartTag = t.asStartTag
-          var name: String = startTag.name
+          val name: String = startTag.name
           if (name == "tr") {
             tb.clearStackToTableBodyContext()
             tb.insert(startTag)
@@ -1274,7 +1274,7 @@ private[parser] object HtmlTreeBuilderState {
           return false
         case StartTag =>
           val start: Token.StartTag = t.asStartTag
-          var name: String = start.name
+          val name: String = start.name
           if (name == "html") {
             return tb.process(start, InBody)
           } else if (name == "option") {

@@ -6,7 +6,7 @@ package com.github.ligangty.scala.jsoup.parser
 class ParseError private[parser](var pos: Int, var errorMsg: String) {
 
   private[parser] def this(pos: Int, errorFormat: String, args: Any*) {
-    this(pos, errorFormat.format(args))
+    this(pos, errorFormat.format(args:_*))
   }
 
   /**

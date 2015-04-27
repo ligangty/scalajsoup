@@ -798,7 +798,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
             if (accum.length > 0 && (element.isBlock || (element.tagVal.getName == "br")) && !TextNode.lastCharIsWhitespace(accum)) {
               accum.append(" ")
             }
-
+          case _ =>
         }
       }
 
@@ -889,6 +889,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
           val element: Element = e.asInstanceOf[Element]
           val elementData: String = element.data
           sb.append(elementData)
+        case _ =>
       }
     }
     sb.toString()
