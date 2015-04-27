@@ -119,7 +119,19 @@ object Parser {
     val body: Element = doc.body
     val nodeList: Seq[Node] = parseFragment(bodyHtml, body, baseUri)
     val nodes: Array[Node] = nodeList.toArray // the node list gets modified when re-parented
-    nodes.foreach(node => body.appendChild(node))
+
+    var i = nodes.length - 1
+    while (i > 0) {
+      nodes(i).remove()
+      i -= i
+    }
+
+    i = 0
+    val length = nodes.length
+    while (i < length) {
+      body.appendChild(nodes(i))
+      i += 1
+    }
     doc
   }
 

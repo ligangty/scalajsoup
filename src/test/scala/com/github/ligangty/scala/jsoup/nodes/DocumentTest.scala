@@ -56,7 +56,7 @@ class DocumentTest extends FunSuite {
 
   test("testNormalisesStructure") {
     val doc: Document = Jsoup.parse("<html><head><script>one</script><noscript><p>two</p></noscript></head><body><p>three</p></body><p>four</p></html>")
-    assert("<html><head><script>one</script><noscript></noscript></head><body><p>two</p><p>three</p><p>four</p></body></html>" == TextUtil.stripNewlines(doc.html))
+    assert("<html><head><script>one</script><noscript>&lt;p&gt;two</noscript></head><body><p>three</p><p>four</p></body></html>" == TextUtil.stripNewlines(doc.html))
   }
 
   test("testClone") {
