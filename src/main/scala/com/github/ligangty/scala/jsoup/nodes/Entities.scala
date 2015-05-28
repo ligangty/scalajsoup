@@ -83,12 +83,55 @@ object Entities {
     accum.toString()
   }
 
+  /*
+   * Provides a fast-path for Encoder.canEncode, which drastically improves performance on Android post JellyBean.
+   * After KitKat, the implementation of canEncode degrades to the point of being useless. For non ASCII or UTF,
+   * performance may be bad. We can add more encoders for common character sets that are impacted by performance
+   * issues on Android if required.
+   *
+   * Benchmarks:     *
+   * OLD toHtml() impl v New (fastpath) in millis
+   * Wiki: 1895, 16
+   * CNN: 6378, 55
+   * Alterslash: 3013, 28
+   * Jsoup: 167, 2
+   */
+  private def canEncode(charset: Entities.CoreCharset, c: Char, fallback: CharsetEncoder): Boolean = {
+    charset match {
+      case CoreCharset.ascii =>
+        c < 0x80
+      case CoreCharset.utf =>
+        true
+      case _ =>
+        fallback.canEncode(c)
+    }
+  }
+
+  private[Entities] object CoreCharset extends Enumeration {
+
+    val ascii, utf, fallback = Value
+
+    private[Entities] def byName(name: String): CoreCharset.Value = {
+      if (name == "US-ASCII") {
+        return ascii
+      }
+      if (name.startsWith("UTF-")) {
+        return utf
+      }
+      fallback
+    }
+
+  }
+
+  private[Entities] type CoreCharset = CoreCharset.Value
+
   // this method is ugly, and does a lot. but other breakups cause rescanning and stringbuilder generations
   private[nodes] def escape(accum: StringBuilder, string: String, out: Document.OutputSettings, inAttribute: Boolean, normaliseWhite: Boolean, stripLeadingWhite: Boolean): Unit = {
     var lastWasWhite: Boolean = false
     var reachedNonWhite: Boolean = false
     val escapeMode: Entities.EscapeMode = out.escapeMode
     val encoder: CharsetEncoder = out.encoder
+    val coreCharset: CoreCharset = CoreCharset.byName(encoder.charset().name())
     val escapeModeMap: Map[Char, String] = escapeMode.getMap
     val length: Int = string.length
     var offset: Int = 0
@@ -139,7 +182,7 @@ object Entities {
                 accum.append(c)
               }
             case _ =>
-              if (encoder.canEncode(c)) {
+              if (canEncode(coreCharset, c, encoder)) {
                 accum.append(c)
               } else if (escapeModeMap.containsKey(c)) {
                 accum.append('&').append(escapeModeMap(c)).append(';')
@@ -150,6 +193,7 @@ object Entities {
         } else {
           val c: String = new String(Character.toChars(codePoint))
           if (encoder.canEncode(c)) {
+            // uses fallback encoder for simplicity
             accum.append(c)
           } else {
             accum.append("&#x").append(Integer.toHexString(codePoint)).append(';')
@@ -169,9 +213,9 @@ object Entities {
 
   /**
    * Unescape the input string.
-   * @param string string
+   * @param string to un-HTML-escape
    * @param strict if "strict" (that is, requires trailing ';' char, otherwise that's optional)
-   * @return
+   * @return unescaped string
    */
   private[nodes] def unescape(string: String, strict: Boolean): String = {
     Parser.unescapeEntities(string, strict)
