@@ -14,7 +14,7 @@ import scala.collection.mutable
  */
 class Document private(baseUri: String, locationVal: String) extends Element(Tag("#root"), baseUri) {
 
-  private var outputSettingsVal: Document.OutputSettings = new Document.OutputSettings
+  private var outputSettingsVal: Document.OutputSettings = new Document.OutputSettings(this)
   private var quirksModeVal: Document.QuirksMode = Document.QuirksMode.noQuirks
 
   def this(baseUri: String) {
@@ -266,7 +266,7 @@ object Document {
   /**
    * A Document's output settings control the form of the text() and html() methods.
    */
-  class OutputSettings extends Cloneable {
+  class OutputSettings private[nodes](doc: Document) extends Cloneable {
 
     import Entities._
 
@@ -278,6 +278,11 @@ object Document {
     private var indentAmountVal: Int = 1
     private var syntaxVal: OutputSettings.Syntax = OutputSettings.Syntax.html
     private var updateMetaCharsetVal: Boolean = false
+    private var document: Document = doc
+
+    def this() {
+      this(null)
+    }
 
     /**
      * Get the document's current HTML escape mode: <code>base</code>, which provides a limited set of named HTML
@@ -316,6 +321,12 @@ object Document {
      * @return the document's output settings, for chaining
      */
     def charset(charSet: Charset): Document.OutputSettings = {
+      if (document != null) {
+        val meta: Element = document.select("meta[charset]").first()
+        if (meta != null) {
+          meta.attr("charset", charSet.displayName)
+        }
+      }
       this.charsetVal = charSet
       charsetEncoder = charSet.newEncoder
       this
