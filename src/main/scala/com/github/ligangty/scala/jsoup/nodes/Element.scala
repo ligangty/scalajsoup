@@ -90,12 +90,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * @return The id attribute, if present, or an empty string if not.
    */
   def id: String = {
-    val id: String = attr("id")
-    if (id == null) {
-      ""
-    } else {
-      id
-    }
+    this.attributes.get("id")
   }
 
   /**
