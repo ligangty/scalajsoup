@@ -909,7 +909,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * @return set of classnames, empty if no class attribute
    */
   def classNames: Set[String] = {
-    val names: Array[String] = className.split("\\s+")
+    val names: Array[String] = classSplit.split(className)
     val classNames: mutable.Set[String] = mutable.LinkedHashSet(names: _*)
     classNames.remove("") // if classNames() was empty, would include an empty class
     classNames.toSet
@@ -931,17 +931,27 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * @param className name of class to check for
    * @return true if it does, false if not
    */
+  /*
+    Used by common .class selector, so perf tweaked to reduce object creation vs hitting classnames().
+
+    Wiki: 71, 13 (5.4x)
+    CNN: 227, 91 (2.5x)
+    Alterslash: 59, 4 (14.8x)
+    Jsoup: 14, 1 (14x)
+   */
   def hasClass(className: String): Boolean = {
-    val classNms: Set[String] = classNames
-    for (name <- classNms if className.equalsIgnoreCase(name)) {
-      return true
+    val classAttr = attributes.get("class")
+    if (classAttr == "" || classAttr.length < className.length) {
+      return false
     }
-    false
+
+    val classes = classSplit.split(classAttr)
+    classes.exists(name => className.equalsIgnoreCase(name))
   }
 
   /**
    * Add a class name to this element's <code>class</code> attribute.
-   * @param className class name to add
+   * @param className class name to ad
    * @return this element
    */
   def addClass(className: String): Element = {
@@ -1008,8 +1018,8 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
 
   override private[nodes] def outerHtmlHead(accum: StringBuilder, depth: Int, out: Document.OutputSettings) {
     if (accum.length > 0 &&
-      out.prettyPrint &&
-      (tagVal.isFormatAsBlock || (parent != null && parent.tagVal.isFormatAsBlock) || out.outline)) {
+            out.prettyPrint &&
+            (tagVal.isFormatAsBlock || (parent != null && parent.tagVal.isFormatAsBlock) || out.outline)) {
       indent(accum, depth, out)
     }
     accum.append("<").append(tagName)
@@ -1028,14 +1038,14 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
   private[nodes] def outerHtmlTail(accum: StringBuilder, depth: Int, out: Document.OutputSettings) {
     if (!(childNodes.isEmpty && tagVal.isSelfClosing)) {
       if (out.prettyPrint && (childNodes.nonEmpty &&
-        (tagVal.isFormatAsBlock ||
-          (out.outline &&
-            (childNodes.size > 1 ||
-              (childNodes.size == 1 && !childNodes.head.isInstanceOf[TextNode])
+              (tagVal.isFormatAsBlock ||
+                      (out.outline &&
+                              (childNodes.size > 1 ||
+                                      (childNodes.size == 1 && !childNodes.head.isInstanceOf[TextNode])
+                                      )
+                              )
+                      )
               )
-            )
-          )
-        )
       ) {
         indent(accum, depth, out)
       }
@@ -1085,7 +1095,11 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
 
   override def hashCode: Int = {
     var hash: Int = 31 * super.hashCode
-    hash += (if (tagVal != null) tagVal.## else 0)
+    hash += (if (tagVal != null) {
+      tagVal.##
+    } else {
+      0
+    })
     hash
   }
 
@@ -1095,6 +1109,8 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
 }
 
 private[nodes] object Element {
+
+  private val classSplit: Regex = """\s+""".r
 
   private[nodes] def preserveWhitespace(node: Node): Boolean = {
     if (node != null && node.isInstanceOf[Element]) {
