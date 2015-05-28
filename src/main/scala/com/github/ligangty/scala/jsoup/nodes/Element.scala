@@ -208,6 +208,7 @@ class Element(baseUri: String, attributes: Attributes) extends Node(baseUri, att
    * @param cssQuery a { @link Selector} CSS-like query
    * @return elements that match the query (empty if none match)
    * @see org.jsoup.select.Selector
+   * @throws Selector.SelectorParseException (unchecked) on an invalid CSS query.
    */
   def select(cssQuery: String): Elements = {
     Selector.select(cssQuery, this)

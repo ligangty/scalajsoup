@@ -89,6 +89,7 @@ object Selector {
    * @param query CSS selector
    * @param root  root element to descend into
    * @return matching elements, empty if not
+   * @throws Selector.SelectorParseException (unchecked) on an invalid CSS query.
    */
   def select(query: String, root: Element): Elements = {
     val sel = new Selector(query, root)
