@@ -162,11 +162,6 @@ class Document private(baseUri: String, locationVal: String) extends Element(Tag
     None
   }
 
-  override def html: String = {
-    ensureMetaCharset()
-    super.html
-  }
-
   override def outerHtml: String = {
     super.html // no outer wrapper tag
   }
@@ -189,21 +184,6 @@ class Document private(baseUri: String, locationVal: String) extends Element(Tag
     val clone: Document = super.clone().asInstanceOf[Document]
     clone.outputSettingsVal = this.outputSettingsVal.clone
     clone
-  }
-
-  private def ensureMetaCharset() {
-    if (outputSettings.updateMetaCharset()) {
-      val metaCharset: Element = select("meta[charset]").first()
-      if (metaCharset != null) {
-        metaCharset.attr("charset", outputSettings.charset.displayName)
-        // TODO: Remove other charset tags / handle duplicates (?)
-      } else {
-        val headElem: Element = head
-        if (headElem != null) {
-          headElem.appendElement("meta").attr("charset", outputSettings.charset.displayName)
-        }
-      }
-    }
   }
 
   /**
@@ -277,7 +257,6 @@ object Document {
     private var outlineVal: Boolean = false
     private var indentAmountVal: Int = 1
     private var syntaxVal: OutputSettings.Syntax = OutputSettings.Syntax.html
-    private var updateMetaCharsetVal: Boolean = false
 
     /**
      * Get the document's current HTML escape mode: <code>base</code>, which provides a limited set of named HTML
@@ -398,15 +377,6 @@ object Document {
     def indentAmount(indentAmountIn: Int): Document.OutputSettings = {
       isTrue(indentAmountIn >= 0)
       this.indentAmountVal = indentAmountIn
-      this
-    }
-
-    def updateMetaCharset(): Boolean = {
-      updateMetaCharsetVal
-    }
-
-    def updateMetaCharset(updateMetaCharsetVal: Boolean): Document.OutputSettings = {
-      this.updateMetaCharsetVal = updateMetaCharsetVal
       this
     }
 
