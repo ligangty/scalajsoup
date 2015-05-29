@@ -133,21 +133,4 @@ class DocumentTest extends FunSuite {
 
   }
 
-  test("testMetaCharsetUpdate") {
-    val doc: Document = Document.createShell("")
-    doc.head.appendElement("meta").attr("charset", "changeThis")
-    doc.body.appendElement("div").text("aaa")
-    val charsetUtf8: String = "UTF-8"
-    doc.outputSettings.charset(charsetUtf8)
-    var metaCharset: Element = doc.select("meta[charset]").first()
-    assert(metaCharset != null)
-    assert(doc.outputSettings.charset.displayName == charsetUtf8)
-    assert(metaCharset.attr("charset") == charsetUtf8)
-    val charsetIso8859: String = "ISO-8859-1"
-    doc.outputSettings.charset(Charset.forName(charsetIso8859))
-    metaCharset = doc.select("meta[charset]").first()
-    assert(metaCharset != null)
-    assert(doc.outputSettings.charset.displayName == charsetIso8859)
-    assert(metaCharset.attr("charset") == charsetIso8859)
-  }
 }
