@@ -5,21 +5,32 @@ import com.github.ligangty.scala.jsoup.nodes.Entities
 
 /**
  * Readers the input stream into tokens.
+ * @param reader  html input
+ * @param errors errors found while tokenising
  */
 final private[parser] class Tokeniser private[parser](var reader: CharacterReader, var errors: ParseErrorList) {
 
+  // current tokenisation state
   private var state: TokeniserState.State = TokeniserState.Data
+  // the token we are about to emit on next read
   private var emitPending: Token = null
   private var isEmitPending: Boolean = false
+  // characters pending an emit. Will fall to charsBuilder if more than one
   private var charsString: String = null
+  // buffers characters to output as one token, if more than one emit per read
   private val charsBuilder: StringBuilder = new StringBuilder(1024)
+  // buffers data looking for </script>
   private[parser] var dataBuffer: StringBuilder = new StringBuilder(1024)
+  // tag we are building up
   private[parser] var tagPending: Token.Tag = null
   private[parser] var startPending: Token.StartTag = new Token.StartTag()
   private[parser] var endPending: Token.EndTag = new Token.EndTag
   private[parser] var charPending: Token.Character = new Token.Character
+  // doctype building up
   private[parser] var doctypePending: Token.Doctype = new Token.Doctype
+  // comment building up
   private[parser] var commentPending: Token.Comment = new Token.Comment
+  // the last start tag emitted, to test appropriate end tag
   private var lastStartTag: String = null
   private var selfClosingFlagAcknowledged: Boolean = true
 
@@ -294,6 +305,7 @@ final private[parser] class Tokeniser private[parser](var reader: CharacterReade
 
 private[parser] object Tokeniser {
 
+  // replaces null character
   private[parser] val replacementChar: Char = '\uFFFD'
   private val notCharRefCharsSorted: Array[Char] = Array[Char]('\t', '\n', '\r', '\f', ' ', '<', '&').sorted
 }

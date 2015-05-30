@@ -3,31 +3,25 @@ package com.github.ligangty.scala.jsoup.helper
 import java.io._
 import java.net._
 import java.nio.ByteBuffer
-import java.nio.charset.Charset
-import java.security.{KeyManagementException, NoSuchAlgorithmException, SecureRandom}
+import java.nio.charset.{IllegalCharsetNameException, Charset}
 import java.security.cert.X509Certificate
+import java.security.{KeyManagementException, NoSuchAlgorithmException, SecureRandom}
 import java.util.zip.GZIPInputStream
 import javax.net.ssl._
 
-import com.github.ligangty.scala.jsoup.{UnsupportedMimeTypeException, HttpStatusException, Connection}
-import Validator._
 import com.github.ligangty.scala.jsoup.helper.HttpConnection.KeyVal
+import com.github.ligangty.scala.jsoup.helper.Validator._
 import com.github.ligangty.scala.jsoup.nodes.Document
-import com.github.ligangty.scala.jsoup.parser.{TokenQueue, Parser}
+import com.github.ligangty.scala.jsoup.parser.{Parser, TokenQueue}
+import com.github.ligangty.scala.jsoup.{Connection, HttpStatusException, UnsupportedMimeTypeException}
 
 import scala.collection.mutable
 import scala.util.matching.Regex
 
-class HttpConnection private(n: Unit) extends Connection {
+class HttpConnection private() extends Connection {
 
-  private var req: Connection.Request = null
-  private var res: Connection.Response = null
-
-  private def this() {
-    this(())
-    req = new HttpConnection.Request
-    res = new HttpConnection.Response
-  }
+  private var req: Connection.Request = new HttpConnection.Request
+  private var res: Connection.Response = new HttpConnection.Response
 
   override def url(url: URL): Connection = {
     req.url(url)
@@ -104,7 +98,7 @@ class HttpConnection private(n: Unit) extends Connection {
 
   override def data(data: Map[String, String]): Connection = {
     Validator.notNull(data, "Data map must not be null")
-    data.foreach({ case (key, value) => req.data(KeyVal.create(key, value)) })
+    data.foreach({ case (key, value) => req.data(KeyVal.create(key, value))})
     this
   }
 
@@ -139,7 +133,7 @@ class HttpConnection private(n: Unit) extends Connection {
 
   override def cookies(cookies: Map[String, String]): Connection = {
     Validator.notNull(cookies, "Cookie map must not be null")
-    cookies.foreach({ case (key, value) => req.cookie(key, value) })
+    cookies.foreach({ case (key, value) => req.cookie(key, value)})
     this
   }
 
@@ -345,27 +339,21 @@ object HttpConnection {
     }
   }
 
-  class Request private(n: Unit = ()) extends HttpConnection.Base[Connection.Request]() with Connection.Request {
+  class Request private[HttpConnection]() extends HttpConnection.Base[Connection.Request]() with Connection.Request {
 
-    private var timeoutMilliseconds: Int = 0
-    private var maxBodySizeBytes: Int = 0
-    private var followRedirectsVal: Boolean = false
-    private var dataVal: mutable.Buffer[Connection.KeyVal] = null
+    this.methodVal = Connection.Method.GET()
+    headersMap.put("Accept-Encoding", "gzip")
+
+    private var timeoutMilliseconds: Int = 3000
+    // 1MB
+    private var maxBodySizeBytes: Int = 1024 * 1024
+    private var followRedirectsVal: Boolean = true
+    private var dataVal: mutable.Buffer[Connection.KeyVal] = new mutable.ArrayBuffer[Connection.KeyVal]
     private var ignoreHttpErrorsVal: Boolean = false
     private var ignoreContentTypeVal: Boolean = false
-    private var parserVal: Parser = null
+    private var parserVal: Parser = Parser.htmlParser
     private var ValidatorTSLCertificatesVal: Boolean = true
-
-    private[HttpConnection] def this() {
-      this(())
-      timeoutMilliseconds = 3000
-      maxBodySizeBytes = 1024 * 1024
-      followRedirectsVal = true
-      dataVal = new mutable.ArrayBuffer[Connection.KeyVal]
-      this.methodVal = Connection.Method.GET()
-      headersMap.put("Accept-Encoding", "gzip")
-      parserVal = Parser.htmlParser
-    }
+    private var postDataCharsetVal: String = DataUtil.defaultCharset
 
     def timeout: Int = {
       timeoutMilliseconds
@@ -430,7 +418,6 @@ object HttpConnection {
 
     override def data: mutable.Buffer[Connection.KeyVal] = dataVal
 
-
     def parser(parser: Parser): HttpConnection.Request = {
       this.parserVal = parser
       this
@@ -439,6 +426,20 @@ object HttpConnection {
     def parser: Parser = {
       parserVal
     }
+
+    def postDataCharset(charset: String): Connection.Request = {
+      Validator.notNull(charset, "Charset must not be null")
+      if (!Charset.isSupported(charset)) {
+        throw new IllegalCharsetNameException(charset)
+      }
+      this.postDataCharsetVal = charset
+      this
+    }
+
+    def postDataCharset: String = {
+      postDataCharsetVal
+    }
+
   }
 
   object Response {
@@ -495,7 +496,7 @@ object HttpConnection {
           }
           req.url(new URL(req.url, encodeUrl(location)))
           // add response cookies to request (for e.g. login posts)
-          res.cookies.foreach({ case (key, value) => req.cookie(key, value) })
+          res.cookies.foreach({ case (key, value) => req.cookie(key, value)})
           return execute(req, res)
         }
         if ((status < 200 || status >= 400) && !req.ignoreHttpErrors) {
@@ -504,34 +505,40 @@ object HttpConnection {
         // check that we can handle the returned content type; if not, abort before fetching it
         val contentType: String = res.contentTypeVal
         if (contentType != null &&
-          !req.ignoreContentType &&
-          !contentType.startsWith("text/") &&
-          !contentType.startsWith("application/xml") &&
-          xmlContentTypeRxp.findFirstIn(contentType).isEmpty) {
+                !req.ignoreContentType &&
+                !contentType.startsWith("text/") &&
+                !contentType.startsWith("application/xml") &&
+                xmlContentTypeRxp.findFirstIn(contentType).isEmpty) {
           throw new UnsupportedMimeTypeException("Unhandled content type. Must be text/*, application/xml, or application/xhtml+xml", contentType, req.url.toString)
         }
-        var bodyStream: InputStream = null
-        var dataStream: InputStream = null
-        try {
-          dataStream = if (conn.getErrorStream != null) {
-            conn.getErrorStream
-          } else {
-            conn.getInputStream
+        res.charsetVal = DataUtil.getCharsetFromContentType(res.contentTypeVal)
+        if (conn.getContentLength() != 0) {
+          // -1 means unknown, chunked. sun throws an IO exception on 500 response with no content when trying to read body
+
+          var bodyStream: InputStream = null
+          var dataStream: InputStream = null
+          try {
+            dataStream = if (conn.getErrorStream != null) {
+              conn.getErrorStream
+            } else {
+              conn.getInputStream
+            }
+            bodyStream = if (res.hasHeaderWithValue(CONTENT_ENCODING, "gzip")) {
+              new BufferedInputStream(new GZIPInputStream(dataStream))
+            } else {
+              new BufferedInputStream(dataStream)
+            }
+            res.byteData = DataUtil.readToByteBuffer(bodyStream, req.maxBodySize)
+          } finally {
+            if (bodyStream != null) {
+              bodyStream.close()
+            }
+            if (dataStream != null) {
+              dataStream.close()
+            }
           }
-          bodyStream = if (res.hasHeaderWithValue(CONTENT_ENCODING, "gzip")) {
-            new BufferedInputStream(new GZIPInputStream(dataStream))
-          } else {
-            new BufferedInputStream(dataStream)
-          }
-          res.byteData = DataUtil.readToByteBuffer(bodyStream, req.maxBodySize)
-          res.charsetVal = DataUtil.getCharsetFromContentType(res.contentTypeVal) // may be null, readInputStream deals with it
-        } finally {
-          if (bodyStream != null) {
-            bodyStream.close()
-          }
-          if (dataStream != null) {
-            dataStream.close()
-          }
+        } else {
+          res.byteData = DataUtil.emptyByteBuffer
         }
       } finally {
         // per Java's documentation, this is not necessary, and precludes keepalives. However in practise,
@@ -565,7 +572,7 @@ object HttpConnection {
       if (req.cookies.size > 0) {
         conn.addRequestProperty("Cookie", getRequestCookieString(req))
       }
-      req.headers.foreach({ case (key, value) => conn.addRequestProperty(key, value) })
+      req.headers.foreach({ case (key, value) => conn.addRequestProperty(key, value)})
       conn
     }
 
@@ -636,7 +643,7 @@ object HttpConnection {
         bound = DataUtil.mimeBoundary
         req.header(CONTENT_TYPE, MULTIPART_FORM_DATA + "; boundary=" + bound)
       } else {
-        req.header(CONTENT_TYPE, FORM_URL_ENCODED)
+        req.header(CONTENT_TYPE, FORM_URL_ENCODED + "; charset=" + req.postDataCharset)
       }
       bound
     }
@@ -679,9 +686,9 @@ object HttpConnection {
           } else {
             first = false
           }
-          w.write(URLEncoder.encode(keyVal.key, DataUtil.defaultCharset))
+          w.write(URLEncoder.encode(keyVal.key, req.postDataCharset))
           w.write('=')
-          w.write(URLEncoder.encode(keyVal.value, DataUtil.defaultCharset))
+          w.write(URLEncoder.encode(keyVal.value, req.postDataCharset))
         }
       }
       w.close()
@@ -726,7 +733,7 @@ object HttpConnection {
     }
   }
 
-  class Response private(n: Unit = ()) extends HttpConnection.Base[Connection.Response] with Connection.Response {
+  class Response private[helper]() extends HttpConnection.Base[Connection.Response] with Connection.Response {
 
     private var statusCodeVal: Int = 0
     private var statusMessageVal: String = null
@@ -737,13 +744,9 @@ object HttpConnection {
     private var numRedirects: Int = 0
     private var req: Connection.Request = null
 
-    private[helper] def this() {
-      this(())
-    }
-
     @throws(classOf[IOException])
     private def this(previousResponse: HttpConnection.Response) {
-      this(())
+      this()
       if (previousResponse != null) {
         numRedirects = previousResponse.numRedirects + 1
         if (numRedirects >= Response.MAX_REDIRECTS) {
@@ -808,8 +811,8 @@ object HttpConnection {
       // if from a redirect, map previous response cookies into this response
       if (previousResponse != null) {
         previousResponse.cookies
-          .filter(prevCookie => !hasCookie(prevCookie._1))
-          .foreach({ case (key, value) => cookie(key, value) })
+                .filter(prevCookie => !hasCookie(prevCookie._1))
+                .foreach({ case (key, value) => cookie(key, value)})
       }
     }
 

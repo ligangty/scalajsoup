@@ -538,6 +538,9 @@ object Connection {
      * @return current Parser
      */
     def parser: Parser
+
+    def postDataCharset: String
+
   }
 
   /**

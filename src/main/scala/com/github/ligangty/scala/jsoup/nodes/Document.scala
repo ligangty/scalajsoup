@@ -4,6 +4,7 @@ import java.nio.charset.{CharsetEncoder, Charset}
 
 import com.github.ligangty.scala.jsoup.helper.Strings
 import com.github.ligangty.scala.jsoup.helper.Validator._
+import com.github.ligangty.scala.jsoup.nodes.Document.OutputSettings
 import com.github.ligangty.scala.jsoup.parser.Tag
 import com.github.ligangty.scala.jsoup.select.Elements
 
@@ -16,6 +17,7 @@ class Document private(baseUri: String, locationVal: String) extends Element(Tag
 
   private var outputSettingsVal: Document.OutputSettings = new Document.OutputSettings
   private var quirksModeVal: Document.QuirksMode = Document.QuirksMode.noQuirks
+  private var updateMetaCharsetVal: Boolean = false
 
   def this(baseUri: String) {
     this(baseUri, baseUri)
@@ -99,11 +101,16 @@ class Document private(baseUri: String, locationVal: String) extends Element(Tag
     if (body == null) {
       htmlEl.appendElement("body")
     }
+    // pull text nodes out of root, html, and head els, and push into body. non-text nodes are already taken care
+    // of. do in inverse order to maintain text order.
     normaliseTextNodes(head)
     normaliseTextNodes(htmlEl)
     normaliseTextNodes(this)
+
     normaliseStructure("head", htmlEl)
     normaliseStructure("body", htmlEl)
+
+    ensureMetaCharsetElement()
     this
   }
 
@@ -180,10 +187,142 @@ class Document private(baseUri: String, locationVal: String) extends Element(Tag
     "#document"
   }
 
+  /**
+   * Sets the charset used in this document. This method is equivalent
+   * to {@link OutputSettings#charset(java.nio.charset.Charset)
+     * OutputSettings.charset(Charset)} but in addition it updates the
+   * charset / encoding element within the document.
+   *
+   * <p>This enables
+   * {@link #updateMetaCharsetElement(boolean) meta charset update}.</p>
+   *
+   * <p>If there's no element with charset / encoding information yet it will
+   * be created. Obsolete charset / encoding definitions are removed!</p>
+   *
+   * <p><b>Elements used:</b></p>
+   *
+   * <ul>
+   * <li><b>Html:</b> <i>&lt;meta charset="CHARSET"&gt;</i></li>
+   * <li><b>Xml:</b> <i>&lt;?xml version="1.0" encoding="CHARSET"&gt;</i></li>
+   * </ul>
+   *
+   * @param charset Charset
+   *
+   * @see #updateMetaCharsetElement(boolean)
+   * @see OutputSettings#charset(java.nio.charset.Charset)
+   */
+  def charset(charset: Charset) {
+    updateMetaCharsetElement(true)
+    outputSettings.charset(charset)
+    ensureMetaCharsetElement()
+  }
+
+  /**
+   * Returns the charset used in this document. This method is equivalent
+   * to {@link OutputSettings#charset()}.
+   *
+   * @return Current Charset
+   *
+   * @see OutputSettings#charset()
+   */
+  def charset: Charset = {
+    outputSettings.charset
+  }
+
+  /**
+   * Sets whether the element with charset information in this document is
+   * updated on changes through {@link #charset(java.nio.charset.Charset)
+     * Document.charset(Charset)} or not.
+   *
+   * <p>If set to <tt>false</tt> <i>(default)</i> there are no elements
+   * modified.</p>
+   *
+   * @param update If <tt>true</tt> the element updated on charset
+   *               changes, <tt>false</tt> if not
+   *
+   * @see #charset(java.nio.charset.Charset)
+   */
+  def updateMetaCharsetElement(update: Boolean) {
+    this.updateMetaCharsetVal = true
+  }
+
+  /**
+   * Returns whether the element with charset information in this document is
+   * updated on changes through {@link #charset(java.nio.charset.Charset)
+     * Document.charset(Charset)} or not.
+   *
+   * @return Returns <tt>true</tt> if the element is updated on charset
+   *         changes, <tt>false</tt> if not
+   */
+  def updateMetaCharsetElement(): Boolean = {
+    updateMetaCharsetVal
+  }
+
   override def clone(): Document = {
     val clone: Document = super.clone().asInstanceOf[Document]
     clone.outputSettingsVal = this.outputSettingsVal.clone
     clone
+  }
+
+  /**
+   * Ensures a meta charset (html) or xml declaration (xml) with the current
+   * encoding used. This only applies with
+   * {@link #updateMetaCharsetElement(boolean) updateMetaCharset} set to
+   * <tt>true</tt>, otherwise this method does nothing.
+   *
+   * <ul>
+   * <li>An exsiting element gets updated with the current charset</li>
+   * <li>If there's no element yet it will be inserted</li>
+   * <li>Obsolete elements are removed</li>
+   * </ul>
+   *
+   * <p><b>Elements used:</b></p>
+   *
+   * <ul>
+   * <li><b>Html:</b> <i>&lt;meta charset="CHARSET"&gt;</i></li>
+   * <li><b>Xml:</b> <i>&lt;?xml version="1.0" encoding="CHARSET"&gt;</i></li>
+   * </ul>
+   */
+  private def ensureMetaCharsetElement() {
+    if (updateMetaCharsetVal) {
+      val syntax = outputSettings.syntax
+      if (syntax eq OutputSettings.Syntax.html) {
+        val metaCharset: Element = select("meta[charset]").first()
+        if (metaCharset != null) {
+          metaCharset.attr("charset", charset.displayName)
+        } else {
+          val headVal: Element = head
+          if (headVal != null) {
+            headVal.appendElement("meta").attr("charset", charset.displayName)
+          }
+        }
+        select("meta[name=charset]").remove
+      } else if (syntax == OutputSettings.Syntax.xml) {
+        val node: Node = childNodes.head
+        node match {
+          case decl: XmlDeclaration =>
+            if (decl.attr(XmlDeclaration.DECL_KEY) == "xml") {
+              decl.attr("encoding", charset.displayName)
+              val version: String = decl.attr("version")
+              if (version != null) {
+                decl.attr("version", "1.0")
+              }
+            } else {
+              val declNew = new XmlDeclaration("xml", baseUri, false)
+              declNew.attr("version", "1.0")
+              declNew.attr("encoding", charset.displayName)
+              prependChild(declNew)
+            }
+          case _ =>
+            val decl: XmlDeclaration = new XmlDeclaration("xml", baseUri, false)
+            decl.attr("version", "1.0")
+            decl.attr("encoding", charset.displayName)
+            prependChild(decl)
+        }
+      } else {
+        // Unsupported syntax - nothing to do yet
+      }
+    }
   }
 
   /**

@@ -8,6 +8,7 @@ import com.github.ligangty.scala.jsoup.helper.Validator._
  * A text node.
  */
 class TextNode extends Node {
+
   private[nodes] var textVal: String = null
 
   /**
@@ -22,7 +23,6 @@ class TextNode extends Node {
     this.baseUriVal = baseUri
     this.textVal = text
   }
-
 
   def nodeName(): String = "#text"
 
@@ -40,7 +40,9 @@ class TextNode extends Node {
    */
   def text(text: String): TextNode = {
     this.textVal = text
-    if (attributesVal != null) attributesVal.put(TEXT_KEY, text)
+    if (attributesVal != null) {
+      attributesVal.put(TEXT_KEY, text)
+    }
     this
   }
 
@@ -49,7 +51,11 @@ class TextNode extends Node {
      @return text
     */
   def getWholeText: String =
-    if (attributesVal == null) textVal else attributesVal.get(TEXT_KEY)
+    if (attributesVal == null) {
+      textVal
+    } else {
+      attributesVal.get(TEXT_KEY)
+    }
 
   /**
   Test if this text node is blank -- that is, empty or only whitespace (including newlines).
@@ -70,13 +76,17 @@ class TextNode extends Node {
     val tail: String = getWholeText.substring(offset)
     text(head)
     val tailNode: TextNode = new TextNode(tail, this.baseUri)
-    if (parent != null) parent.addChildren(siblingIndex + 1, tailNode)
+    if (parent != null) {
+      parent.addChildren(siblingIndex + 1, tailNode)
+    }
     tailNode
   }
 
   private[nodes] def outerHtmlHead(accum: StringBuilder, depth: Int, out: Document.OutputSettings) {
-    if (out.prettyPrint && ((siblingIndex == 0 && parentNodeVal.isInstanceOf[Element] && parentNodeVal.asInstanceOf[Element].tag.isFormatAsBlock && !isBlank) || (out.outline && siblingNodes.size > 0 && !isBlank))) indent(accum, depth, out)
-    val normaliseWhite: Boolean = out.prettyPrint && parent.isInstanceOf[Element] && !Element.preserveWhitespace(parent.asInstanceOf[Element])
+    if (out.prettyPrint && ((siblingIndex == 0 && parentNodeVal.isInstanceOf[Element] && parentNodeVal.asInstanceOf[Element].tag.isFormatAsBlock && !isBlank) || (out.outline && siblingNodes.size > 0 && !isBlank))) {
+      indent(accum, depth, out)
+    }
+    val normaliseWhite: Boolean = out.prettyPrint && parent.isInstanceOf[Element] && !Element.preserveWhitespace(parent)
     Entities.escape(accum, getWholeText, out, false, normaliseWhite, false)
   }
 
@@ -130,7 +140,7 @@ class TextNode extends Node {
     case _ => false
   }
 
-  override def hashCode: Int ={
+  override def hashCode: Int = {
     31 * super.hashCode + (if (textVal != null) {
       textVal.##
     } else {
@@ -140,6 +150,7 @@ class TextNode extends Node {
 }
 
 object TextNode {
+
   /*
    TextNode is a node, and so by default comes with attributes and children. The attributes are seldom used, but use
    memory, and the child nodes are never used. So we don't have them, and override accessors to attributes to create
@@ -162,6 +173,5 @@ object TextNode {
 
   private[nodes] def lastCharIsWhitespace(sb: java.lang.StringBuilder): Boolean =
     sb.length != 0 && sb.charAt(sb.length - 1) == ' '
-
 
 }

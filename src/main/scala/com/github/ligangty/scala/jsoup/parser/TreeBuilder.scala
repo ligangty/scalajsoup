@@ -9,13 +9,19 @@ import scala.collection.mutable
 private[parser] abstract class TreeBuilder {
   private[parser] var reader: CharacterReader = null
   private[parser] var tokeniser: Tokeniser = null
+  // the last start tag emitted, to test appropriate end tag
   protected var doc: Document = null
+  // the stack of open elements
   protected var stack: mutable.Buffer[Element] = null
+  // current base uri, for creating new elements
   protected var baseUri: String = null
+  // currentToken is used only for error tracking.
   protected var currentToken: Token = null
+  // null when not tracking errors
   protected var errors: ParseErrorList = null
-  private var start: Token.StartTag = new Token.StartTag
-  private var end: Token.EndTag = new Token.EndTag
+  // start tag to process
+  private val start: Token.StartTag = new Token.StartTag
+  private val end: Token.EndTag = new Token.EndTag
 
   protected def initialiseParse(input: String, baseUri: String, errors: ParseErrorList) {
     notNull(input, "String input must not be null")

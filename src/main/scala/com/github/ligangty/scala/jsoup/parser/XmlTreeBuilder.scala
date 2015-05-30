@@ -89,25 +89,29 @@ class XmlTreeBuilder extends TreeBuilder {
     val elName: String = endTag.name
     var firstFound: Element = null
     import scala.util.control.Breaks._
+    var pos = stack.size - 1
     breakable {
-      for (pos <- (stack.size - 1).to(0, -1)) {
+      while (pos >= 0) {
         val next = stack(pos)
         if (next.nodeName().equals(elName)) {
           firstFound = next
           break()
         }
+        pos -= 1
       }
     }
     if (firstFound == null) {
       return
     }; // not found, skip
+    pos = stack.size - 1
     breakable {
-      for (pos <- (stack.size - 1).to(0,-1)) {
+      while (pos >= 0) {
         val next = stack(pos)
         stack.remove(pos)
         if (next == firstFound) {
           break()
         }
+        pos -= 1
       }
     }
   }

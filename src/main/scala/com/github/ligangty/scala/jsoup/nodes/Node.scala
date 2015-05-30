@@ -360,13 +360,12 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable with Equals {
    */
   def unwrap: Node = {
     notNull(parentNodeVal)
-    val index: Int = siblingIndexVal
     val firstChild: Node = if (childNodes.size > 0) {
       childNodes.head
     } else {
       null
     }
-    parentNodeVal.addChildren(index, this.childNodesAsArray)
+    parentNodeVal.addChildren(siblingIndexVal, this.childNodesAsArray)
     this.remove()
     firstChild
   }
@@ -475,36 +474,32 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable with Equals {
   }
 
   /**
-  Get this node's next sibling.
-     @return next sibling, or null if this is the last sibling
-    */
+   * Get this node's next sibling.
+   * @return next sibling, or null if this is the last sibling
+   */
   def nextSibling: Node = {
     if (parentNodeVal == null) {
-      return null
+      return null // root
     }
     val siblings: mutable.Buffer[Node] = parentNodeVal.childNodes
-    val index: Integer = siblingIndexVal
-    notNull(index)
-    if (siblings.size > index + 1) {
-      siblings(index + 1)
+    val index: Integer = siblingIndexVal + 1
+    if (siblings.size > index) {
+      siblings(index)
     } else {
       null
     }
   }
 
   /**
-  Get this node's previous sibling.
-     @return the previous sibling, or null if this is the first sibling
-    */
+   * Get this node's previous sibling.
+   * @return the previous sibling, or null if this is the first sibling
+   */
   def previousSibling: Node = {
     if (parentNodeVal == null) {
-      return null
+      return null // root
     }
-    val siblings: mutable.Buffer[Node] = parentNodeVal.childNodes
-    val index: Integer = siblingIndexVal
-    notNull(index)
-    if (index > 0) {
-      siblings(index - 1)
+    if (siblingIndexVal > 0) {
+      parentNode.childNodes(siblingIndexVal - 1);
     } else {
       null
     }
@@ -567,7 +562,6 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable with Equals {
 
   override def toString: String = outerHtml
 
-
   protected def indent(accum: StringBuilder, depth: Int, out: Document.OutputSettings) {
     accum.append("\n").append(Strings.padding(depth * out.indentAmount))
   }
@@ -597,13 +591,20 @@ abstract class Node private(u: Unit = ()) extends scala.Cloneable with Equals {
    * @see Node#equals(Object)
    */
   override def hashCode: Int = {
-    var result: Int = if (childNodes != null) childNodes.## else 0
-    result = 31 * result + (if (attributesVal != null) attributesVal.## else 0)
+    var result: Int = if (childNodes != null) {
+      childNodes.##
+    } else {
+      0
+    }
+    result = 31 * result + (if (attributesVal != null) {
+      attributesVal.##
+    } else {
+      0
+    })
     result
   }
 
   override def canEqual(that: Any): Boolean = that.isInstanceOf[Node]
-
 
   /**
    * Create a stand-alone, deep copy of this node, and all of its children. The cloned node will have no siblings or

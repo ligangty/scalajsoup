@@ -102,18 +102,16 @@ object DataUtil {
         var foundCharset: String = null
         if (meta.hasAttr("http-equiv")) {
           foundCharset = getCharsetFromContentType(meta.attr("content"))
-          if (foundCharset == null && meta.hasAttr("charset")) {
-            try {
-              if (Charset.isSupported(meta.attr("charset"))) {
-                foundCharset = meta.attr("charset")
-              }
-            } catch {
-              case e: IllegalCharsetNameException =>
-                foundCharset = null
+        }
+        if (foundCharset == null && meta.hasAttr("charset")) {
+          try {
+            if (Charset.isSupported(meta.attr("charset"))) {
+              foundCharset = meta.attr("charset")
             }
+          } catch {
+            case e: IllegalCharsetNameException =>
+              foundCharset = null
           }
-        } else {
-          foundCharset = meta.attr("charset")
         }
         if (foundCharset != null && foundCharset.length != 0 && foundCharset != defaultCharset) {
           foundCharset = foundCharset.trim.replaceAll("[\"']", "")
@@ -196,6 +194,10 @@ object DataUtil {
         randomAccessFile.close()
       }
     }
+  }
+
+  private[helper] def emptyByteBuffer: ByteBuffer = {
+    ByteBuffer.allocate(0)
   }
 
   /**

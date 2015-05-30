@@ -72,7 +72,7 @@ class Selector private[Selector](evaluator: Evaluator, root: Element) {
   notNull(root)
 
   private[Selector] def this(query:String, root:Element){
-    this(QueryParser.parse(query), root)
+    this(QueryParser.parse(query.trim), root)
   }
 
 

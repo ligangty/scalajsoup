@@ -9,12 +9,13 @@ import scala.collection.mutable
 
 /**
  * The attributes of an Element.
- * <p/>
+ * <p>
  * Attributes are treated as a map: there can be only one value associated with an attribute key.
- * <p/>
+ * </p>
+ * <p>
  * Attribute key and value comparisons are done case insensitively, and keys are normalised to
  * lower-case.
- *
+ * </p>
  */
 class Attributes extends Iterable[Attribute] with Cloneable {
   self =>
@@ -154,6 +155,11 @@ class Attributes extends Iterable[Attribute] with Cloneable {
 
   override def toString(): String = html
 
+  /**
+   * Checks if these attributes are equal to another set of attributes, by comparing the two sets
+   * @param o attributes to compare with
+   * @return if both sets of attributes have the same content
+   */
   override def equals(o: Any): Boolean = o match {
     case attrs: Attributes => (this eq attrs) || !(if (attributes != null) {
       !(attributes == attrs.attributes)
@@ -163,6 +169,10 @@ class Attributes extends Iterable[Attribute] with Cloneable {
     case _ => false
   }
 
+  /**
+   * Calculates the hashcode of these attributes, by iterating all attributes and summing their hashcodes.
+   * @return calculated hashcode
+   */
   override def hashCode: Int = if (attributes != null) {
     attributes.hashCode()
   } else {

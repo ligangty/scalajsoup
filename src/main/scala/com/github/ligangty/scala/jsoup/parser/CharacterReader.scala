@@ -16,6 +16,7 @@ final private[parser] class CharacterReader(input: String) {
 
   private var posVal: Int = 0
   private var markVal: Int = 0
+  // holds reused strings in this doc, to lessen garbage
   private val stringCache: Array[String] = new Array[String](512)
 
   private[parser] def pos: Int = posVal

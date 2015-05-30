@@ -21,9 +21,7 @@ abstract private[parser] class Token private() {
 
   private[parser] def isDoctype: Boolean = tokType == TokenType.Doctype
 
-  private[parser] def asDoctype: Token.Doctype = {
-    this.asInstanceOf[Token.Doctype]
-  }
+  private[parser] def asDoctype: Token.Doctype = this.asInstanceOf[Token.Doctype]
 
   private[parser] def isStartTag: Boolean = tokType == TokenType.StartTag
 
@@ -64,7 +62,7 @@ private[parser] object Token {
     private[parser] val systemIdentifier: StringBuilder = new StringBuilder
     private[parser] var forceQuirks: Boolean = false
 
-    private[parser] def reset: Token = {
+    override private[parser] def reset: Token = {
       Token.reset(name)
       Token.reset(publicIdentifier)
       Token.reset(systemIdentifier)
@@ -190,10 +188,11 @@ private[parser] object Token {
   }
 
   private[parser] final class StartTag private[parser]() extends Tag {
+
     attributes = new Attributes
     tokType = TokenType.StartTag
 
-    private[parser] override def reset: Token.Tag = {
+    override private[parser] def reset: Token.Tag = {
       super.reset
       attributes = new Attributes
       // todo - would prefer these to be null, but need to check Element assertions

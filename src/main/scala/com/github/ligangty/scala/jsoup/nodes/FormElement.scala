@@ -12,6 +12,7 @@ import scala.collection.mutable.ArrayBuffer
  * form to easily be submitted.
  */
 class FormElement(tag: Tag, baseUri: String, attributes: Attributes) extends Element(tag, baseUri, attributes) {
+
   private val elems: Elements = new Elements
 
   /**
@@ -40,9 +41,17 @@ class FormElement(tag: Tag, baseUri: String, attributes: Attributes) extends Ele
    *                                  document's base URI when parsing.
    */
   def submit: Connection = {
-    val action: String = if (hasAttr("action")) absUrl("action") else baseUri
+    val action: String = if (hasAttr("action")) {
+      absUrl("action")
+    } else {
+      baseUri
+    }
     Validator.notEmpty(action, "Could not determine a form action URL for submit. Ensure you set a base URI when parsing.")
-    val method: Connection.Method.Method = if (attr("method").toUpperCase == "POST") Connection.Method.POST() else Connection.Method.GET()
+    val method: Connection.Method.Method = if (attr("method").toUpperCase == "POST") {
+      Connection.Method.POST()
+    } else {
+      Connection.Method.GET()
+    }
     val con: Connection = Jsoup.connect(action).data(formData).method(method)
     con
   }
@@ -55,11 +64,23 @@ class FormElement(tag: Tag, baseUri: String, attributes: Attributes) extends Ele
   def formData: Seq[Connection.KeyVal] = {
     val data: ArrayBuffer[Connection.KeyVal] = new ArrayBuffer[Connection.KeyVal]
     import scala.util.control.Breaks._
+    // iterate the form control elements and accumulate their values
     for (el <- elems) {
       breakable {
-        if (!el.tag.isFormSubmittable) break()
+        // contents are form listable, superset of submitable
+        if (!el.tag.isFormSubmittable) {
+          break()
+        }
+        // skip disabled form inputs
+        if (el.hasAttr("disabled")) {
+          break()
+        }
         val name: String = el.attr("name")
-        if (name.length == 0) break()
+        if (name.length == 0) {
+          break()
+        }
+
+        val typeVal: String = el.attr("type")
         if ("select" == el.tagName) {
           val options: Elements = el.select("option[selected]")
           var set: Boolean = false
@@ -69,7 +90,19 @@ class FormElement(tag: Tag, baseUri: String, attributes: Attributes) extends Ele
           }
           if (!set) {
             val option: Element = el.select("option").first()
-            if (option != null) data.append(HttpConnection.KeyVal.create(name, option.value))
+            if (option != null) {
+              data.append(HttpConnection.KeyVal.create(name, option.value))
+            }
+          }
+        } else if ("checkbox".equalsIgnoreCase(typeVal) || "radio".equalsIgnoreCase(typeVal)) {
+          // only add checkbox or radio if they have the checked attribute
+          if (el.hasAttr("checked")) {
+            val value = if (el.value.length() > 0) {
+              el.value
+            } else {
+              "on"
+            }
+            data.append(HttpConnection.KeyVal.create(name, value) )
           }
         } else {
           data.append(HttpConnection.KeyVal.create(name, el.value))
@@ -79,4 +112,7 @@ class FormElement(tag: Tag, baseUri: String, attributes: Attributes) extends Ele
     data.toSeq
   }
 
+  override def equals(o: Any): Boolean = {
+    super.equals(o)
+  }
 }

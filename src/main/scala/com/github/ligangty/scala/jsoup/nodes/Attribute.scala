@@ -79,6 +79,8 @@ class Attribute(var key: String, var value: String) extends Product2[String, Str
 
   /**
    * Collapsible if it's a boolean attribute and value is empty or same as name
+   * @param out Outputsettings
+   * @return  Returns whether collapsible or not
    */
   private[nodes] def shouldCollapseAttribute(out: Document.OutputSettings): Boolean = {
     (("" == value) || value.equalsIgnoreCase(key)) &&
