@@ -105,12 +105,15 @@ class HttpConnection private() extends Connection {
   override def data(keyvals: String*): Connection = {
     Validator.notNull(keyvals, "Data key value pairs must not be null")
     Validator.isTrue(keyvals.length % 2 == 0, "Must supply an even number of key value pairs")
-    for (i <- 0.to(keyvals.length - 1, 2)) {
+    var i = 0
+    val length = keyvals.length
+    while (i < length) {
       val key: String = keyvals(i)
       val value: String = keyvals(i + 1)
       Validator.notEmpty(key, "Data key must not be empty")
       Validator.notNull(value, "Data value must not be null")
       req.data(KeyVal.create(key, value))
+      i += 2
     }
     this
   }
@@ -654,7 +657,11 @@ object HttpConnection {
       val w: BufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream, DataUtil.defaultCharset))
       if (bound != null) {
         // boundary will be set if we're in multipart mode
-        for (keyVal <- data) {
+        var i = 0
+        val length = data.length
+        var keyVal: Connection.KeyVal = null
+        while (i < length) {
+          keyVal = data(i)
           w.write("--")
           w.write(bound)
           w.write("\r\n")
@@ -673,6 +680,7 @@ object HttpConnection {
             w.write(keyVal.value)
           }
           w.write("\r\n")
+          i += 1
         }
         w.write("--")
         w.write(bound)
@@ -680,7 +688,11 @@ object HttpConnection {
       } else {
         // regular form data (application/x-www-form-urlencoded)
         var first: Boolean = true
-        for (keyVal <- data) {
+        var i = 0
+        val length = data.length
+        var keyVal: Connection.KeyVal = null
+        while (i < length) {
+          keyVal = data(i)
           if (!first) {
             w.append('&')
           } else {
@@ -689,6 +701,7 @@ object HttpConnection {
           w.write(URLEncoder.encode(keyVal.key, req.postDataCharset))
           w.write('=')
           w.write(URLEncoder.encode(keyVal.value, req.postDataCharset))
+          i += 1
         }
       }
       w.close()

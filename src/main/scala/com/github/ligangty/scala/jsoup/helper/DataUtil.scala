@@ -240,8 +240,11 @@ object DataUtil {
   private[helper] def mimeBoundary: String = {
     val mime: StringBuilder = new StringBuilder(boundaryLength)
     val rand: Random = new Random
-    for (i <- 0 to (boundaryLength - 1)) {
+    var i = 0
+    val length = boundaryLength
+    while (i < length) {
       mime.append(mimeBoundaryChars(rand.nextInt(mimeBoundaryChars.length)))
+      i += 1
     }
     mime.toString()
   }
