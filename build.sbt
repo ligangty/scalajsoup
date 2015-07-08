@@ -1,10 +1,10 @@
-organization := "com.github.ligangty.scala"
+organization := "com.github.ligangty.scala.jsoup"
 
 version := "0.0.1-SNAPSHOT"
 
 scalaVersion := "2.10.4"
 
-name := "scalalearn"
+name := "scalajsoup"
 
 scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
 

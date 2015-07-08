@@ -1,10 +1,11 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.github.ligangty.scala</groupId>
-    <artifactId>scalalearn</artifactId>
+    <groupId>com.github.ligangty.scala.jsoup</groupId>
+    <artifactId>scalajsoup</artifactId>
     <packaging>jar</packaging>
     <version>0.0.1-SNAPSHOT</version>
+    <description>A scala implementation of jsoup project (https://github.com/jhy/jsoup)</description>
     <properties>
         <scala.macros.version>2.0.1</scala.macros.version>
         <scala.version>2.10.4</scala.version>
